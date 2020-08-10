@@ -2,18 +2,19 @@ package controller
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"time"
 
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/common/log"
 	"github.com/yottachain/YTCoreService/api"
 )
 
 //UploadFile 根据路径上传文件
-func UploadFile(g *gin.Context) string {
+func UploadFile(g *gin.Context) {
 
 	bucketName := g.PostForm("bucketName")
 
@@ -46,8 +47,18 @@ func UploadFile(g *gin.Context) string {
 	c.NewObjectAccessor().CreateObject(bucketName, filename, upload.VNU, meta)
 
 	//如果成功返回文件hash
-	return string(hash)
+	// return string(hash)
+	g.String(http.StatusOK, string(hash))
 }
+
+//GetProgress 查询上传进度
+// func GetProgress(g *gin.Context) {
+// 	publicKey := g.PostForm("publicKey")
+// 	c := api.GetClient(publicKey)
+// 	upload := c.NewUploadObject()
+
+// 	ii := upload.GetProgress()
+// }
 
 func getFileSize(filename string) int64 {
 	var result int64
