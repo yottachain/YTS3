@@ -16,8 +16,9 @@ type buckets struct {
 func ListBucket(g *gin.Context) {
 
 	publicKey := g.Query("publicKey")
-	fmt.Println("publicKey::::", publicKey)
-	c := api.GetClient(publicKey)
+	content := publicKey[3:]
+	fmt.Println("publicKey::::", content)
+	c := api.GetClient(content)
 	bucketAccessor := c.NewBucketAccessor()
 	fmt.Println("UserName:", c.Username)
 	names, err := bucketAccessor.ListBucket()

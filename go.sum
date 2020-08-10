@@ -623,8 +623,8 @@ github.com/xdg/stringprep v1.0.0/go.mod h1:Jhud4/sHMO4oL310DaZAKk9ZaJ08SJfe+sJh0
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
 github.com/yottachain/P2PHost v1.0.1-0.20200330065720-69572fdc7d92/go.mod h1:V7g0oufx1cRzGw+1aUsMPkmD/+Uvdiax7dZiiC+afoM=
-github.com/yottachain/YTCoreService v0.0.0-20200807095139-d0d199a7aad7 h1:eS4BPSG31QXgJH+/pP97FRp3MWoX8oGUeOw9CbLSZr8=
-github.com/yottachain/YTCoreService v0.0.0-20200807095139-d0d199a7aad7/go.mod h1:vZ3fU4p2lk5xuBdGq1FvHa0Wpap0FpQn/cw4zUmn5kY=
+github.com/yottachain/YTCoreService v0.0.0-20200810100847-574fcc6cd075 h1:ytgglLhSxtGmk1IhQOZItXKPifTf4T62ap1iQYnZCBo=
+github.com/yottachain/YTCoreService v0.0.0-20200810100847-574fcc6cd075/go.mod h1:vZ3fU4p2lk5xuBdGq1FvHa0Wpap0FpQn/cw4zUmn5kY=
 github.com/yottachain/YTCrypto v0.0.0-20200122165219-0ea35dc29812 h1:XG9TtLosanLdwqSoporMr8OASUOjxuaj6cJDlut1c9s=
 github.com/yottachain/YTCrypto v0.0.0-20200122165219-0ea35dc29812/go.mod h1:jDJUVGeQ1clW7k9OTRBAFtCMwGs9B9fGQ9QY64SKqlk=
 github.com/yottachain/YTDNMgmt v0.0.0-20200805025457-dfe292c75384/go.mod h1:54ncBoypTn1yxf7rQShg50gqRYrPeN81z9e08afPet0=

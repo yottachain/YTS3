@@ -19,8 +19,8 @@ func DownloadFile(g *gin.Context) {
 	publicKey := g.Query("publicKey")
 
 	filePath := g.Query("path")
-
-	c := api.GetClient(publicKey)
+	content := publicKey[3:]
+	c := api.GetClient(content)
 
 	// download, err := c.NewDownloadBytes(bucketName, objectKey, primitive.NilObjectID)
 	download, err := c.NewDownloadFile(bucketName, objectKey, primitive.NilObjectID)

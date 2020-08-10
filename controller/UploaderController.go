@@ -24,8 +24,9 @@ func UploadFile(g *gin.Context) {
 	var filename string
 	filename = path.Base(filepath)
 	fmt.Println("filename=", filename)
+	content := publicKey[3:]
+	c := api.GetClient(content)
 
-	c := api.GetClient(publicKey)
 	//根据路径上传文件
 	upload := c.NewUploadObject()
 	hash, err := upload.UploadFile(filepath)

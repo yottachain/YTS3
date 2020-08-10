@@ -2,7 +2,6 @@ package controller
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/gin-gonic/gin"
@@ -23,16 +22,20 @@ func GetObjects(g *gin.Context) {
 	item := ObjectItem{}
 	bucketName := g.Query("bucketName")
 	publicKey := g.Query("publicKey")
-	fileName := g.Query("fileName")
+	content := publicKey[3:]
+	// fileName := g.Query("fileName")
 	prefix := g.Query("prefix")
-	maxKeys := g.Query("maxKeys")
-	limitCount, err := strconv.ParseInt(maxKeys, 10, 32)
+	// maxKeys := g.Query("maxKeys")
+	// limitCount, err := strconv.ParseInt(maxKeys, 10, 32)
 	var flag bool = false
-	CheckErr(err)
+	// CheckErr(err)
+	var fileName string
+	limitCount := 1000
 
 	for flag == false {
-		startObjectID := primitive.NilObjectID
-		ls := listObjects(publicKey, bucketName, fileName, prefix, false, startObjectID, uint32(limitCount))
+		// startObjectID := primitive.NilObjectID
+		var startObjectID primitive.ObjectID
+		ls := listObjects(content, bucketName, fileName, prefix, false, startObjectID, uint32(limitCount))
 		if len(ls) > 0 {
 			for _, object := range ls {
 				item.FileName = object.FileName
