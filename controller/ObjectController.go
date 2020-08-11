@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/ethereum/go-ethereum/log"
@@ -44,10 +45,13 @@ func GetObjects(g *gin.Context) {
 				objectItems = append(objectItems, item)
 			}
 		}
+		fmt.Println(len(ls))
 		if len(ls) < int(limitCount) {
 			flag = true
 		} else {
 			startObjectID = ls[len(ls)-1].nVerid
+			fileName = ls[len(ls)-1].FileName
+			fmt.Println("fileName:", fileName)
 		}
 
 	}
