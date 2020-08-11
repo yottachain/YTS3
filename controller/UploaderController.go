@@ -33,6 +33,9 @@ func UploadFile(g *gin.Context) {
 
 	//根据路径上传文件
 	upload := c.NewUploadObject()
+
+	putUploadObject(bucketName, filename, publicKey, *upload)
+
 	hash, err := upload.UploadFile(filepath)
 	if err != nil {
 
