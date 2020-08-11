@@ -93,6 +93,22 @@ func listObjects(publicKey, buck, fileName, prefix string, wversion bool, nVerid
 	return objectItems
 }
 
+//GetFileBlockDetails 查询文件分块信息
+func GetFileBlockDetails(g *gin.Context) {
+	fileName := g.Query("fileName")
+	bucketName := g.Query("bucketName")
+	publicKey := g.Query("publicKey")
+	content := publicKey[3:]
+	c := api.GetClient(content)
+	info, err := c.NewObjectMeta(bucketName, fileName, primitive.NilObjectID)
+
+	if err != nil {
+		log.Info("Query file info is error")
+		panic(err)
+	}
+	g.JSON(http.StatusOK, info)
+}
+
 //CheckErr 检查错误原因
 func CheckErr(err error) {
 	if err != nil {
