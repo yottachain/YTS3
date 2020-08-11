@@ -20,6 +20,7 @@ func InitRouter() (router *gin.Engine) {
 		v1.GET("/getObject", controller.DownloadFile)
 		v1.GET("/listBucket", controller.GetObjects)
 		v1.GET("/listAllBucket", controller.ListBucket)
+		v1.GET("/getProgress", controller.GetProgress)
 	}
 
 	return
