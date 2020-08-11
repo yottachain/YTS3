@@ -2,6 +2,7 @@ package controller
 
 import (
 	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"os"
@@ -44,7 +45,7 @@ func UploadFile(g *gin.Context) {
 	header = make(map[string]string)
 	timeUnix := time.Now().Unix()
 	fileSize := getFileSize(filepath)
-	header["ETag"] = string(hash)
+	header["ETag"] = hex.EncodeToString(hash)
 	header["x-amz-date"] = string(timeUnix)
 	header["contentLength"] = string(fileSize)
 	meta, err1 := api.FileMetaMapTobytes(header)
@@ -56,7 +57,7 @@ func UploadFile(g *gin.Context) {
 
 	//如果成功返回文件hash
 	// return string(hash)
-	g.String(http.StatusOK, string(hash))
+	g.String(http.StatusOK, hex.EncodeToString(hash))
 }
 
 //GetProgress 查询上传进度
