@@ -104,7 +104,7 @@ func GetFileBlockDetails(g *gin.Context) {
 
 	if err != nil {
 		log.Info("Query file info is error")
-		panic(err)
+		// panic(err)
 	}
 	g.JSON(http.StatusOK, info)
 }
