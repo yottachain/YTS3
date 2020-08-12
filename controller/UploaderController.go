@@ -44,10 +44,13 @@ func UploadFile(g *gin.Context) {
 	var header map[string]string
 	header = make(map[string]string)
 	timeUnix := time.Now().Unix()
+
 	fileSize := getFileSize(filepath)
+
+	fmt.Println("contentLength::::::", fmt.Sprintf("%x", fileSize))
 	header["ETag"] = hex.EncodeToString(hash)
 	header["x-amz-date"] = string(timeUnix)
-	header["contentLength"] = string(fileSize)
+	header["contentLength"] = fmt.Sprintf("%x", fileSize)
 	meta, err1 := api.FileMetaMapTobytes(header)
 	if err1 != nil {
 		log.Error(err1.Error())
