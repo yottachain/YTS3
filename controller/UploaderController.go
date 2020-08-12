@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -47,10 +48,10 @@ func UploadFile(g *gin.Context) {
 
 	fileSize := getFileSize(filepath)
 
-	fmt.Println("contentLength::::::", fmt.Sprintf("%x", fileSize))
+	fmt.Println("contentLength::::::", strconv.FormatInt(fileSize, 10))
 	header["ETag"] = hex.EncodeToString(hash)
 	header["x-amz-date"] = string(timeUnix)
-	header["contentLength"] = fmt.Sprintf("%x", fileSize)
+	header["contentLength"] = strconv.FormatInt(fileSize, 10)
 	meta, err1 := api.FileMetaMapTobytes(header)
 	if err1 != nil {
 		log.Error(err1.Error())
