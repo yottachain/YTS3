@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -18,18 +17,18 @@ import (
 	"github.com/yottachain/YTCoreService/env"
 )
 
-var upload_progress_CACHE = cache.New(time.Duration(100000)*time.Second, time.Duration(100000)*time.Second)
+var upload_progress_CACHE = cache.New(time.Duration(60)*time.Second, time.Duration(60)*time.Second)
 
 //UploadFile 根据路径上传文件
 func UploadFile(g *gin.Context) {
-	defer env.TracePanic()
+	// defer env.TracePanic()
 	bucketName := g.PostForm("bucketName")
 
 	publicKey := g.PostForm("publicKey")
-	filepath := g.PostForm("path")
+	files := g.PostForm("path")
 
 	var filename string
-	filename = path.Base(filepath)
+	filename = filepath.Base(files)
 	fmt.Println("filename=", filename)
 	content := publicKey[3:]
 	c := api.GetClient(content)
@@ -39,7 +38,7 @@ func UploadFile(g *gin.Context) {
 
 	putUploadObject(bucketName, filename, publicKey, upload)
 
-	hash, err := upload.UploadFile(filepath)
+	hash, err := upload.UploadFile(files)
 	if err != nil {
 		logrus.Errorf("[UploadFile ]AuthSuper ERR:%s\n", err)
 	}
@@ -47,7 +46,7 @@ func UploadFile(g *gin.Context) {
 	header = make(map[string]string)
 	timeUnix := time.Now().Unix()
 
-	fileSize := getFileSize(filepath)
+	fileSize := getFileSize(files)
 
 	fmt.Println("contentLength::::::", strconv.FormatInt(fileSize, 10))
 	header["ETag"] = hex.EncodeToString(hash)
