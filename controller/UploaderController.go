@@ -35,7 +35,7 @@ func UploadFile(g *gin.Context) {
 	//根据路径上传文件
 	upload := c.NewUploadObject()
 
-	putUploadObject(bucketName, filename, publicKey, *upload)
+	putUploadObject(bucketName, filename, publicKey, upload)
 
 	hash, err := upload.UploadFile(filepath)
 	if err != nil {
@@ -75,7 +75,7 @@ func GetProgress(g *gin.Context) {
 }
 
 //putUploadObject 将上传实例加入到缓存中 用于进度查询
-func putUploadObject(bucketName, fileName, publicKey string, upload api.UploadObject) {
+func putUploadObject(bucketName, fileName, publicKey string, upload *api.UploadObject) {
 
 	key := bucketName + fileName + publicKey
 
