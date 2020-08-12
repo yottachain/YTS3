@@ -1,7 +1,8 @@
 package controller
 
 import (
-	"net/http"
+	"fmt"
+	"io"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -19,21 +20,30 @@ func DownloadFile(g *gin.Context) {
 
 	publicKey := g.Query("publicKey")
 
-	filePath := g.Query("path")
+	// filePath := g.Query("path")
 	content := publicKey[3:]
 	c := api.GetClient(content)
+	g.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", objectKey))
+	g.Writer.Header().Add("Content-Type", "application/octet-stream")
+	download, erra := c.NewDownloadFile(bucketName, objectKey, primitive.NilObjectID)
 
-	// download, err := c.NewDownloadBytes(bucketName, objectKey, primitive.NilObjectID)
-	download, err := c.NewDownloadFile(bucketName, objectKey, primitive.NilObjectID)
-
-	if err != nil {
-		logrus.Errorf("[DownloadFile ]AuthSuper ERR:%s\n", err)
+	if erra != nil {
+		logrus.Errorf("[DownloadFile ]AuthSuper ERR:%s\n", erra)
+	}
+	reader := download.Load()
+	readbuf := make([]byte, 8192)
+	for {
+		num, err := reader.Read(readbuf)
+		if err != nil && err != io.EOF {
+			// return err
+		}
+		if num > 0 {
+			bs := readbuf[0:num]
+			g.Writer.Write(bs)
+		}
+		if err != nil && err == io.EOF {
+			break
+		}
 	}
 
-	err2 := download.SaveToFile(filePath)
-
-	if err2 != nil {
-		logrus.Errorf("[DownloadFile ]AuthSuper ERR:%s\n", err)
-	}
-	g.String(http.StatusOK, "Download is Success")
 }

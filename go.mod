@@ -9,8 +9,9 @@ require (
 	github.com/go-ini/ini v1.57.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/common v0.11.1
+	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/yottachain/YTCoreService v0.0.0-20200811014705-7537705ceb72
+	github.com/yottachain/YTCoreService v0.0.0-20200811070342-07fd8ac5cdec
 	go.mongodb.org/mongo-driver v1.3.3
 	golang.org/x/sys v0.0.0-20200806060901-a37d78b92225 // indirect
 )
