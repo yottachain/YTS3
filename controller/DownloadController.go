@@ -4,14 +4,15 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/prometheus/common/log"
+	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
+	"github.com/yottachain/YTCoreService/env"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 //DownloadFile 指定下载路径下载文件
 func DownloadFile(g *gin.Context) {
-
+	defer env.TracePanic()
 	bucketName := g.Query("bucketName")
 
 	objectKey := g.Query("key")
@@ -26,13 +27,13 @@ func DownloadFile(g *gin.Context) {
 	download, err := c.NewDownloadFile(bucketName, objectKey, primitive.NilObjectID)
 
 	if err != nil {
-		log.Info("Download is error, fileName:" + objectKey)
+		logrus.Errorf("[DownloadFile ]AuthSuper ERR:%s\n", err)
 	}
 
 	err2 := download.SaveToFile(filePath)
 
 	if err2 != nil {
-		log.Info("Download is error, fileName:" + objectKey)
+		logrus.Errorf("[DownloadFile ]AuthSuper ERR:%s\n", err)
 	}
 	g.String(http.StatusOK, "Download is Success")
 }

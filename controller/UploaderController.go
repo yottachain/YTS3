@@ -13,15 +13,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/patrickmn/go-cache"
-	"github.com/prometheus/common/log"
+	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
+	"github.com/yottachain/YTCoreService/env"
 )
 
 var upload_progress_CACHE = cache.New(time.Duration(100000)*time.Second, time.Duration(100000)*time.Second)
 
 //UploadFile 根据路径上传文件
 func UploadFile(g *gin.Context) {
-
+	defer env.TracePanic()
 	bucketName := g.PostForm("bucketName")
 
 	publicKey := g.PostForm("publicKey")
@@ -40,7 +41,7 @@ func UploadFile(g *gin.Context) {
 
 	hash, err := upload.UploadFile(filepath)
 	if err != nil {
-
+		logrus.Errorf("[UploadFile ]AuthSuper ERR:%s\n", err)
 	}
 	var header map[string]string
 	header = make(map[string]string)
@@ -54,7 +55,7 @@ func UploadFile(g *gin.Context) {
 	header["contentLength"] = strconv.FormatInt(fileSize, 10)
 	meta, err1 := api.FileMetaMapTobytes(header)
 	if err1 != nil {
-		log.Error(err1.Error())
+		logrus.Errorf("[FileMetaMapTobytes ]AuthSuper ERR:%s\n", err1)
 	}
 	//写元数据
 	c.NewObjectAccessor().CreateObject(bucketName, filename, upload.VNU, meta)
@@ -66,6 +67,7 @@ func UploadFile(g *gin.Context) {
 
 //GetProgress 查询上传进度
 func GetProgress(g *gin.Context) {
+	defer env.TracePanic()
 	publicKey := g.Query("publicKey")
 	bucketName := g.Query("bucketName")
 	fileName := g.Query("fileName")

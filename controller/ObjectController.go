@@ -6,7 +6,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
+	"github.com/yottachain/YTCoreService/env"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -19,6 +21,7 @@ type ObjectItem struct {
 
 //GetObjects 获取文件列表
 func GetObjects(g *gin.Context) {
+	defer env.TracePanic()
 	var objectItems []ObjectItem
 	item := ObjectItem{}
 	bucketName := g.Query("bucketName")
@@ -95,6 +98,7 @@ func listObjects(publicKey, buck, fileName, prefix string, wversion bool, nVerid
 
 //GetFileBlockDetails 查询文件分块信息
 func GetFileBlockDetails(g *gin.Context) {
+	defer env.TracePanic()
 	fileName := g.Query("fileName")
 	bucketName := g.Query("bucketName")
 	publicKey := g.Query("publicKey")
@@ -103,7 +107,7 @@ func GetFileBlockDetails(g *gin.Context) {
 	info, err := c.NewObjectMeta(bucketName, fileName, primitive.NilObjectID)
 
 	if err != nil {
-		log.Info("Query file info is error")
+		logrus.Errorf("[GetFileBlockDetails ]AuthSuper ERR:%s\n", err)
 		// panic(err)
 	}
 	g.JSON(http.StatusOK, info)

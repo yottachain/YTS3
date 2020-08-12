@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/common/log"
 	"github.com/yottachain/YTCoreService/api"
+	"github.com/yottachain/YTCoreService/env"
 )
 
 //User 用户注册
@@ -17,7 +18,7 @@ type User struct {
 
 //Register 用户注册
 func Register(g *gin.Context) {
-
+	defer env.TracePanic()
 	var json User
 
 	if err := g.Bind(&json); err != nil {
