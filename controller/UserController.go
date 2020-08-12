@@ -32,7 +32,8 @@ func Register(g *gin.Context) {
 	// if count == 0 {
 	c, err2 := api.NewClient(userName, privateKey)
 	if err2 != nil {
-		CheckErr(err2)
+		// CheckErr(err2)
+		log.Info(err2)
 	}
 	log.Info("User Register Success,UserName:" + "testnodeyyy1")
 	fmt.Println("UserID:", c.UserId)

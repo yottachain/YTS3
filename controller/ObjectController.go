@@ -110,8 +110,8 @@ func GetFileBlockDetails(g *gin.Context) {
 }
 
 //CheckErr 检查错误原因
-func CheckErr(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
+// func CheckErr(err error) {
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// }
