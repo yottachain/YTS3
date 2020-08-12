@@ -46,4 +46,6 @@ func DownloadFile(g *gin.Context) {
 		}
 	}
 
+	fmt.Println("Download File Success")
+
 }
