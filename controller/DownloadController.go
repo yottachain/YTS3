@@ -4,9 +4,11 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -22,48 +24,115 @@ var download_progress_CACHE = cache.New(time.Duration(600000)*time.Second, time.
 //FileBlockAndShardInfo 文件信息
 type FileBlockAndShardInfo struct {
 	FileName   string //文件名
-	BlockCount int    //文件总块数量
+	FileLength int64
+	BlockCount int //文件总块数量
 	Blocks     []*Block
 }
 
 //Block 块信息
 type Block struct {
-	BlockID  int    //分块编号
-	BlockEnc string //16进制加密
-	BlockSrc string //16进制非加密
-	Shards   []*Shard
+	BlockNum     string //分块编号
+	BlockEncPath string //16进制加密
+	BlockSrcPath string //16进制非加密
+	BlockZipPath string
+	Shards       []*Shard
 }
 
 //Shard 分片信息
 type Shard struct {
-	ShardID  int
-	ShardSrc string //分片16进制数据
+	ShardID      int
+	ShardSrcPath string //分片16进制数据
 }
 
 //GetFileAllInfo 获取文件详细信息
 func GetFileAllInfo(g *gin.Context) {
-	fileBlockAndShardInfo := FileBlockAndShardInfo{}
-	// var blocks []Block
-	// var shards []Shard
 
 	fileName := g.Query("fileName")
 
 	fileDirectory := g.Query("directory")
+	fileBlockAndShardInfo := FileBlockAndShardInfo{}
+	var blocks []*Block
+	// var shards []Shard
 
 	fileBlockAndShardInfo.FileName = fileName
-	list, err := getDirList(fileDirectory)
+	list, err := getDirList(fileDirectory + "/" + fileName)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fileBlockAndShardInfo.BlockCount = len(list)
+	fileBlockAndShardInfo.BlockCount = len(list) - 1
+	files := fileDirectory + "/" + fileName + "/source.dat"
+	fileSize := getFileSize(files)
+	fileBlockAndShardInfo.FileLength = fileSize
+	// g.JSON(http.StatusOK, fileBlockAndShardInfo)
+	// fmt.Println("len:::::", len(list)-1)
 
-	// read, err := ioutil.ReadDir(fileDirectory + "/" + fileName) //读取文件夹
-	// if err != nil {
-	// 	logrus.Errorf("[DownloadFile ]AuthSuper ERR:%s\n", err)
-	// }
+	for i := 0; i < len(list)-1; i++ {
+		blockinfo := Block{}
+		var shards []*Shard
+		// blockinfo.BlockID = i
+
+		blockName := "block" + strconv.FormatInt(int64(i), 10)
+		blockinfo.BlockNum = blockName
+		blockinfo.BlockEncPath = fileDirectory + "/" + fileName + "/" + blockName + "/block.enc"
+		blockinfo.BlockSrcPath = fileDirectory + "/" + fileName + "/" + blockName + "/block.src"
+		blockinfo.BlockZipPath = fileDirectory + "/" + fileName + "/" + blockName + "/block.zip"
+		blockDirectory := fileDirectory + "/" + fileName + "/" + blockName + "/"
+		// blockInList, err := getDirList(blockDirectory)
+		blockInList, err := ioutil.ReadDir(blockDirectory)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		for ii := 0; ii < len(blockInList)-3; ii++ {
+			shard := Shard{}
+			shard.ShardID = ii
+			shard.ShardSrcPath = blockDirectory + "/" + strconv.FormatInt(int64(ii), 10)
+			blockinfo.Shards = append(shards, &shard)
+		}
+		// blockinfo.Shards = shards
+		blocks = append(blocks, &blockinfo)
+	}
+	fileBlockAndShardInfo.Blocks = blocks
+
+	g.JSON(http.StatusOK, fileBlockAndShardInfo)
 
 }
+
+// func GetBlockInfo(g *gin.Context) {
+// 	block := Block{}
+// 	fileName := g.Query("fileName")
+
+// 	fileDirectory := g.Query("directory")
+
+// 	blockNum := g.Query("blockNum")
+// 	block.BlockNum = blockNum
+
+// 	blockDirectory := fileDirectory + "/" + fileName + "/" + blockNum
+// 	// list, err := getDirList(blockDirectory)
+// 	// if err != nil {
+// 	// 	fmt.Println(err)
+// 	// 	return
+// 	// }
+
+// 	blockSrc := blockDirectory + "/block.src"
+// 	blockZip := blockDirectory + "/block.zip"
+// 	blockEnc := blockDirectory + "/block.enc"
+// 	bsSrc, err := ioutil.ReadFile(blockSrc)
+// 	bsEnc, err := ioutil.ReadFile(blockEnc)
+// 	bsZip, err := ioutil.ReadFile(blockZip)
+// 	//ioutil.ReadAll()
+
+// 	if err != nil {
+
+// 	}
+// 	block.BlockSrc = hex.EncodeToString(bsSrc)
+// 	// fmt.Println("block.BlockSrc:::::", block.BlockSrc)
+
+// 	block.BlockEnc = hex.EncodeToString(bsEnc)
+// 	block.BlockZip = hex.EncodeToString(bsZip)
+// 	g.JSON(http.StatusOK, block)
+// }
 
 func getDirList(dirpath string) ([]string, error) {
 	var dir_list []string

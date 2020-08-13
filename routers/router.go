@@ -23,6 +23,8 @@ func InitRouter() (router *gin.Engine) {
 		v1.GET("/listAllBucket", controller.ListBucket)
 		v1.GET("/getProgress", controller.GetProgress)
 		v1.GET("/getFileInfo", controller.GetFileBlockDetails)
+		v1.GET("/getFileAllInfo", controller.GetFileAllInfo)
+		// v1.GET("/getBlockInfo", controller.GetBlockInfo)
 	}
 
 	return
