@@ -69,7 +69,7 @@ func GetFileAllInfo(g *gin.Context) {
 
 	for i := 0; i < len(list)-1; i++ {
 		blockinfo := Block{}
-		var shards []*Shard
+		var shardslist []*Shard
 		// blockinfo.BlockID = i
 
 		blockName := "block" + strconv.FormatInt(int64(i), 10)
@@ -88,9 +88,9 @@ func GetFileAllInfo(g *gin.Context) {
 			shard := Shard{}
 			shard.ShardID = ii
 			shard.ShardSrcPath = blockDirectory + "/" + strconv.FormatInt(int64(ii), 10)
-			blockinfo.Shards = append(shards, &shard)
+			shardslist = append(shardslist, &shard)
 		}
-		// blockinfo.Shards = shards
+		blockinfo.Shards = shardslist
 		blocks = append(blocks, &blockinfo)
 	}
 	fileBlockAndShardInfo.Blocks = blocks
