@@ -73,7 +73,7 @@ func GetProgress(g *gin.Context) {
 
 	ii := getUploadProgress(bucketName, fileName, publicKey)
 
-	g.String(http.StatusOK, fmt.Sprintf("%x", ii))
+	g.String(http.StatusOK, strconv.FormatInt(int64(ii), 10))
 }
 
 //putUploadObject 将上传实例加入到缓存中 用于进度查询

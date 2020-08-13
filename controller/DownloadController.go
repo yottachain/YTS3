@@ -239,7 +239,7 @@ func GetDownloadProgress(g *gin.Context) {
 
 	ii := getDownloadProgress(bucketName, fileName, publicKey)
 
-	g.String(http.StatusOK, fmt.Sprintf("%x", ii))
+	g.String(http.StatusOK, strconv.FormatInt(int64(ii), 10))
 }
 
 //getDownloadProgress 查询进度
