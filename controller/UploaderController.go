@@ -17,7 +17,7 @@ import (
 	"github.com/yottachain/YTCoreService/env"
 )
 
-var upload_progress_CACHE = cache.New(time.Duration(60)*time.Second, time.Duration(60)*time.Second)
+var upload_progress_CACHE = cache.New(time.Duration(600000)*time.Second, time.Duration(600000)*time.Second)
 
 //UploadFile 根据路径上传文件
 func UploadFile(g *gin.Context) {
@@ -87,7 +87,7 @@ func putUploadObject(bucketName, fileName, publicKey string, upload *api.UploadO
 	upload_progress_CACHE.SetDefault(md5str, upload)
 }
 
-//getProgress 查询进度
+//getUploadProgress 查询进度
 func getUploadProgress(bucketName, fileName, publicKey string) int32 {
 	var num int32
 	key := bucketName + fileName + publicKey

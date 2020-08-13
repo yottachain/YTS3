@@ -36,7 +36,7 @@ func Register(g *gin.Context) {
 		// CheckErr(err2)
 		log.Info(err2)
 	}
-	log.Info("User Register Success,UserName:" + "testnodeyyy1")
+	log.Info("User Register Success,UserName:" + userName)
 	fmt.Println("UserID:", c.UserId)
 	// }
 	g.JSON(http.StatusOK, gin.H{"status": "Register success " + userName})
