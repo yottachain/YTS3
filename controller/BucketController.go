@@ -14,6 +14,44 @@ type buckets struct {
 	buckets []string
 }
 
+type Bucket struct {
+	bucketName string
+}
+
+//CreateBucket 创建bucket
+func CreateBucket(g *gin.Context) {
+	defer env.TracePanic()
+
+	bucket := g.Query("bucketName")
+
+	publicKey := g.Query("publicKey")
+
+	var header map[string]string
+
+	header = make(map[string]string)
+
+	header["version_status"] = "Enabled"
+
+	meta, err := api.BucketMetaMapToBytes(header)
+	if err != nil {
+		logrus.Errorf("[ListBucket ]AuthSuper ERR:%s\n", err)
+	}
+	content := publicKey[3:]
+
+	c := api.GetClient(content)
+	bucketAccessor := c.NewBucketAccessor()
+	err2 := bucketAccessor.CreateBucket(bucket, meta)
+	if err2 != nil {
+		logrus.Errorf("[ListBucket ]AuthSuper ERR:%s\n", err2)
+		g.JSON(http.StatusMethodNotAllowed, gin.H{"error": "create bucket error"})
+	} else {
+		buck := Bucket{}
+		buck.bucketName = bucket
+		g.JSON(http.StatusOK, buck)
+	}
+
+}
+
 //ListBucket list all bucket
 func ListBucket(g *gin.Context) {
 	defer env.TracePanic()

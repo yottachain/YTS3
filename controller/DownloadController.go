@@ -216,7 +216,13 @@ func DownloadFile(g *gin.Context) {
 		logrus.Errorf("[DownloadFile ]AuthSuper ERR:%s\n", err)
 	}
 
-	download.SaveToPath(savePath + "/" + fileName)
+	errn := download.SaveToPath(savePath + "/" + fileName)
+	if errn != nil {
+		logrus.Errorf("[DownloadFile ]AuthSuper ERR:%s\n", errn)
+	} else {
+		logrus.Info("[ " + fileName + " ]" + " is Download Success")
+	}
+
 }
 
 //putUploadObject 将上传实例加入到缓存中 用于进度查询
@@ -227,6 +233,7 @@ func putDownloadObject(bucketName, fileName, publicKey string, upload *api.Downl
 	data := []byte(key)
 	has := md5.Sum(data)
 	md5str := fmt.Sprintf("%x", has)
+	logrus.Info("md5str set::::", md5str)
 	download_progress_CACHE.SetDefault(md5str, upload)
 }
 
@@ -250,8 +257,10 @@ func getDownloadProgress(bucketName, fileName, publicKey string) int32 {
 	data := []byte(key)
 	has := md5.Sum(data)
 	md5str := fmt.Sprintf("%x", has)
+	logrus.Info("md5str get::::", md5str)
 	v, found := download_progress_CACHE.Get(md5str)
 
+	logrus.Info("key is value:::::::", found)
 	if found {
 		ii := v.(*api.DownloadObject).GetProgress()
 		num = ii
