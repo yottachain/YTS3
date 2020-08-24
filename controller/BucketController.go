@@ -15,7 +15,8 @@ type buckets struct {
 }
 
 type Bucket struct {
-	bucketName string
+	bucketName     string
+	version_status string
 }
 
 //CreateBucket 创建bucket
@@ -47,6 +48,7 @@ func CreateBucket(g *gin.Context) {
 	} else {
 		buck := Bucket{}
 		buck.bucketName = bucket
+		buck.version_status = "Enabled"
 		g.JSON(http.StatusOK, buck)
 	}
 

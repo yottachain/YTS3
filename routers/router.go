@@ -16,6 +16,7 @@ func InitRouter() (router *gin.Engine) {
 	v1 := router.Group("/api/v1")
 	{
 		v1.POST("/insertuser", controller.Register)
+		v1.GET("/createBucket", controller.CreateBucket)
 		v1.POST("/upload", controller.UploadFile)
 		v1.GET("/getObject", controller.DownloadFile)
 		v1.GET("/getObjectProgress", controller.GetDownloadProgress)
@@ -24,7 +25,6 @@ func InitRouter() (router *gin.Engine) {
 		v1.GET("/getProgress", controller.GetProgress)
 		v1.GET("/getFileInfo", controller.GetFileBlockDetails)
 		v1.GET("/getFileAllInfo", controller.GetFileAllInfo)
-		// v1.GET("/getBlockInfo", controller.GetBlockInfo)
 	}
 
 	return
