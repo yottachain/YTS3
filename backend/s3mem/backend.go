@@ -5,7 +5,10 @@ import (
 	"encoding/hex"
 	"io"
 	"sync"
+	"time"
 
+	"github.com/sirupsen/logrus"
+	"github.com/yottachain/YTCoreService/api"
 	"github.com/yottachain/YTS3/internal/goskipiter"
 	"github.com/yottachain/YTS3/yts3"
 )
@@ -61,13 +64,20 @@ func New(opts ...Option) *Backend {
 func (db *Backend) ListBuckets(publicKey string) ([]yts3.BucketInfo, error) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
+	c := api.GetClient(publicKey)
+	bucketAccessor := c.NewBucketAccessor()
+	names, err1 := bucketAccessor.ListBucket()
+	if err1 != nil {
+		logrus.Errorf("[ListBucket ]AuthSuper ERR:%s\n", err1)
+	}
 
-	var buckets = make([]yts3.BucketInfo, 0, len(db.buckets))
-	for _, bucket := range db.buckets {
-		buckets = append(buckets, yts3.BucketInfo{
-			Name:         bucket.name,
-			CreationDate: bucket.creationDate,
-		})
+	var buckets []yts3.BucketInfo
+	len := len(names)
+	for i := 0; i < len; i++ {
+		bucketInfo := yts3.BucketInfo{}
+		bucketInfo.Name = names[i]
+		bucketInfo.CreationDate = yts3.NewContentTime(time.Now())
+		buckets = append(buckets, bucketInfo)
 	}
 
 	return buckets, nil
