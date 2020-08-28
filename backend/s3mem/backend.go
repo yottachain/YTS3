@@ -58,7 +58,7 @@ func New(opts ...Option) *Backend {
 	return b
 }
 
-func (db *Backend) ListBuckets() ([]yts3.BucketInfo, error) {
+func (db *Backend) ListBuckets(publicKey string) ([]yts3.BucketInfo, error) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
 

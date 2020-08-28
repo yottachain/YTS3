@@ -12,10 +12,6 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
-
-	"github.com/sirupsen/logrus"
-	"github.com/yottachain/YTCoreService/api"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Yts3 struct {
@@ -78,23 +74,26 @@ func (g *Yts3) listBuckets(w http.ResponseWriter, r *http.Request) error {
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
 	fmt.Println("publicKey:", content)
-	c := api.GetClient(content)
-	bucketAccessor := c.NewBucketAccessor()
-	fmt.Println("UserName:", c.Username)
-	names, err1 := bucketAccessor.ListBucket()
+	// c := api.GetClient(content)
+	// bucketAccessor := c.NewBucketAccessor()
+	// fmt.Println("UserName:", c.Username)
+	// names, err1 := bucketAccessor.ListBucket()
 
-	// buckets, err := g.storage.ListBuckets()
-	if err1 != nil {
-		logrus.Errorf("[ListBucket ]AuthSuper ERR:%s\n", err1)
+	buckets, err := g.storage.ListBuckets(content)
+	if err != nil {
+		return err
 	}
-	var buckets []BucketInfo
-	len := len(names)
-	for i := 0; i < len; i++ {
-		bucketInfo := BucketInfo{}
-		bucketInfo.Name = names[i]
-		bucketInfo.CreationDate = NewContentTime(time.Now())
-		buckets = append(buckets, bucketInfo)
-	}
+	// if err1 != nil {
+	// 	logrus.Errorf("[ListBucket ]AuthSuper ERR:%s\n", err1)
+	// }
+	// var buckets []BucketInfo
+	// len := len(names)
+	// for i := 0; i < len; i++ {
+	// 	bucketInfo := BucketInfo{}
+	// 	bucketInfo.Name = names[i]
+	// 	bucketInfo.CreationDate = NewContentTime(time.Now())
+	// 	buckets = append(buckets, bucketInfo)
+	// }
 
 	s := &Storage{
 		Xmlns:   "http://s3.amazonaws.com/doc/2006-03-01/",
@@ -120,14 +119,14 @@ func (g *Yts3) getBucketLocation(bucketName string, w http.ResponseWriter, r *ht
 }
 
 func (g *Yts3) listBucket(bucketName string, w http.ResponseWriter, r *http.Request) error {
-	Authorization := r.Header.Get("Authorization")
-	publicKey := GetBetweenStr(Authorization, "YTA", "/")
-	content := publicKey[3:]
-	fmt.Println("publicKey:", content)
-	c := api.GetClient(content)
-	userName := c.Username
+	// Authorization := r.Header.Get("Authorization")
+	// publicKey := GetBetweenStr(Authorization, "YTA", "/")
+	// content := publicKey[3:]
+	// fmt.Println("publicKey:", content)
+	// c := api.GetClient(content)
+	// userName := c.Username
 
-	objectAccessor := c.NewObjectAccessor()
+	// objectAccessor := c.NewObjectAccessor()
 
 	g.log.Print(LogInfo, "LIST BUCKET")
 
@@ -143,57 +142,57 @@ func (g *Yts3) listBucket(bucketName string, w http.ResponseWriter, r *http.Requ
 	g.log.Print(LogInfo, "bucketname:", bucketName)
 	g.log.Print(LogInfo, "prefix    :", prefix)
 	g.log.Print(LogInfo, "page      :", fmt.Sprintf("%+v", page))
-	fileName := prefix.Prefix
-	var startObjectID primitive.ObjectID
-	limitCount := 1000
-	ls, err1 := objectAccessor.ListObject(bucketName, fileName, prefix.Prefix, isVersion2, startObjectID, uint32(limitCount))
-	if err1 != nil {
-		logrus.Info("Pull objects is error ", err1)
-	}
-	objects := ObjectList{}
-	var contents []*Content
-	if len(ls) > 0 {
-		var header map[string]string
-		for i := 0; i < len(ls); i++ {
-			meta := ls[i].Meta
-			header, _ = api.BytesToFileMetaMap(meta, ls[i].VersionId)
-			content := Content{}
-			content.ETag = "etag"
-			content.Key = ls[i].FileName
-			contentLen := header["contentLength"]
+	// fileName := prefix.Prefix
+	// var startObjectID primitive.ObjectID
+	// limitCount := 1000
+	// ls, err1 := objectAccessor.ListObject(bucketName, fileName, prefix.Prefix, isVersion2, startObjectID, uint32(limitCount))
+	// if err1 != nil {
+	// 	logrus.Info("Pull objects is error ", err1)
+	// }
+	// objects := ObjectList{}
+	// var contents []*Content
+	// if len(ls) > 0 {
+	// 	var header map[string]string
+	// 	for i := 0; i < len(ls); i++ {
+	// 		// object := ObjectList{}
+	// 		meta := ls[i].Meta
+	// 		header, _ = api.BytesToFileMetaMap(meta, ls[i].VersionId)
+	// 		content := Content{}
+	// 		content.ETag = "etag"
+	// 		content.Key = ls[i].FileName
+	// 		contentLen := header["contentLength"]
 
-			content.Size, err = strconv.ParseInt(contentLen, 10, 32)
-			if err != nil {
-				logrus.Error(err)
-			}
-			content.Owner.DisplayName = userName
-			contents = append(contents, &content)
-			// item.FileLength = header["contentLength"]
-			// item.TimeStamp = header["x-amz-date"]
-			// item.nVerid = ls[i].VersionId
-			// objectItems = append(objectItems, item)
-
-		}
-	}
-
-	objects, err := g.storage.ListBucket(bucketName, &prefix, page)
-
-	// if err != nil {
-	// 	if err == ErrInternalPageNotImplemented && !g.failOnUnimplementedPage {
-	// 		objects, err = g.storage.ListBucket(bucketName, &prefix, ListBucketPage{})
+	// 		content.Size, err = strconv.ParseInt(contentLen, 10, 32)
 	// 		if err != nil {
-	// 			return err
+	// 			logrus.Error(err)
 	// 		}
+	// 		content.Owner.DisplayName = userName
+	// 		contents = append(contents, &content)
+	// 		// item.FileLength = header["contentLength"]
+	// 		// item.TimeStamp = header["x-amz-date"]
+	// 		// item.nVerid = ls[i].VersionId
+	// 		// objectItems = append(objectItems, item)
 
-	// 	} else if err == ErrInternalPageNotImplemented && g.failOnUnimplementedPage {
-	// 		return ErrNotImplemented
-	// 	} else {
-	// 		return err
 	// 	}
 	// }
 
-	objects.Contents = contents
-	objects.prefixes = prefix.
+	objects, err := g.storage.ListBucket(bucketName, &prefix, page)
+
+	if err != nil {
+		if err == ErrInternalPageNotImplemented && !g.failOnUnimplementedPage {
+			objects, err = g.storage.ListBucket(bucketName, &prefix, ListBucketPage{})
+			if err != nil {
+				return err
+			}
+
+		} else if err == ErrInternalPageNotImplemented && g.failOnUnimplementedPage {
+			return ErrNotImplemented
+		} else {
+			return err
+		}
+	}
+
+	// objects.Contents = contents
 	base := ListBucketResultBase{
 		Xmlns:          "http://s3.amazonaws.com/doc/2006-03-01/",
 		Name:           bucketName,
