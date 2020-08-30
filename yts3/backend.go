@@ -42,7 +42,7 @@ func (p ListBucketPage) IsEmpty() bool {
 
 type Backend interface {
 	ListBuckets(publicKey string) ([]BucketInfo, error)
-	ListBucket(name string, prefix *Prefix, page ListBucketPage) (*ObjectList, error)
+	ListBucket(publicKey, name string, prefix *Prefix, page ListBucketPage) (*ObjectList, error)
 	CreateBucket(name string) error
 	BucketExists(name string) (exists bool, err error)
 	DeleteMulti(bucketName string, objects ...string) (MultiDeleteResult, error)

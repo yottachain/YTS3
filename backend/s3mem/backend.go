@@ -61,6 +61,7 @@ func New(opts ...Option) *Backend {
 	return b
 }
 
+//ListBuckets s3 list all buckets
 func (db *Backend) ListBuckets(publicKey string) ([]yts3.BucketInfo, error) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
@@ -83,7 +84,9 @@ func (db *Backend) ListBuckets(publicKey string) ([]yts3.BucketInfo, error) {
 	return buckets, nil
 }
 
-func (db *Backend) ListBucket(name string, prefix *yts3.Prefix, page yts3.ListBucketPage) (*yts3.ObjectList, error) {
+//ListBucket s3 listObjects
+func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page yts3.ListBucketPage) (*yts3.ObjectList, error) {
+
 	if prefix == nil {
 		prefix = emptyPrefix
 	}
@@ -92,9 +95,9 @@ func (db *Backend) ListBucket(name string, prefix *yts3.Prefix, page yts3.ListBu
 	defer db.lock.RUnlock()
 
 	storedBucket := db.buckets[name]
-	if storedBucket == nil {
-		return nil, yts3.BucketNotFound(name)
-	}
+	// if storedBucket == nil {
+	// 	return nil, yts3.BucketNotFound(name)
+	// }
 
 	var response = yts3.NewObjectList()
 	var iter = goskipiter.New(storedBucket.objects.Iterator())

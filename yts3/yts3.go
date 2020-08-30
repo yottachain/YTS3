@@ -119,9 +119,9 @@ func (g *Yts3) getBucketLocation(bucketName string, w http.ResponseWriter, r *ht
 }
 
 func (g *Yts3) listBucket(bucketName string, w http.ResponseWriter, r *http.Request) error {
-	// Authorization := r.Header.Get("Authorization")
-	// publicKey := GetBetweenStr(Authorization, "YTA", "/")
-	// content := publicKey[3:]
+	Authorization := r.Header.Get("Authorization")
+	publicKey := GetBetweenStr(Authorization, "YTA", "/")
+	content := publicKey[3:]
 	// fmt.Println("publicKey:", content)
 	// c := api.GetClient(content)
 	// userName := c.Username
@@ -176,11 +176,11 @@ func (g *Yts3) listBucket(bucketName string, w http.ResponseWriter, r *http.Requ
 	// 	}
 	// }
 
-	objects, err := g.storage.ListBucket(bucketName, &prefix, page)
+	objects, err := g.storage.ListBucket(content, bucketName, &prefix, page)
 
 	if err != nil {
 		if err == ErrInternalPageNotImplemented && !g.failOnUnimplementedPage {
-			objects, err = g.storage.ListBucket(bucketName, &prefix, ListBucketPage{})
+			objects, err = g.storage.ListBucket(content, bucketName, &prefix, ListBucketPage{})
 			if err != nil {
 				return err
 			}
