@@ -13,61 +13,61 @@ import (
 
 	"log"
 
+	"github.com/yottachain/YTCoreService/api"
+	"github.com/yottachain/YTCoreService/env"
 	"github.com/yottachain/YTS3/backend/s3mem"
-	"github.com/yottachain/YTS3/conf"
-	"github.com/yottachain/YTS3/routers"
 	"github.com/yottachain/YTS3/yts3"
 )
 
 func main() {
-	flag.Parse()
+	// flag.Parse()
 
-	var path string
-	if len(os.Args) > 1 {
-		if os.Args[1] != "" {
-			path = os.Args[1]
-		} else {
-			path = "conf/yotta_config.ini"
-		}
+	// var path string
+	// if len(os.Args) > 1 {
+	// 	if os.Args[1] != "" {
+	// 		path = os.Args[1]
+	// 	} else {
+	// 		path = "conf/yotta_config.ini"
+	// 	}
 
-	} else {
-		path = "conf/yotta_config.ini"
-	}
+	// } else {
+	// 	path = "conf/yotta_config.ini"
+	// }
 
-	cfg, err := conf.CreateConfig(path)
-	if err != nil {
-		panic(err)
-	}
+	// cfg, err := conf.CreateConfig(path)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	// 初始化SDK服务
 	// env.Console = true
 	// api.StartApi()
 
-	router := routers.InitRouter()
-	port := cfg.GetHTTPInfo("port")
-	err1 := router.Run(port)
-	if err1 != nil {
-		panic(err1)
-	}
-	// env.Console = true
-	// api.StartApi()
-	// go func() {
-	// 	for {
-
-	// 		_, err := api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
-	// 		if err == nil {
-	// 			break
-	// 		} else {
-	// 			time.Sleep(time.Second * 5)
-	// 			api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
-	// 		}
-	// 	}
-	// 	// logrus.Info("User Register Success,UserName:" + c.Username)
-	// 	// fmt.Println("UserID:", c.UserId)
-	// }()
-	// if err := run(); err != nil {
-	// 	log.Fatal(err)
+	// router := routers.InitRouter()
+	// port := cfg.GetHTTPInfo("port")
+	// err1 := router.Run(port)
+	// if err1 != nil {
+	// 	panic(err1)
 	// }
+	env.Console = true
+	api.StartApi()
+	go func() {
+		for {
+
+			_, err := api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
+			if err == nil {
+				break
+			} else {
+				time.Sleep(time.Second * 5)
+				api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
+			}
+		}
+		// logrus.Info("User Register Success,UserName:" + c.Username)
+		// fmt.Println("UserID:", c.UserId)
+	}()
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
 
 }
 

@@ -9,7 +9,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
-	"github.com/yottachain/YTS3/internal/goskipiter"
 	"github.com/yottachain/YTS3/yts3"
 )
 
@@ -87,60 +86,7 @@ func (db *Backend) ListBuckets(publicKey string) ([]yts3.BucketInfo, error) {
 //ListBucket s3 listObjects
 func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page yts3.ListBucketPage) (*yts3.ObjectList, error) {
 
-	if prefix == nil {
-		prefix = emptyPrefix
-	}
-
-	db.lock.RLock()
-	defer db.lock.RUnlock()
-
-	storedBucket := db.buckets[name]
-	// if storedBucket == nil {
-	// 	return nil, yts3.BucketNotFound(name)
-	// }
-
 	var response = yts3.NewObjectList()
-	var iter = goskipiter.New(storedBucket.objects.Iterator())
-	var match yts3.PrefixMatch
-
-	if page.Marker != "" {
-		iter.Seek(page.Marker)
-		iter.Next() // Move to the next item after the Marker
-	}
-
-	var cnt int64 = 0
-
-	var lastMatchedPart string
-
-	for iter.Next() {
-		item := iter.Value().(*bucketObject)
-
-		if !prefix.Match(item.data.name, &match) {
-			continue
-
-		} else if match.CommonPrefix {
-			if match.MatchedPart == lastMatchedPart {
-				continue // Should not count towards keys
-			}
-			response.AddPrefix(match.MatchedPart)
-			lastMatchedPart = match.MatchedPart
-
-		} else {
-			response.Add(&yts3.Content{
-				Key:          item.data.name,
-				LastModified: yts3.NewContentTime(item.data.lastModified),
-				ETag:         `"` + hex.EncodeToString(item.data.hash) + `"`,
-				Size:         int64(len(item.data.body)),
-			})
-		}
-
-		cnt++
-		if page.MaxKeys > 0 && cnt >= page.MaxKeys {
-			response.NextMarker = item.data.name
-			response.IsTruncated = iter.Next()
-			break
-		}
-	}
 
 	return response, nil
 }
