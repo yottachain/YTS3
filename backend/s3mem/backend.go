@@ -75,8 +75,13 @@ func (db *Backend) ListBuckets(publicKey string) ([]yts3.BucketInfo, error) {
 	len := len(names)
 	for i := 0; i < len; i++ {
 		bucketInfo := yts3.BucketInfo{}
+		bucket := bucket{}
+		bucket.name = names[i]
+		bucket.versioning = "Suspended"
+		bucket.creationDate = yts3.NewContentTime(time.Now())
 		bucketInfo.Name = names[i]
 		bucketInfo.CreationDate = yts3.NewContentTime(time.Now())
+		db.buckets[bucketInfo.Name] = &bucket
 		buckets = append(buckets, bucketInfo)
 	}
 
@@ -126,7 +131,7 @@ func (db *Backend) PutObject(bucketName, objectName string, meta map[string]stri
 	return result, nil
 }
 
-func (db *Backend) CreateBucket(name string) error {
+func (db *Backend) CreateBucket(publicKey, name string) error {
 	db.lock.Lock()
 	defer db.lock.Unlock()
 
@@ -134,7 +139,7 @@ func (db *Backend) CreateBucket(name string) error {
 		return yts3.ResourceError(yts3.ErrBucketAlreadyExists, name)
 	}
 
-	db.buckets[name] = newBucket(name, db.timeSource.Now(), db.nextVersion)
+	db.buckets[name] = newBucket(publicKey, name, db.timeSource.Now(), db.nextVersion)
 	return nil
 }
 

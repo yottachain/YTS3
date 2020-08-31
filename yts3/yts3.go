@@ -12,6 +12,8 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Yts3 struct {
@@ -122,11 +124,6 @@ func (g *Yts3) listBucket(bucketName string, w http.ResponseWriter, r *http.Requ
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
-	// fmt.Println("publicKey:", content)
-	// c := api.GetClient(content)
-	// userName := c.Username
-
-	// objectAccessor := c.NewObjectAccessor()
 
 	g.log.Print(LogInfo, "LIST BUCKET")
 
@@ -142,39 +139,6 @@ func (g *Yts3) listBucket(bucketName string, w http.ResponseWriter, r *http.Requ
 	g.log.Print(LogInfo, "bucketname:", bucketName)
 	g.log.Print(LogInfo, "prefix    :", prefix)
 	g.log.Print(LogInfo, "page      :", fmt.Sprintf("%+v", page))
-	// fileName := prefix.Prefix
-	// var startObjectID primitive.ObjectID
-	// limitCount := 1000
-	// ls, err1 := objectAccessor.ListObject(bucketName, fileName, prefix.Prefix, isVersion2, startObjectID, uint32(limitCount))
-	// if err1 != nil {
-	// 	logrus.Info("Pull objects is error ", err1)
-	// }
-	// objects := ObjectList{}
-	// var contents []*Content
-	// if len(ls) > 0 {
-	// 	var header map[string]string
-	// 	for i := 0; i < len(ls); i++ {
-	// 		// object := ObjectList{}
-	// 		meta := ls[i].Meta
-	// 		header, _ = api.BytesToFileMetaMap(meta, ls[i].VersionId)
-	// 		content := Content{}
-	// 		content.ETag = "etag"
-	// 		content.Key = ls[i].FileName
-	// 		contentLen := header["contentLength"]
-
-	// 		content.Size, err = strconv.ParseInt(contentLen, 10, 32)
-	// 		if err != nil {
-	// 			logrus.Error(err)
-	// 		}
-	// 		content.Owner.DisplayName = userName
-	// 		contents = append(contents, &content)
-	// 		// item.FileLength = header["contentLength"]
-	// 		// item.TimeStamp = header["x-amz-date"]
-	// 		// item.nVerid = ls[i].VersionId
-	// 		// objectItems = append(objectItems, item)
-
-	// 	}
-	// }
 
 	objects, err := g.storage.ListBucket(content, bucketName, &prefix, page)
 
@@ -310,7 +274,7 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 	}
 
 	if result.VersionID != "" {
-		g.log.Print(LogInfo, "CREATED VERSION:", bucket, object, result.VersionID)
+		logrus.Print(LogInfo, "CREATED VERSION:", bucket, object, result.VersionID)
 		w.Header().Set("x-amz-version-id", string(result.VersionID))
 	}
 	w.Header().Set("ETag", `"`+hex.EncodeToString(rdr.Sum(nil))+`"`)
@@ -319,12 +283,16 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 }
 
 func (g *Yts3) createBucket(bucket string, w http.ResponseWriter, r *http.Request) error {
-	g.log.Print(LogInfo, "CREATE BUCKET:", bucket)
+	logrus.Print(LogInfo, "CREATE BUCKET:", bucket)
+
+	Authorization := r.Header.Get("Authorization")
+	publicKey := GetBetweenStr(Authorization, "YTA", "/")
+	content := publicKey[3:]
 
 	if err := ValidateBucketName(bucket); err != nil {
 		return err
 	}
-	if err := g.storage.CreateBucket(bucket); err != nil {
+	if err := g.storage.CreateBucket(content, bucket); err != nil {
 		return err
 	}
 
