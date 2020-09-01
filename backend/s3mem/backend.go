@@ -96,13 +96,15 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 	return response, nil
 }
 
+//BucketExists BucketExists
 func (db *Backend) BucketExists(name string) (exists bool, err error) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
 	return db.buckets[name] != nil, nil
 }
 
-func (db *Backend) PutObject(bucketName, objectName string, meta map[string]string, input io.Reader, size int64) (result yts3.PutObjectResult, err error) {
+//PutObject upload file
+func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[string]string, input io.Reader, size int64) (result yts3.PutObjectResult, err error) {
 	bts, err := yts3.ReadAll(input, size)
 	if err != nil {
 		return result, err
@@ -126,11 +128,28 @@ func (db *Backend) PutObject(bucketName, objectName string, meta map[string]stri
 		metadata:     meta,
 		lastModified: db.timeSource.Now(),
 	}
-	bucket.put(objectName, item)
+	c := api.GetClient(publicKey)
+	upload := c.NewUploadObject()
+	resulthash, err1 := upload.UploadBytes(item.body)
+	if err1 != nil {
+		logrus.Printf("ERR", err1)
+	}
+	logrus.Info("upload hash etag:", item.etag)
+	logrus.Info("upload hash result:", hex.EncodeToString(resulthash))
+	//update meta data
+	metadata, err2 := api.FileMetaMapTobytes(item.metadata)
+	if err2 != nil {
+		logrus.Errorf("[FileMetaMapTobytes ]:%s\n", err2)
+	}
 
+	err3 := c.NewObjectAccessor().CreateObject(bucketName, objectName, upload.VNU, metadata)
+	if err3 != nil {
+		logrus.Errorf("[Save meta data ]:%s\n", err3)
+	}
 	return result, nil
 }
 
+//CreateBucket create bucket
 func (db *Backend) CreateBucket(publicKey, name string) error {
 	db.lock.Lock()
 	defer db.lock.Unlock()
@@ -149,7 +168,7 @@ func (db *Backend) nextVersion() yts3.VersionID {
 	return v
 }
 
-func (db *Backend) DeleteMulti(bucketName string, objects ...string) (result yts3.MultiDeleteResult, err error) {
+func (db *Backend) DeleteMulti(publicKey, bucketName string, objects ...string) (result yts3.MultiDeleteResult, err error) {
 	db.lock.Lock()
 	defer db.lock.Unlock()
 
@@ -161,7 +180,7 @@ func (db *Backend) DeleteMulti(bucketName string, objects ...string) (result yts
 	now := db.timeSource.Now()
 
 	for _, object := range objects {
-		dresult, err := bucket.rm(object, now)
+		dresult, err := bucket.rm(publicKey, object, now)
 		_ = dresult // FIXME: what to do with rm result in multi delete?
 
 		if err != nil {

@@ -121,11 +121,10 @@ func (g *Yts3) getBucketLocation(bucketName string, w http.ResponseWriter, r *ht
 }
 
 func (g *Yts3) listBucket(bucketName string, w http.ResponseWriter, r *http.Request) error {
+	logrus.Print(LogInfo, "LIST BUCKET")
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
-
-	g.log.Print(LogInfo, "LIST BUCKET")
 
 	q := r.URL.Query()
 	prefix := prefixFromQuery(q)
@@ -226,7 +225,10 @@ func listBucketPageFromQuery(query url.Values) (page ListBucketPage, rerr error)
 }
 
 func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *http.Request) (err error) {
-	g.log.Print(LogInfo, "CREATE OBJECT:", bucket, object)
+	logrus.Print(LogInfo, "CREATE OBJECT:", bucket, object)
+	Authorization := r.Header.Get("Authorization")
+	publicKey := GetBetweenStr(Authorization, "YTA", "/")
+	content := publicKey[3:]
 
 	meta, err := metadataHeaders(r.Header, g.timeSource.Now(), g.metadataSizeLimit)
 	if err != nil {
@@ -268,7 +270,7 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 		return err
 	}
 
-	result, err := g.storage.PutObject(bucket, object, meta, rdr, size)
+	result, err := g.storage.PutObject(content, bucket, object, meta, rdr, size)
 	if err != nil {
 		return err
 	}
@@ -409,8 +411,10 @@ func (g *Yts3) hostBucketMiddleware(handler http.Handler) http.Handler {
 }
 
 func (g *Yts3) deleteMulti(bucket string, w http.ResponseWriter, r *http.Request) error {
-	g.log.Print(LogInfo, "delete multi", bucket)
-
+	logrus.Print(LogInfo, "delete multi", bucket)
+	Authorization := r.Header.Get("Authorization")
+	publicKey := GetBetweenStr(Authorization, "YTA", "/")
+	content := publicKey[3:]
 	var in DeleteRequest
 
 	defer r.Body.Close()
@@ -424,7 +428,7 @@ func (g *Yts3) deleteMulti(bucket string, w http.ResponseWriter, r *http.Request
 		keys[i] = o.Key
 	}
 
-	out, err := g.storage.DeleteMulti(bucket, keys...)
+	out, err := g.storage.DeleteMulti(content, bucket, keys...)
 	if err != nil {
 		return err
 	}
@@ -437,8 +441,10 @@ func (g *Yts3) deleteMulti(bucket string, w http.ResponseWriter, r *http.Request
 }
 
 func (g *Yts3) createObjectBrowserUpload(bucket string, w http.ResponseWriter, r *http.Request) error {
-	g.log.Print(LogInfo, "CREATE OBJECT THROUGH BROWSER UPLOAD")
-
+	logrus.Print(LogInfo, "CREATE OBJECT THROUGH BROWSER UPLOAD")
+	Authorization := r.Header.Get("Authorization")
+	publicKey := GetBetweenStr(Authorization, "YTA", "/")
+	content := publicKey[3:]
 	const _24MB = (1 << 20) * 24
 	if err := r.ParseMultipartForm(_24MB); nil != err {
 		return ErrMalformedPOSTRequest
@@ -479,7 +485,7 @@ func (g *Yts3) createObjectBrowserUpload(bucket string, w http.ResponseWriter, r
 		return err
 	}
 
-	result, err := g.storage.PutObject(bucket, key, meta, rdr, fileHeader.Size)
+	result, err := g.storage.PutObject(content, bucket, key, meta, rdr, fileHeader.Size)
 	if err != nil {
 		return err
 	}

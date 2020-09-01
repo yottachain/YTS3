@@ -189,14 +189,6 @@ func run() error {
 		fmt.Println()
 		return fmt.Errorf("-backend is required")
 
-	// case "bolt":
-	// 	var err error
-	// 	backend, err = s3bolt.NewFile(values.boltDb, s3bolt.WithTimeSource(timeSource))
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	log.Println("using bolt backend with file", values.boltDb)
-
 	case "mem", "memory":
 		if values.initialBucket == "" {
 			log.Println("no buckets available; consider passing -initialbucket")
