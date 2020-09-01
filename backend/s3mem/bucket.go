@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/ryszard/goskiplist/skiplist"
+	"github.com/sirupsen/logrus"
+	"github.com/yottachain/YTCoreService/api"
 	"github.com/yottachain/YTS3/internal/s3io"
 	"github.com/yottachain/YTS3/yts3"
 )
@@ -23,9 +25,23 @@ type bucket struct {
 	objects *skiplist.SkipList
 }
 
-func newBucket(name string, at time.Time, versionGen versionGenFunc) *bucket {
+func newBucket(publicKey, bucketName string, at time.Time, versionGen versionGenFunc) *bucket {
+	c := api.GetClient(publicKey)
+	bucketAccessor := c.NewBucketAccessor()
+	var header map[string]string
+	header = make(map[string]string)
+
+	header["version_status"] = "Enabled"
+	meta, err := api.BucketMetaMapToBytes(header)
+	if err != nil {
+		logrus.Errorf("[CreateBucket meta map to bytes] ERR:%s\n", err)
+	}
+	err2 := bucketAccessor.CreateBucket(bucketName, meta)
+	if err2 != nil {
+		logrus.Error(err2)
+	}
 	return &bucket{
-		name:         name,
+		name:         bucketName,
 		creationDate: yts3.NewContentTime(at),
 		versionGen:   versionGen,
 		objects:      skiplist.NewStringMap(),
