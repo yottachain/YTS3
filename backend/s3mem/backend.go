@@ -101,6 +101,12 @@ func getContentByMeta(meta map[string]string)*yts3.Content{
 			content.Size = size
 		}
 	}
+	if contentLengthString,ok:=meta["contentLength"];ok{
+		size,err:=strconv.ParseInt(contentLengthString,10,64)
+		if err == nil {
+			content.Size = size
+		}
+	}	
 	if lastModifyString,ok:=meta["x-amz-meta-s3b-last-modified"];ok {
 		lastModifyTime,err:=time.Parse("20190108T135030Z",lastModifyString)
 		if err == nil {
@@ -136,6 +142,7 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 			response.Contents = append(response.Contents,content)			
 			if len(items)<1000 {
 				goto end
+				break;
 			} else {
 				filename = v.FileName
 			}
