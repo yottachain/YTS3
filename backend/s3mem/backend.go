@@ -120,11 +120,6 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 	c := api.GetClient(publicKey)
 	filename := ""
 	for {
-		// 如果 已经是最后一条了退出循环
-		if filename == "%end%"{
-			break
-		}
-
 		objectAccessor := c.NewObjectAccessor()
 		items,err:=objectAccessor.ListObject(name,filename,"",false,primitive.ObjectID{},1000)
 		if err != nil {
@@ -140,14 +135,13 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 			content.Key = v.FileName
 			response.Contents = append(response.Contents,content)			
 			if len(items)<1000 {
-				filename="%end%"
-				break
+				goto end
 			} else {
 				filename = v.FileName
 			}
 		}
 	}
-
+	end:
 	return response, nil
 }
 
