@@ -139,6 +139,10 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 			}
 			content := getContentByMeta(meta)
 			content.Key = v.FileName
+			content.Owner = &yts3.UserInfo{
+				ID:          c.Username,
+				DisplayName: c.Username,
+			}
 			response.Contents = append(response.Contents,content)			
 			if len(items)<1000 {
 				goto end
