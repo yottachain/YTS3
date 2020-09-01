@@ -3,7 +3,10 @@ package s3mem
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"io"
+	"strconv"
 	"sync"
 	"time"
 
@@ -83,10 +86,62 @@ func (db *Backend) ListBuckets(publicKey string) ([]yts3.BucketInfo, error) {
 	return buckets, nil
 }
 
+func getContentByMeta(meta map[string]string)*yts3.Content{
+	var content yts3.Content
+
+	content.ETag = meta["ETag"]
+	if contentLengthString,ok:=meta["content-length"];ok{
+		size,err:=strconv.ParseInt(contentLengthString,10,64)
+		if err == nil {
+			content.Size = size
+		}
+	}
+	if lastModifyString,ok:=meta["x-amz-meta-s3b-last-modified"];ok {
+		lastModifyTime,err:=time.Parse("20190108T135030Z",lastModifyString)
+		if err == nil {
+			content.LastModified = yts3.ContentTime{lastModifyTime}
+		}
+	}
+
+	return &content
+}
 //ListBucket s3 listObjects
 func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page yts3.ListBucketPage) (*yts3.ObjectList, error) {
+	db.lock.RLock()
+	defer db.lock.RUnlock()
 
 	var response = yts3.NewObjectList()
+
+	c := api.GetClient(publicKey)
+	filename := ""
+	for {
+		// 如果 已经是最后一条了退出循环
+		if filename == "%end%"{
+			break
+		}
+
+		objectAccessor := c.NewObjectAccessor()
+		items,err:=objectAccessor.ListObject(name,filename,"",false,primitive.ObjectID{},1000)
+		if err != nil {
+			return response,fmt.Errorf(err.String())
+		}
+		logrus.Printf("items len %d\n",len(items))
+		for _,v:= range items {
+			meta,err:=api.BytesToFileMetaMap(v.Meta,v.VersionId)
+			if err != nil {
+				continue
+			}
+			content := getContentByMeta(meta)
+			content.Key = v.FileName
+			response.Contents = append(response.Contents,content)			
+			if len(items)<1000 {
+				filename="%end%"
+				break
+			} else {
+				filename = v.FileName
+			}
+		}
+	}
 
 	return response, nil
 }
