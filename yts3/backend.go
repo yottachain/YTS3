@@ -47,6 +47,10 @@ type Backend interface {
 	BucketExists(name string) (exists bool, err error)
 	DeleteMulti(publicKey, bucketName string, objects ...string) (MultiDeleteResult, error)
 	PutObject(publicKey, bucketName, key string, meta map[string]string, input io.Reader, size int64) (PutObjectResult, error)
+	GetObject(publicKey, bucketName, objectName string, rangeRequest *ObjectRangeRequest) (*Object, error)
+	DeleteBucket(publicKey, name string) error
+	HeadObject(publicKey, bucketName, objectName string) (*Object, error)
+	DeleteObject(publicKey, bucketName, objectName string) (ObjectDeleteResult, error)
 }
 
 type VersionedBackend interface{}
