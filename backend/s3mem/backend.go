@@ -144,15 +144,12 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 				DisplayName: c.Username,
 			}
 			response.Contents = append(response.Contents,content)			
-			if len(items)<1000 {
-				goto end
-				break;
-			} else {
-				filename = v.FileName
-			}
+			filename = v.FileName
+		}
+		if len(items)<1000 {
+			break;
 		}
 	}
-	end:
 	return response, nil
 }
 
