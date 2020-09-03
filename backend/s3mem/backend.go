@@ -9,6 +9,7 @@ import (
 	"io"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -119,13 +120,13 @@ func getContentByMeta(meta map[string]string)*yts3.Content{
 }
 //ListBucket s3 listObjects
 func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page yts3.ListBucketPage) (*yts3.ObjectList, error) {
-	db.lock.RLock()
-	defer db.lock.RUnlock()
+	db.lock.Lock()
+	defer db.lock.RLock()
 
 	var response = yts3.NewObjectList()
 
 	c := api.GetClient(publicKey)
-	db.buckets[name].objects = skiplist.New()
+	sklist := skiplist.NewStringMap()
 
 	filename := ""
 	for {
@@ -135,6 +136,7 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 			return response,fmt.Errorf(err.String())
 		}
 		logrus.Printf("items len %d\n",len(items))
+		var i int32
 		for _,v:= range items {
 			meta,err:=api.BytesToFileMetaMap(v.Meta,v.VersionId)
 			if err != nil {
@@ -148,11 +150,15 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 			}
 			response.Contents = append(response.Contents,content)
 			filename = v.FileName
+			sklist.Set(v.FileName,&bucketObject{})
+			logrus.Printf("set %d-%d\n",i,len(items))
+			atomic.AddInt32(&i,1)
 		}
 		if len(items)<1000 {
 			break;
 		}
 	}
+	db.buckets[name].objects = sklist
 	return response, nil
 }
 
