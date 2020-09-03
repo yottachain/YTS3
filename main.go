@@ -1,12 +1,13 @@
 package main
 
 import (
-	"encoding/json"
 	"expvar"
 	"flag"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/env"
+	"github.com/yottachain/YTS3/conf"
+	"github.com/yottachain/YTS3/routers"
 	"net"
 	"net/http"
 	httppprof "net/http/pprof"
@@ -22,75 +23,83 @@ import (
 )
 
 func main() {
-	//flag.Parse()
-	//
-	//var path string
-	//if len(os.Args) > 1 {
-	//	if os.Args[1] != "" {
-	//		path = os.Args[1]
-	//	} else {
-	//		path = "conf/yotta_config.ini"
-	//	}
-	//
-	//} else {
-	//	path = "conf/yotta_config.ini"
-	//}
-	//
-	//cfg, err := conf.CreateConfig(path)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//
+	flag.Parse()
+
+	var path string
+	if len(os.Args) > 1 {
+		if os.Args[1] != "" {
+			path = os.Args[1]
+		} else {
+			path = "conf/yotta_config.ini"
+		}
+
+	} else {
+		path = "conf/yotta_config.ini"
+	}
+
+	cfg, err := conf.CreateConfig(path)
+	if err != nil {
+		panic(err)
+	}
+
 	////初始化SDK服务
 	//env.Console = true
 	//api.StartApi()
 	//
-	//router := routers.InitRouter()
-	//port := cfg.GetHTTPInfo("port")
-	//err1 := router.Run(port)
-	//if err1 != nil {
-	//	panic(err1)
-	//}
+	go func() {
+
+		router := routers.InitRouter()
+		port := cfg.GetHTTPInfo("port")
+		lsn,err:=net.Listen("tcp4",port)
+		if err !=nil {
+			logrus.Printf("HTTPServer start error %s\n",err)
+			return
+		}
+		err1 := router.RunListener(lsn)
+		if err1 != nil {
+			panic(err1)
+		}
+	}()
 	env.Console = true
 	api.StartApi()
 
 	go func() {
 		for {
 
-			//_, err := api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
-			//if err == nil {
-			//	break
-			//} else {
-			//	time.Sleep(time.Second * 5)
-			//	api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
-			//}
-			type userInfo struct {
-				Uname string `uname`
-				Privkey string `privkey`
-			}
-			var ui userInfo
-
-			server,err:=net.Listen("tcp4",":8080")
-
+			_, err := api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
 			if err == nil {
-				sm:=http.NewServeMux()
-				sm.HandleFunc("/api/v1/register",func(resp http.ResponseWriter,req *http.Request) {
-					dc:=json.NewDecoder(req.Body)
-					defer req.Body.Close()
-					if err:=dc.Decode(&ui);err != nil {
-						fmt.Fprintf(resp,"register failed %v %s\n",ui,err)
-						return
-					}
-					_,err=api.NewClient(ui.Uname,ui.Privkey)
-					if err != nil {
-						fmt.Fprintf(resp,"register failed %v %s\n",ui,err)
-						return
-					}
-					fmt.Fprintf(resp,"register success %v\n",ui)
-				})
-				logrus.Printf("HTTPServer start success 8080\n")
-				http.Serve(server, sm)
+				break
+			} else {
+				time.Sleep(time.Second * 5)
+				api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
 			}
+			//type userInfo struct {
+			//	Uname string `uname`
+			//	Privkey string `privkey`
+			//}
+			//var ui userInfo
+			//
+			//server,err:=net.Listen("tcp4",":8080")
+			//
+			//if err == nil {
+			//	sm:=http.NewServeMux()
+			//	sm.HandleFunc("/api/v1/register",func(resp http.ResponseWriter,req *http.Request) {
+			//		dc:=json.NewDecoder(req.Body)
+			//		defer req.Body.Close()
+			//		if err:=dc.Decode(&ui);err != nil {
+			//			fmt.Fprintf(resp,"register failed %v %s\n",ui,err)
+			//			return
+			//		}
+			//		_,err=api.NewClient(ui.Uname,ui.Privkey)
+			//		if err != nil {
+			//			fmt.Fprintf(resp,"register failed %v %s\n",ui,err)
+			//			return
+			//		}
+			//		fmt.Fprintf(resp,"register success %v\n",ui)
+			//	})
+			//	logrus.Printf("HTTPServer start success 8080\n")
+			//	http.Serve(server, sm)
+			//}
 		}
 		// logrus.Info("User Register Success,UserName:" + c.Username)
 		// fmt.Println("UserID:", c.UserId)

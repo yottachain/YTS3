@@ -26,6 +26,5 @@ func InitRouter() (router *gin.Engine) {
 		v1.GET("/getFileInfo", controller.GetFileBlockDetails)
 		v1.GET("/getFileAllInfo", controller.GetFileAllInfo)
 	}
-
 	return
 }
