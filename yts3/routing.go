@@ -91,6 +91,8 @@ func (g *Yts3) routeBucket(bucket string, w http.ResponseWriter, r *http.Request
 		}
 	case "PUT":
 		return g.createBucket(bucket, w, r)
+	case "DELETE":
+		return g.deleteBucket(bucket, w, r)
 
 	case "POST":
 		if _, ok := r.URL.Query()["delete"]; ok {

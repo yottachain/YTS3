@@ -319,19 +319,23 @@ func (db *Backend) DeleteObject(publicKey, bucketName, objectName string) (resul
 	return bucket.rm(publicKey, objectName, db.timeSource.Now())
 }
 
-func (db *Backend) DeleteBucket(publicKey, name string) error {
+func (db *Backend) DeleteBucket(publicKey, bucketName string) error {
 	db.lock.Lock()
 	defer db.lock.Unlock()
 
-	if db.buckets[name] == nil {
+	if db.buckets[bucketName] == nil {
 		return yts3.ErrNoSuchBucket
 	}
 
-	if db.buckets[name].objects.Len() > 0 {
-		return yts3.ResourceError(yts3.ErrBucketNotEmpty, name)
+	if db.buckets[bucketName].objects.Len() > 0 {
+		return yts3.ResourceError(yts3.ErrBucketNotEmpty, bucketName)
 	}
-
-	delete(db.buckets, name)
+	c := api.GetClient(publicKey)
+	bucketAccessor := c.NewBucketAccessor()
+	err := bucketAccessor.DeleteBucket(bucketName)
+	if err != nil {
+		logrus.Println(err)
+	}
 
 	return nil
 }
