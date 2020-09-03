@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/xml"
 	"fmt"
+	"io"
 	"net/http"
 	"net/textproto"
 	"net/url"
@@ -76,26 +77,11 @@ func (g *Yts3) listBuckets(w http.ResponseWriter, r *http.Request) error {
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
 	fmt.Println("publicKey:", content)
-	// c := api.GetClient(content)
-	// bucketAccessor := c.NewBucketAccessor()
-	// fmt.Println("UserName:", c.Username)
-	// names, err1 := bucketAccessor.ListBucket()
 
 	buckets, err := g.storage.ListBuckets(content)
 	if err != nil {
 		return err
 	}
-	// if err1 != nil {
-	// 	logrus.Errorf("[ListBucket ]AuthSuper ERR:%s\n", err1)
-	// }
-	// var buckets []BucketInfo
-	// len := len(names)
-	// for i := 0; i < len; i++ {
-	// 	bucketInfo := BucketInfo{}
-	// 	bucketInfo.Name = names[i]
-	// 	bucketInfo.CreationDate = NewContentTime(time.Now())
-	// 	buckets = append(buckets, bucketInfo)
-	// }
 
 	s := &Storage{
 		Xmlns:   "http://s3.amazonaws.com/doc/2006-03-01/",
@@ -121,11 +107,10 @@ func (g *Yts3) getBucketLocation(bucketName string, w http.ResponseWriter, r *ht
 }
 
 func (g *Yts3) listBucket(bucketName string, w http.ResponseWriter, r *http.Request) error {
+	logrus.Print(LogInfo, "LIST BUCKET")
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
-
-	g.log.Print(LogInfo, "LIST BUCKET")
 
 	q := r.URL.Query()
 	prefix := prefixFromQuery(q)
@@ -226,7 +211,10 @@ func listBucketPageFromQuery(query url.Values) (page ListBucketPage, rerr error)
 }
 
 func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *http.Request) (err error) {
-	g.log.Print(LogInfo, "CREATE OBJECT:", bucket, object)
+	logrus.Print(LogInfo, "CREATE OBJECT:", bucket, object)
+	Authorization := r.Header.Get("Authorization")
+	publicKey := GetBetweenStr(Authorization, "YTA", "/")
+	content := publicKey[3:]
 
 	meta, err := metadataHeaders(r.Header, g.timeSource.Now(), g.metadataSizeLimit)
 	if err != nil {
@@ -268,7 +256,7 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 		return err
 	}
 
-	result, err := g.storage.PutObject(bucket, object, meta, rdr, size)
+	result, err := g.storage.PutObject(content, bucket, object, meta, rdr, size)
 	if err != nil {
 		return err
 	}
@@ -408,9 +396,107 @@ func (g *Yts3) hostBucketMiddleware(handler http.Handler) http.Handler {
 	})
 }
 
-func (g *Yts3) deleteMulti(bucket string, w http.ResponseWriter, r *http.Request) error {
-	g.log.Print(LogInfo, "delete multi", bucket)
+func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.ResponseWriter, r *http.Request) error {
 
+	logrus.Print(LogInfo, "GET OBJECT")
+	logrus.Print(LogInfo, "Bucket:", bucket)
+	logrus.Print(LogInfo, "└── Object:", object)
+	Authorization := r.Header.Get("Authorization")
+	publicKey := GetBetweenStr(Authorization, "YTA", "/")
+	content := publicKey[3:]
+	rnge, err := parseRangeHeader(r.Header.Get("Range"))
+	if err != nil {
+		return err
+	}
+
+	var obj *Object
+
+	{
+		if versionID == "" {
+			obj, err = g.storage.GetObject(content, bucket, object, rnge)
+			if err != nil {
+				return err
+			}
+		} else {
+
+		}
+	}
+
+	if obj == nil {
+		g.log.Print(LogErr, "unexpected nil object for key", bucket, object)
+		return ErrInternal
+	}
+	defer obj.Contents.Close()
+
+	if err := g.writeGetOrHeadObjectResponse(obj, w, r); err != nil {
+		return err
+	}
+
+	obj.Range.writeHeader(obj.Size, w)
+
+	if _, err := io.Copy(w, obj.Contents); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (g *Yts3) headObject(
+	bucket, object string,
+	versionID VersionID,
+	w http.ResponseWriter,
+	r *http.Request,
+) error {
+
+	logrus.Println(LogInfo, "HEAD OBJECT")
+	logrus.Println(LogInfo, "Bucket:", bucket)
+	logrus.Println(LogInfo, "└── Object:", object)
+	Authorization := r.Header.Get("Authorization")
+	publicKey := GetBetweenStr(Authorization, "YTA", "/")
+	content := publicKey[3:]
+	obj, err := g.storage.HeadObject(content, bucket, object)
+	if err != nil {
+		return err
+	}
+	if obj == nil {
+		g.log.Print(LogErr, "unexpected nil object for key", bucket, object)
+		return ErrInternal
+	}
+	defer obj.Contents.Close()
+
+	if err := g.writeGetOrHeadObjectResponse(obj, w, r); err != nil {
+		return err
+	}
+
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", obj.Size))
+
+	return nil
+}
+
+func (g *Yts3) writeGetOrHeadObjectResponse(obj *Object, w http.ResponseWriter, r *http.Request) error {
+	if obj.IsDeleteMarker {
+		w.Header().Set("x-amz-version-id", string(obj.VersionID))
+		w.Header().Set("x-amz-delete-marker", "true")
+		return KeyNotFound(obj.Name)
+	}
+
+	for mk, mv := range obj.Metadata {
+		w.Header().Set(mk, mv)
+	}
+	w.Header().Set("Accept-Ranges", "bytes")
+	w.Header().Set("ETag", `"`+hex.EncodeToString(obj.Hash)+`"`)
+
+	if obj.VersionID != "" {
+		w.Header().Set("x-amz-version-id", string(obj.VersionID))
+	}
+	return nil
+}
+
+func (g *Yts3) deleteMulti(bucket string, w http.ResponseWriter, r *http.Request) error {
+	logrus.Print(LogInfo, "delete multi", bucket)
+	Authorization := r.Header.Get("Authorization")
+	publicKey := GetBetweenStr(Authorization, "YTA", "/")
+	content := publicKey[3:]
 	var in DeleteRequest
 
 	defer r.Body.Close()
@@ -424,7 +510,7 @@ func (g *Yts3) deleteMulti(bucket string, w http.ResponseWriter, r *http.Request
 		keys[i] = o.Key
 	}
 
-	out, err := g.storage.DeleteMulti(bucket, keys...)
+	out, err := g.storage.DeleteMulti(content, bucket, keys...)
 	if err != nil {
 		return err
 	}
@@ -437,8 +523,10 @@ func (g *Yts3) deleteMulti(bucket string, w http.ResponseWriter, r *http.Request
 }
 
 func (g *Yts3) createObjectBrowserUpload(bucket string, w http.ResponseWriter, r *http.Request) error {
-	g.log.Print(LogInfo, "CREATE OBJECT THROUGH BROWSER UPLOAD")
-
+	logrus.Print(LogInfo, "CREATE OBJECT THROUGH BROWSER UPLOAD")
+	Authorization := r.Header.Get("Authorization")
+	publicKey := GetBetweenStr(Authorization, "YTA", "/")
+	content := publicKey[3:]
 	const _24MB = (1 << 20) * 24
 	if err := r.ParseMultipartForm(_24MB); nil != err {
 		return ErrMalformedPOSTRequest
@@ -479,7 +567,7 @@ func (g *Yts3) createObjectBrowserUpload(bucket string, w http.ResponseWriter, r
 		return err
 	}
 
-	result, err := g.storage.PutObject(bucket, key, meta, rdr, fileHeader.Size)
+	result, err := g.storage.PutObject(content, bucket, key, meta, rdr, fileHeader.Size)
 	if err != nil {
 		return err
 	}
@@ -511,4 +599,28 @@ func ErrorResultFromError(err error) ErrorResult {
 	default:
 		return ErrorResult{Code: ErrInternal}
 	}
+}
+
+func (g *Yts3) deleteObject(bucket, object string, w http.ResponseWriter, r *http.Request) error {
+	logrus.Print(LogInfo, "DELETE:", bucket, object)
+	Authorization := r.Header.Get("Authorization")
+	publicKey := GetBetweenStr(Authorization, "YTA", "/")
+	content := publicKey[3:]
+	result, err := g.storage.DeleteObject(content, bucket, object)
+	if err != nil {
+		return err
+	}
+
+	if result.IsDeleteMarker {
+		w.Header().Set("x-amz-delete-marker", "true")
+	} else {
+		w.Header().Set("x-amz-delete-marker", "false")
+	}
+
+	if result.VersionID != "" {
+		w.Header().Set("x-amz-version-id", string(result.VersionID))
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+	return nil
 }

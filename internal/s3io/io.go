@@ -11,3 +11,7 @@ type NoOpReadCloser struct{}
 func (d NoOpReadCloser) Read(b []byte) (n int, err error) { return 0, io.EOF }
 
 func (d NoOpReadCloser) Close() error { return nil }
+
+// func Copy(dst Writer, src Reader) (written int64, err error) {
+// 	return copyBuffer(dst, src, nil)
+// }

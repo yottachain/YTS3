@@ -1,6 +1,8 @@
 package yts3
 
 import (
+	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 )
@@ -8,6 +10,16 @@ import (
 type ObjectRange struct {
 	Start, Length int64
 }
+
+func (o *ObjectRange) writeHeader(sz int64, w http.ResponseWriter) {
+	if o != nil {
+		w.Header().Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", o.Start, o.Start+o.Length-1, sz))
+		w.Header().Set("Content-Length", fmt.Sprintf("%d", o.Length))
+	} else {
+		w.Header().Set("Content-Length", fmt.Sprintf("%d", sz))
+	}
+}
+
 type ObjectRangeRequest struct {
 	Start, End int64
 	FromEnd    bool
@@ -52,6 +64,10 @@ func (o *ObjectRangeRequest) Range(size int64) (*ObjectRange, error) {
 	return &ObjectRange{Start: start, Length: length}, nil
 }
 
+// parseRangeHeader parses a single byte range from the Range header.
+//
+// Amazon S3 doesn't support retrieving multiple ranges of data per GET request:
+// https://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectGET.html
 func parseRangeHeader(s string) (*ObjectRangeRequest, error) {
 	if s == "" {
 		return nil, nil

@@ -45,8 +45,12 @@ type Backend interface {
 	ListBucket(publicKey, name string, prefix *Prefix, page ListBucketPage) (*ObjectList, error)
 	CreateBucket(publicKey, name string) error
 	BucketExists(name string) (exists bool, err error)
-	DeleteMulti(bucketName string, objects ...string) (MultiDeleteResult, error)
-	PutObject(bucketName, key string, meta map[string]string, input io.Reader, size int64) (PutObjectResult, error)
+	DeleteMulti(publicKey, bucketName string, objects ...string) (MultiDeleteResult, error)
+	PutObject(publicKey, bucketName, key string, meta map[string]string, input io.Reader, size int64) (PutObjectResult, error)
+	GetObject(publicKey, bucketName, objectName string, rangeRequest *ObjectRangeRequest) (*Object, error)
+	DeleteBucket(publicKey, name string) error
+	HeadObject(publicKey, bucketName, objectName string) (*Object, error)
+	DeleteObject(publicKey, bucketName, objectName string) (ObjectDeleteResult, error)
 }
 
 type VersionedBackend interface{}

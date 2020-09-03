@@ -66,14 +66,14 @@ func (g *Yts3) routeBase(w http.ResponseWriter, r *http.Request) {
 // object path segment.
 func (g *Yts3) routeObject(bucket, object string, w http.ResponseWriter, r *http.Request) (err error) {
 	switch r.Method {
-	// case "GET":
-	// 	return g.getObject(bucket, object, "", w, r)
-	// case "HEAD":
-	// 	return g.headObject(bucket, object, "", w, r)
+	case "GET":
+		return g.getObject(bucket, object, "", w, r)
+	case "HEAD":
+		return g.headObject(bucket, object, "", w, r)
 	case "PUT":
 		return g.createObject(bucket, object, w, r)
-	// case "DELETE":
-	// 	return g.deleteObject(bucket, object, w, r)
+	case "DELETE":
+		return g.deleteObject(bucket, object, w, r)
 	default:
 		return ErrMethodNotAllowed
 	}
@@ -103,71 +103,12 @@ func (g *Yts3) routeBucket(bucket string, w http.ResponseWriter, r *http.Request
 	}
 }
 
-// routeMultipartUploadBase operates on routes that contain '?uploads' in the
-// query string. These routes may or may not have a value for bucket or object;
-// this is validated and handled in the target handler functions.
 // func (g *Yts3) routeMultipartUploadBase(bucket, object string, w http.ResponseWriter, r *http.Request) error {
 // 	switch r.Method {
 // 	case "GET":
 // 		return g.listMultipartUploads(bucket, w, r)
 // 	case "POST":
 // 		return g.initiateMultipartUpload(bucket, object, w, r)
-// 	default:
-// 		return ErrMethodNotAllowed
-// 	}
-// }
-
-// routeVersioningBase operates on routes that contain '?versioning' in the
-// query string. These routes may or may not have a value for bucket; this is
-// validated and handled in the target handler functions.
-// func (g *Yts3) routeVersioning(bucket string, w http.ResponseWriter, r *http.Request) error {
-// 	switch r.Method {
-// 	case "GET":
-// 		return g.getBucketVersioning(bucket, w, r)
-// 	case "PUT":
-// 		return g.putBucketVersioning(bucket, w, r)
-// 	default:
-// 		return ErrMethodNotAllowed
-// 	}
-// }
-
-// routeVersions operates on routes that contain '?versions' in the query string.
-// func (g *Yts3) routeVersions(bucket string, w http.ResponseWriter, r *http.Request) error {
-// 	switch r.Method {
-// 	case "GET":
-// 		return g.listBucketVersions(bucket, w, r)
-// 	default:
-// 		return ErrMethodNotAllowed
-// 	}
-// }
-
-// routeVersion operates on routes that contain '?versionId=<id>' in the
-// query string.
-// func (g *Yts3) routeVersion(bucket, object string, versionID VersionID, w http.ResponseWriter, r *http.Request) error {
-// 	switch r.Method {
-// 	case "GET":
-// 		return g.getObject(bucket, object, versionID, w, r)
-// 	case "HEAD":
-// 		return g.headObject(bucket, object, versionID, w, r)
-// 	case "DELETE":
-// 		return g.deleteObjectVersion(bucket, object, versionID, w, r)
-// 	default:
-// 		return ErrMethodNotAllowed
-// 	}
-// }
-
-// routeMultipartUpload operates on routes that contain '?uploadId=<id>' in the
-// query string.
-// func (g *Yts3) routeMultipartUpload(bucket, object string, uploadID UploadID, w http.ResponseWriter, r *http.Request) error {
-// 	switch r.Method {
-// 	case "GET":
-// 		return g.listMultipartUploadParts(bucket, object, uploadID, w, r)
-// 	case "PUT":
-// 		return g.putMultipartUploadPart(bucket, object, uploadID, w, r)
-// 	case "DELETE":
-// 		return g.abortMultipartUpload(bucket, object, uploadID, w, r)
-// 	case "POST":
-// 		return g.completeMultipartUpload(bucket, object, uploadID, w, r)
 // 	default:
 // 		return ErrMethodNotAllowed
 // 	}

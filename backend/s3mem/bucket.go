@@ -213,7 +213,7 @@ func (b *bucket) objectVersion(objectName string, versionID yts3.VersionID) (*bu
 	return versionIface.(*bucketData), nil
 }
 
-func (b *bucket) put(name string, item *bucketData) {
+func (b *bucket) put(publicKey, name string, item *bucketData) {
 	item.versionID = b.versionGen()
 
 	object := b.object(name)
@@ -236,7 +236,7 @@ func (b *bucket) put(name string, item *bucketData) {
 	object.data = item
 }
 
-func (b *bucket) rm(name string, at time.Time) (result yts3.ObjectDeleteResult, rerr error) {
+func (b *bucket) rm(publicKey, name string, at time.Time) (result yts3.ObjectDeleteResult, rerr error) {
 	object := b.object(name)
 	if object == nil {
 		// S3 does not report an error when attemping to delete a key that does not exist
@@ -245,7 +245,7 @@ func (b *bucket) rm(name string, at time.Time) (result yts3.ObjectDeleteResult, 
 
 	if b.versioning == yts3.VersioningEnabled {
 		item := &bucketData{lastModified: at, name: name, deleteMarker: true}
-		b.put(name, item)
+		b.put(publicKey, name, item)
 		result.IsDeleteMarker = true
 		result.VersionID = item.versionID
 
