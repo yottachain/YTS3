@@ -185,14 +185,12 @@ func (b *bucket) setVersioning(enabled bool) {
 }
 
 func (b *bucket) object(objectName string) (obj *bucketObject) {
+
 	objIface, _ := b.objects.Get(objectName)
 	if objIface == nil {
 		return nil
 	}
 	obj, _ = objIface.(*bucketObject)
-	if err:=recover();err != nil {
-		return nil
-	}
 	return obj
 }
 

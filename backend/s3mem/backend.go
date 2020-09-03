@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"github.com/ryszard/goskiplist/skiplist"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"io"
 	"strconv"
@@ -124,6 +125,8 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 	var response = yts3.NewObjectList()
 
 	c := api.GetClient(publicKey)
+	db.buckets[name].objects = skiplist.New()
+
 	filename := ""
 	for {
 		objectAccessor := c.NewObjectAccessor()
@@ -143,7 +146,7 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 				ID:          c.Username,
 				DisplayName: c.Username,
 			}
-			response.Contents = append(response.Contents,content)			
+			response.Contents = append(response.Contents,content)
 			filename = v.FileName
 		}
 		if len(items)<1000 {
