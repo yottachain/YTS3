@@ -55,6 +55,7 @@ func main() {
 			logrus.Printf("HTTPServer start error %s\n",err)
 			return
 		}
+		logrus.Printf("HTTPServer start Success %s\n",port)
 		err1 := router.RunListener(lsn)
 		if err1 != nil {
 			panic(err1)
