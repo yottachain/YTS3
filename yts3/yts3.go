@@ -402,6 +402,12 @@ func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.Resp
 	logrus.Print(LogInfo, "Bucket:", bucket)
 	logrus.Print(LogInfo, "└── Object:", object)
 	Authorization := r.Header.Get("Authorization")
+
+	// debug 调试用
+	if Authorization == "" {
+		Authorization="YTA5ESq7wZMs2f83sRoAXzB8nsWotKMYeG2CRn7MmmAWPiwYfTHfU"
+	}
+	
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
 	rnge, err := parseRangeHeader(r.Header.Get("Range"))

@@ -64,47 +64,20 @@ func main() {
 	env.Console = true
 	api.StartApi()
 
-	//go func() {
-	//	for {
-	//
-	//		_, err := api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
-	//		if err == nil {
-	//			break
-	//		} else {
-	//			time.Sleep(time.Second * 5)
-	//			api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
-	//		}
-	//		//type userInfo struct {
-	//		//	Uname string `uname`
-	//		//	Privkey string `privkey`
-	//		//}
-	//		//var ui userInfo
-	//		//
-	//		//server,err:=net.Listen("tcp4",":8080")
-	//		//
-	//		//if err == nil {
-	//		//	sm:=http.NewServeMux()
-	//		//	sm.HandleFunc("/api/v1/register",func(resp http.ResponseWriter,req *http.Request) {
-	//		//		dc:=json.NewDecoder(req.Body)
-	//		//		defer req.Body.Close()
-	//		//		if err:=dc.Decode(&ui);err != nil {
-	//		//			fmt.Fprintf(resp,"register failed %v %s\n",ui,err)
-	//		//			return
-	//		//		}
-	//		//		_,err=api.NewClient(ui.Uname,ui.Privkey)
-	//		//		if err != nil {
-	//		//			fmt.Fprintf(resp,"register failed %v %s\n",ui,err)
-	//		//			return
-	//		//		}
-	//		//		fmt.Fprintf(resp,"register success %v\n",ui)
-	//		//	})
-	//		//	logrus.Printf("HTTPServer start success 8080\n")
-	//		//	http.Serve(server, sm)
-	//		//}
-	//	}
-	//	// logrus.Info("User Register Success,UserName:" + c.Username)
-	//	// fmt.Println("UserID:", c.UserId)
-	//}()
+	go func() {
+		for {
+
+			_, err := api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
+			if err == nil {
+				break
+			} else {
+				time.Sleep(time.Second * 5)
+				api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
+			}
+		}
+		// logrus.Info("User Register Success,UserName:" + c.Username)
+		// fmt.Println("UserID:", c.UserId)
+	}()
 	if err := run(); err != nil {
 		log.Fatal(err)
 	}
