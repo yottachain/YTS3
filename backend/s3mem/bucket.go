@@ -153,7 +153,7 @@ func (bi *bucketData) toObject(rangeRequest *yts3.ObjectRangeRequest, withBody b
 		}
 
 		if rnge != nil {
-			data = data[rnge.Start : rnge.Start+rnge.Length]
+			// data =
 		}
 
 		// The data slice should be completely replaced if the bucket item is edited, so

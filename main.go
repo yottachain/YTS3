@@ -13,63 +13,119 @@ import (
 
 	"log"
 
+	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
 	"github.com/yottachain/YTCoreService/env"
 	"github.com/yottachain/YTS3/backend/s3mem"
+	"github.com/yottachain/YTS3/conf"
+	"github.com/yottachain/YTS3/routers"
 	"github.com/yottachain/YTS3/yts3"
 )
 
 func main() {
-	// flag.Parse()
-
-	// var path string
-	// if len(os.Args) > 1 {
-	// 	if os.Args[1] != "" {
-	// 		path = os.Args[1]
-	// 	} else {
-	// 		path = "conf/yotta_config.ini"
-	// 	}
-
-	// } else {
-	// 	path = "conf/yotta_config.ini"
-	// }
-
-	// cfg, err := conf.CreateConfig(path)
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// 初始化SDK服务
-	// env.Console = true
-	// api.StartApi()
-
-	// router := routers.InitRouter()
-	// port := cfg.GetHTTPInfo("port")
-	// err1 := router.Run(port)
-	// if err1 != nil {
-	// 	panic(err1)
-	// }
+	flag.Parse()
+	var path string
+	if len(os.Args) > 1 {
+		if os.Args[1] != "" {
+			path = os.Args[1]
+		} else {
+			path = "conf/yotta_config.ini"
+		}
+	} else {
+		path = "conf/yotta_config.ini"
+	}
+	cfg, err := conf.CreateConfig(path)
+	if err != nil {
+		panic(err)
+	}
+	////初始化SDK服务
+	//env.Console = true
+	//api.StartApi()
+	//
+	go func() {
+		router := routers.InitRouter()
+		port := cfg.GetHTTPInfo("port")
+		lsn, err := net.Listen("tcp4", port)
+		if err != nil {
+			logrus.Printf("HTTPServer start error %s\n", err)
+			return
+		}
+		logrus.Printf("HTTPServer start Success %s\n", port)
+		err1 := router.RunListener(lsn)
+		if err1 != nil {
+			panic(err1)
+		}
+	}()
 	env.Console = true
 	api.StartApi()
-	go func() {
-		for {
+	// go func() {
+	// 	for {
+	// 		_, err := api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
+	// 		if err == nil {
+	// 			break
+	// 		} else {
+	// 			time.Sleep(time.Second * 5)
+	// 			api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
+	// 		}
 
-			_, err := api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
-			if err == nil {
-				break
-			} else {
-				time.Sleep(time.Second * 5)
-				api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
-			}
-		}
-		// logrus.Info("User Register Success,UserName:" + c.Username)
-		// fmt.Println("UserID:", c.UserId)
-	}()
+	// 	}
+	// }()
 	if err := run(); err != nil {
 		log.Fatal(err)
 	}
-
 }
+
+// func main() {
+// 	// flag.Parse()
+
+// 	// var path string
+// 	// if len(os.Args) > 1 {
+// 	// 	if os.Args[1] != "" {
+// 	// 		path = os.Args[1]
+// 	// 	} else {
+// 	// 		path = "conf/yotta_config.ini"
+// 	// 	}
+
+// 	// } else {
+// 	// 	path = "conf/yotta_config.ini"
+// 	// }
+
+// 	// cfg, err := conf.CreateConfig(path)
+// 	// if err != nil {
+// 	// 	panic(err)
+// 	// }
+
+// 	// 初始化SDK服务
+// 	// env.Console = true
+// 	// api.StartApi()
+
+// 	// router := routers.InitRouter()
+// 	// port := cfg.GetHTTPInfo("port")
+// 	// err1 := router.Run(port)
+// 	// if err1 != nil {
+// 	// 	panic(err1)
+// 	// }
+// 	env.Console = true
+// 	api.StartApi()
+// 	go func() {
+// 		for {
+
+// 			_, err := api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
+// 			if err == nil {
+// 				break
+// 			} else {
+// 				time.Sleep(time.Second * 5)
+// 				api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
+// 			}
+// 		}
+// 		// logrus.Info("User Register Success,UserName:" + c.Username)
+// 		// fmt.Println("UserID:", c.UserId)
+// 	}()
+// 	if err := run(); err != nil {
+// 		log.Fatal(err)
+// 	}
+
+// }
 
 type yts3Flags struct {
 	host          string
