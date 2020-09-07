@@ -9,7 +9,6 @@ import (
 	"io"
 	"strconv"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -120,8 +119,8 @@ func getContentByMeta(meta map[string]string)*yts3.Content{
 }
 //ListBucket s3 listObjects
 func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page yts3.ListBucketPage) (*yts3.ObjectList, error) {
-	db.lock.Lock()
-	defer db.lock.Unlock()
+	db.lock.RLock()
+	defer db.lock.RUnlock()
 
 	var response = yts3.NewObjectList()
 
@@ -136,7 +135,6 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 			return response,fmt.Errorf(err.String())
 		}
 		logrus.Printf("items len %d\n",len(items))
-		var i int32
 		for _,v:= range items {
 			meta,err:=api.BytesToFileMetaMap(v.Meta,v.VersionId)
 			if err != nil {
@@ -150,9 +148,16 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 			}
 			response.Contents = append(response.Contents,content)
 			filename = v.FileName
-			sklist.Set(v.FileName,&bucketObject{})
-			logrus.Printf("set %d-%d\n",i,len(items))
-			atomic.AddInt32(&i,1)
+			hash,_:= hex.DecodeString(meta["ETag"])
+			sklist.Set(v.FileName,&bucketObject{
+				name:v.FileName,
+				data: &bucketData{
+					name: v.FileName,
+					hash: hash,
+					metadata:meta,
+					lastModified: content.LastModified.Time,
+				},
+			})
 		}
 		if len(items)<1000 {
 			break;
@@ -287,7 +292,6 @@ func (db *Backend) HeadObject(publicKey, bucketName, objectName string) (*yts3.O
 	if obj == nil || obj.data.deleteMarker {
 		return nil, yts3.KeyNotFound(objectName)
 	}
-
 	return obj.data.toObject(nil, false)
 }
 
@@ -313,6 +317,14 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 	if bucket.versioning != yts3.VersioningEnabled {
 		result.VersionID = ""
 	}
+
+	c := api.GetClient(publicKey)
+	download,errMsg := c.NewDownloadFile(bucketName,objectName,primitive.NilObjectID)
+	if errMsg != nil {
+		logrus.Printf("%v\n",errMsg)
+	}
+	result.Contents=download.Load().(io.ReadCloser)
+	logrus.Printf("size %d\n",obj.data.)
 
 	return result, nil
 }

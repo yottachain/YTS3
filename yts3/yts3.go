@@ -405,7 +405,7 @@ func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.Resp
 
 	// debug 调试用
 	if Authorization == "" {
-		Authorization="YTA5ESq7wZMs2f83sRoAXzB8nsWotKMYeG2CRn7MmmAWPiwYfTHfU"
+		Authorization="YTA7YW7xoyFzUPBQh4T2wj6hfrGLukBWYBZLUjiE1MkeVLFymMS21"
 	}
 	
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")

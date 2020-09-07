@@ -67,12 +67,12 @@ func main() {
 	go func() {
 		for {
 
-			_, err := api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
+			_, err := api.NewClient("devtestuser4", "5JDYRHvNaWENtEpuugw9xqb8MS2AbefpBQvaFg3iq3cxPALg6XZ")
 			if err == nil {
 				break
 			} else {
 				time.Sleep(time.Second * 5)
-				api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
+				api.NewClient("devtestuser4", "5JDYRHvNaWENtEpuugw9xqb8MS2AbefpBQvaFg3iq3cxPALg6XZ")
 			}
 		}
 		// logrus.Info("User Register Success,UserName:" + c.Username)
