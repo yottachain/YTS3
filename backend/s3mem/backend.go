@@ -121,7 +121,7 @@ func getContentByMeta(meta map[string]string)*yts3.Content{
 //ListBucket s3 listObjects
 func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page yts3.ListBucketPage) (*yts3.ObjectList, error) {
 	db.lock.Lock()
-	defer db.lock.RLock()
+	defer db.lock.Unlock()
 
 	var response = yts3.NewObjectList()
 
