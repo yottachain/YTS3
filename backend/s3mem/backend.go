@@ -313,6 +313,8 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 	if err != nil {
 		return nil, err
 	}
+	content:=getContentByMeta(result.Metadata)
+	result.Size = content.Size
 
 	if bucket.versioning != yts3.VersioningEnabled {
 		result.VersionID = ""
@@ -324,7 +326,6 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 		logrus.Printf("%v\n",errMsg)
 	}
 	result.Contents=download.Load().(io.ReadCloser)
-	logrus.Printf("size %d\n",obj.data.)
 
 	return result, nil
 }
