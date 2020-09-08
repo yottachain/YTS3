@@ -396,16 +396,21 @@ func (g *Yts3) hostBucketMiddleware(handler http.Handler) http.Handler {
 	})
 }
 
-//w http.ResponseWriter, r *http.Request
 func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.ResponseWriter, r *http.Request) error {
 
 	logrus.Print(LogInfo, "GET OBJECT")
 	logrus.Print(LogInfo, "Bucket:", bucket)
 	logrus.Print(LogInfo, "└── Object:", object)
-	// Authorization := r.Header.Get("Authorization")
-	// publicKey := GetBetweenStr(Authorization, "YTA", "/")
-	// content := publicKey[3:]
-	content := "5ESq7wZMs2f83sRoAXzB8nsWotKMYeG2CRn7MmmAWPiwYfTHfU"
+	Authorization := r.Header.Get("Authorization")
+
+	// debug 调试用
+	if Authorization == "" {
+		logrus.Info("publicKey is null")
+		// return
+	}
+
+	publicKey := GetBetweenStr(Authorization, "YTA", "/")
+	content := publicKey[3:]
 	rnge, err := parseRangeHeader(r.Header.Get("Range"))
 	if err != nil {
 		return err
@@ -443,12 +448,7 @@ func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.Resp
 	return nil
 }
 
-func (g *Yts3) headObject(
-	bucket, object string,
-	versionID VersionID,
-	w http.ResponseWriter,
-	r *http.Request,
-) error {
+func (g *Yts3) headObject(bucket, object string, versionID VersionID, w http.ResponseWriter, r *http.Request) error {
 
 	logrus.Println(LogInfo, "HEAD OBJECT")
 	logrus.Println(LogInfo, "Bucket:", bucket)

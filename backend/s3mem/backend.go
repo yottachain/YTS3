@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ryszard/goskiplist/skiplist"
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
 	"github.com/yottachain/YTS3/yts3"
@@ -123,6 +124,8 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 	var response = yts3.NewObjectList()
 
 	c := api.GetClient(publicKey)
+	sklist := skiplist.NewStringMap()
+
 	filename := ""
 	for {
 		objectAccessor := c.NewObjectAccessor()
@@ -144,11 +147,22 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 			}
 			response.Contents = append(response.Contents, content)
 			filename = v.FileName
+			hash, _ := hex.DecodeString(meta["ETag"])
+			sklist.Set(v.FileName, &bucketObject{
+				name: v.FileName,
+				data: &bucketData{
+					name:         v.FileName,
+					hash:         hash,
+					metadata:     meta,
+					lastModified: content.LastModified.Time,
+				},
+			})
 		}
 		if len(items) < 1000 {
 			break
 		}
 	}
+	db.buckets[name].objects = sklist
 	return response, nil
 }
 
@@ -243,7 +257,7 @@ func (db *Backend) DeleteMulti(publicKey, bucketName string, objects ...string) 
 	now := db.timeSource.Now()
 
 	for _, object := range objects {
-		dresult, err := bucket.rm(publicKey, object, now)
+		dresult, err := bucket.rm(publicKey, bucketName, object, now)
 		_ = dresult // FIXME: what to do with rm result in multi delete?
 
 		if err != nil {
@@ -277,7 +291,6 @@ func (db *Backend) HeadObject(publicKey, bucketName, objectName string) (*yts3.O
 	if obj == nil || obj.data.deleteMarker {
 		return nil, yts3.KeyNotFound(objectName)
 	}
-
 	return obj.data.toObject(nil, false)
 }
 
@@ -299,13 +312,48 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 	if err != nil {
 		return nil, err
 	}
+	content := getContentByMeta(result.Metadata)
+	result.Size = content.Size
 
 	if bucket.versioning != yts3.VersioningEnabled {
 		result.VersionID = ""
 	}
 
+	c := api.GetClient(publicKey)
+	download, errMsg := c.NewDownloadFile(bucketName, objectName, primitive.NilObjectID)
+	if errMsg != nil {
+		logrus.Printf("%v\n", errMsg)
+	}
+	result.Contents = download.Load().(io.ReadCloser)
+
 	return result, nil
 }
+
+// func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequest *yts3.ObjectRangeRequest) (*yts3.Object, error) {
+// 	db.lock.RLock()
+// 	defer db.lock.RUnlock()
+
+// 	bucket := db.buckets[bucketName]
+// 	if bucket == nil {
+// 		return nil, yts3.BucketNotFound(bucketName)
+// 	}
+
+// 	obj := bucket.object(objectName)
+// 	if obj == nil || obj.data.deleteMarker {
+// 		return nil, yts3.KeyNotFound(objectName)
+// 	}
+
+// 	result, err := obj.data.toObject(rangeRequest, true)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	if bucket.versioning != yts3.VersioningEnabled {
+// 		result.VersionID = ""
+// 	}
+
+// 	return result, nil
+// }
 
 func (db *Backend) DeleteObject(publicKey, bucketName, objectName string) (result yts3.ObjectDeleteResult, rerr error) {
 	db.lock.Lock()
@@ -316,7 +364,7 @@ func (db *Backend) DeleteObject(publicKey, bucketName, objectName string) (resul
 		return result, yts3.BucketNotFound(bucketName)
 	}
 
-	return bucket.rm(publicKey, objectName, db.timeSource.Now())
+	return bucket.rm(publicKey, bucketName, objectName, db.timeSource.Now())
 }
 
 func (db *Backend) DeleteBucket(publicKey, bucketName string) error {

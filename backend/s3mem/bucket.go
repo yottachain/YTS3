@@ -10,6 +10,7 @@ import (
 	"github.com/yottachain/YTCoreService/api"
 	"github.com/yottachain/YTS3/internal/s3io"
 	"github.com/yottachain/YTS3/yts3"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type versionGenFunc func() yts3.VersionID
@@ -236,24 +237,26 @@ func (b *bucket) put(publicKey, name string, item *bucketData) {
 	object.data = item
 }
 
-func (b *bucket) rm(publicKey, name string, at time.Time) (result yts3.ObjectDeleteResult, rerr error) {
-	object := b.object(name)
+func (b *bucket) rm(publicKey, bucketName, objectName string, at time.Time) (result yts3.ObjectDeleteResult, rerr error) {
+	object := b.object(objectName)
 	if object == nil {
 		// S3 does not report an error when attemping to delete a key that does not exist
 		return result, nil
 	}
 
 	if b.versioning == yts3.VersioningEnabled {
-		item := &bucketData{lastModified: at, name: name, deleteMarker: true}
-		b.put(publicKey, name, item)
+		item := &bucketData{lastModified: at, name: objectName, deleteMarker: true}
+		b.put(publicKey, objectName, item)
 		result.IsDeleteMarker = true
 		result.VersionID = item.versionID
 
 	} else {
-		// object.data = nil
-		// if object.versions == nil || object.versions.Len() == 0 {
-		// 	b.objects.Delete(name)
-		// }
+		c := api.GetClient(publicKey)
+		objectAccessor := c.NewObjectAccessor()
+		err := objectAccessor.DeleteObject(bucketName, objectName, primitive.ObjectID{})
+		if err != nil {
+
+		}
 	}
 
 	return result, nil
