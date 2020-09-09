@@ -38,10 +38,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	////初始化SDK服务
-	//env.Console = true
-	//api.StartApi()
-	//
+
 	go func() {
 		router := routers.InitRouter()
 		port := cfg.GetHTTPInfo("port")
@@ -58,75 +55,10 @@ func main() {
 	}()
 	env.Console = true
 	api.StartApi()
-
-	// go func() {
-	// 	for {
-	// 		_, err := api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
-	// 		if err == nil {
-	// 			break
-	// 		} else {
-	// 			time.Sleep(time.Second * 5)
-	// 			api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
-	// 		}
-
-	// 	}
-	// }()
 	if err := run(); err != nil {
 		log.Fatal(err)
 	}
 }
-
-// func main() {
-// 	// flag.Parse()
-
-// 	// var path string
-// 	// if len(os.Args) > 1 {
-// 	// 	if os.Args[1] != "" {
-// 	// 		path = os.Args[1]
-// 	// 	} else {
-// 	// 		path = "conf/yotta_config.ini"
-// 	// 	}
-
-// 	// } else {
-// 	// 	path = "conf/yotta_config.ini"
-// 	// }
-
-// 	// cfg, err := conf.CreateConfig(path)
-// 	// if err != nil {
-// 	// 	panic(err)
-// 	// }
-
-// 	// 初始化SDK服务
-// 	// env.Console = true
-// 	// api.StartApi()
-
-// 	// router := routers.InitRouter()
-// 	// port := cfg.GetHTTPInfo("port")
-// 	// err1 := router.Run(port)
-// 	// if err1 != nil {
-// 	// 	panic(err1)
-// 	// }
-// 	env.Console = true
-// 	api.StartApi()
-// 	go func() {
-// 		for {
-
-// 			_, err := api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
-// 			if err == nil {
-// 				break
-// 			} else {
-// 				time.Sleep(time.Second * 5)
-// 				api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
-// 			}
-// 		}
-// 		// logrus.Info("User Register Success,UserName:" + c.Username)
-// 		// fmt.Println("UserID:", c.UserId)
-// 	}()
-// 	if err := run(); err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// }
 
 type yts3Flags struct {
 	host          string
@@ -154,21 +86,6 @@ func (f *yts3Flags) attach(flagSet *flag.FlagSet) {
 	flagSet.BoolVar(&f.noIntegrity, "no-integrity", false, "Pass this flag to disable Content-MD5 validation when uploading.")
 	flagSet.BoolVar(&f.hostBucket, "hostbucket", false, "If passed, the bucket name will be extracted from the first segment of the hostname, rather than the first part of the URL path.")
 	flagSet.StringVar(&f.initialBucket, "bucket", "", `Deprecated; use -initialbucket`)
-	// Backend specific:
-	// flagSet.StringVar(&f.backendKind, "backend", "", "Backend to use to store data (memory, bolt, directfs, fs)")
-	// flagSet.StringVar(&f.boltDb, "bolt.db", "locals3.db", "Database path / name when using bolt backend")
-	// flagSet.StringVar(&f.directFsPath, "directfs.path", "", "File path to serve using S3. You should not modify the contents of this path outside gofakes3 while it is running as it can cause inconsistencies.")
-	// flagSet.StringVar(&f.directFsMeta, "directfs.meta", "", "Optional path for storing S3 metadata for your bucket. If not passed, metadata will not persist between restarts of gofakes3.")
-	// flagSet.StringVar(&f.directFsBucket, "directfs.bucket", "mybucket", "Name of the bucket for your file path; this will be the only supported bucket by the 'directfs' backend for the duration of your run.")
-	// flagSet.StringVar(&f.fsPath, "fs.path", "", "Path to your S3 buckets. Buckets are stored under the '/buckets' subpath.")
-	// flagSet.StringVar(&f.fsMeta, "fs.meta", "", "Optional path for storing S3 metadata for your buckets. Defaults to the '/metadata' subfolder of -fs.path if not passed.")
-
-	// // Debugging:
-	// flagSet.StringVar(&f.debugHost, "debug.host", "", "Run the debug server on this host")
-	// flagSet.StringVar(&f.debugCPU, "debug.cpu", "", "Create CPU profile in this file")
-
-	// Deprecated:
-	// flagSet.StringVar(&f.boltDb, "db", "locals3.db", "Deprecated; use -bolt.db")
 
 }
 
