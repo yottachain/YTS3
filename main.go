@@ -58,6 +58,7 @@ func main() {
 	}()
 	env.Console = true
 	api.StartApi()
+
 	// go func() {
 	// 	for {
 	// 		_, err := api.NewClient("ianmooneyy11", "5JnLRW1bTRD2bxo93wZ1qnpXfMDHzA97qcQjabnoqgmJTt7kBoH")
@@ -203,13 +204,6 @@ func debugServer(host string) {
 }
 
 func run() error {
-
-	// c, err := api.NewClient("qiyufengxing", "5J8FvWrq26M86nqF48MamCjQWV8N6S3FrPFnH4KjjnD2CCEKvF3")
-	// if err != nil {
-
-	// }
-	// logrus.Info("User Register Success,UserName:" + c.Username)
-	// fmt.Println("UserID:", c.UserId)
 	var values yts3Flags
 
 	flagSet := flag.NewFlagSet("", 0)
@@ -278,7 +272,7 @@ func listenAndServe(addr string, handler http.Handler) error {
 
 	log.Println("using port:", listener.Addr().(*net.TCPAddr).Port)
 	server := &http.Server{Addr: addr, Handler: handler}
-
+	env.SetVersionID("2.0.0.1")
 	return server.Serve(listener)
 }
 
