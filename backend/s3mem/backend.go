@@ -3,15 +3,19 @@ package s3mem
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
+	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/ryszard/goskiplist/skiplist"
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
+	"github.com/yottachain/YTS3/conf"
 	"github.com/yottachain/YTS3/yts3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -135,7 +139,8 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 		}
 		logrus.Printf("items len %d\n", len(items))
 		for _, v := range items {
-			meta, err := api.BytesToFileMetaMap(v.Meta, v.VersionId)
+			meta, err := api.BytesToFileMetaMap(v.Meta, primitive.ObjectID{})
+
 			if err != nil {
 				continue
 			}
@@ -154,7 +159,7 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 					name:         v.FileName,
 					hash:         hash,
 					metadata:     meta,
-					lastModified: content.LastModified.Time,
+					lastModified: v.FileId.Timestamp(),
 				},
 			})
 		}
@@ -175,9 +180,38 @@ func (db *Backend) BucketExists(name string) (exists bool, err error) {
 
 //PutObject upload file
 func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[string]string, input io.Reader, size int64) (result yts3.PutObjectResult, err error) {
-	bts, err := yts3.ReadAll(input, size)
+	c := api.GetClient(publicKey)
+	upload := c.NewUploadObject()
+	iniPath := "conf/yotta_config.ini"
+	cfg, err := conf.CreateConfig(iniPath)
 	if err != nil {
-		return result, err
+		panic(err)
+	}
+
+	var hash [16]byte
+	var bts []byte
+	var header map[string]string
+	header = make(map[string]string)
+	if size >= 10485760 {
+		cache := cfg.GetCacheInfo("directory")
+		directory := cache + "/" + bucketName
+		errw := writeCacheFile(directory, objectName, input)
+		if errw != nil {
+			return
+		}
+		filePath := directory + "/" + objectName
+		hashw, erre := upload.UploadFile(filePath)
+		if erre != nil {
+			return
+		}
+		logrus.Info("upload hash result:", hex.EncodeToString(hashw))
+	} else {
+		bts, err = yts3.ReadAll(input, size)
+		if err != nil {
+			return result, err
+		}
+		hash = md5.Sum(bts)
+		logrus.Println("length:::", len(bts))
 	}
 
 	db.lock.Lock()
@@ -188,8 +222,6 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 		return result, yts3.BucketNotFound(bucketName)
 	}
 
-	hash := md5.Sum(bts)
-
 	item := &bucketData{
 		name:         objectName,
 		body:         bts,
@@ -199,21 +231,24 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 		lastModified: db.timeSource.Now(),
 	}
 	item.metadata["ETag"] = item.etag
-	c := api.GetClient(publicKey)
-	upload := c.NewUploadObject()
-	resulthash, err1 := upload.UploadBytes(item.body)
-	if err1 != nil {
-		logrus.Printf("ERR", err1)
-	}
 	logrus.Info("upload hash etag:", item.etag)
-	logrus.Info("upload hash result:", hex.EncodeToString(resulthash))
+	// logrus.Info("fileSize:::::::::", len(item.body))
+
+	if size < 10485760 {
+		resulthash, err1 := upload.UploadBytes(item.body)
+		if err1 != nil {
+			logrus.Printf("ERR", err1)
+			return
+		}
+		logrus.Info("upload hash result:", hex.EncodeToString(resulthash))
+	}
+
 	//update meta data
-	var header map[string]string
-	header = make(map[string]string)
+
 	header["ETag"] = hex.EncodeToString(hash[:])
-	header["x-amz-date"] = item.metadata["X-Amz-Date"]
 	header["contentLength"] = strconv.FormatInt(size, 10)
 	metadata2, err2 := api.FileMetaMapTobytes(header)
+
 	if err2 != nil {
 		logrus.Errorf("[FileMetaMapTobytes ]:%s\n", err2)
 		return
@@ -224,6 +259,51 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 		logrus.Errorf("[Save meta data ]:%s\n", err3)
 	}
 	return result, nil
+}
+
+func writeCacheFile(directory, fileName string, input io.Reader) error {
+
+	// path := directory + "/" + fileName
+	s, err := os.Stat(directory)
+	if err != nil {
+		if !os.IsExist(err) {
+			err = os.MkdirAll(directory, os.ModePerm)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	} else {
+		if !s.IsDir() {
+			return errors.New("The specified path is not a directory.")
+		}
+	}
+	if !strings.HasSuffix(directory, "/") {
+		directory = directory + "/"
+	}
+	filePath := directory + fileName
+	f, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	readbuf := make([]byte, 8192)
+	for {
+		num, err := input.Read(readbuf)
+		if err != nil && err != io.EOF {
+			return err
+		}
+		if num > 0 {
+			bs := readbuf[0:num]
+			f.Write(bs)
+		}
+		if err != nil && err == io.EOF {
+			break
+		}
+	}
+	return nil
 }
 
 //CreateBucket create bucket
@@ -328,32 +408,6 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 
 	return result, nil
 }
-
-// func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequest *yts3.ObjectRangeRequest) (*yts3.Object, error) {
-// 	db.lock.RLock()
-// 	defer db.lock.RUnlock()
-
-// 	bucket := db.buckets[bucketName]
-// 	if bucket == nil {
-// 		return nil, yts3.BucketNotFound(bucketName)
-// 	}
-
-// 	obj := bucket.object(objectName)
-// 	if obj == nil || obj.data.deleteMarker {
-// 		return nil, yts3.KeyNotFound(objectName)
-// 	}
-
-// 	result, err := obj.data.toObject(rangeRequest, true)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	if bucket.versioning != yts3.VersioningEnabled {
-// 		result.VersionID = ""
-// 	}
-
-// 	return result, nil
-// }
 
 func (db *Backend) DeleteObject(publicKey, bucketName, objectName string) (result yts3.ObjectDeleteResult, rerr error) {
 	db.lock.Lock()

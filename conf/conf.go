@@ -40,3 +40,7 @@ func (c *Config) GetRecieveInfo(expectKey string) string {
 	// }
 	return c.conf.Section("receive").Key(expectKey).String()
 }
+
+func (c *Config) GetCacheInfo(expectKey string) string {
+	return c.conf.Section("cache").Key(expectKey).String()
+}
