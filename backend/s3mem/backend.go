@@ -184,6 +184,8 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 	upload := c.NewUploadObject()
 	iniPath := "conf/yotta_config.ini"
 	cfg, err := conf.CreateConfig(iniPath)
+	cache := cfg.GetCacheInfo("directory")
+	directory := cache + "/" + bucketName
 	if err != nil {
 		panic(err)
 	}
@@ -193,8 +195,7 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 	var header map[string]string
 	header = make(map[string]string)
 	if size >= 10485760 {
-		cache := cfg.GetCacheInfo("directory")
-		directory := cache + "/" + bucketName
+
 		errw := writeCacheFile(directory, objectName, input)
 		if errw != nil {
 			return
@@ -258,7 +259,20 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 	if err3 != nil {
 		logrus.Errorf("[Save meta data ]:%s\n", err3)
 	}
+	if size >= 10485760 {
+		filePath := directory + "/" + objectName
+		deleteCacheFile(filePath)
+	}
+
 	return result, nil
+}
+
+//deleteCacheFile 删除缓存文件
+func deleteCacheFile(path string) {
+	del := os.Remove(path)
+	if del != nil {
+		fmt.Println(del)
+	}
 }
 
 func writeCacheFile(directory, fileName string, input io.Reader) error {
