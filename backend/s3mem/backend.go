@@ -255,6 +255,7 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 		return
 	}
 
+	logrus.Println("bucket name is [" + bucketName + "]")
 	err3 := c.NewObjectAccessor().CreateObject(bucketName, objectName, upload.VNU, metadata2)
 	if err3 != nil {
 		logrus.Errorf("[Save meta data ]:%s\n", err3)
