@@ -1,11 +1,14 @@
 package yts3
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/xml"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"math"
 	"net/http"
 	"net/textproto"
 	"net/url"
@@ -627,8 +630,6 @@ func (g *Yts3) deleteObject(bucket, object string, w http.ResponseWriter, r *htt
 	return nil
 }
 
-// DeleteBucket deletes the bucket in the underlying backend, if and only if it
-// contains no items.
 func (g *Yts3) deleteBucket(bucket string, w http.ResponseWriter, r *http.Request) error {
 	logrus.Print(LogInfo, "DELETE BUCKET:", bucket)
 	Authorization := r.Header.Get("Authorization")
@@ -638,5 +639,188 @@ func (g *Yts3) deleteBucket(bucket string, w http.ResponseWriter, r *http.Reques
 		return err
 	}
 	w.WriteHeader(http.StatusNoContent)
+	return nil
+}
+
+func (g *Yts3) listMultipartUploadParts(bucket, object string, uploadID UploadID, w http.ResponseWriter, r *http.Request) error {
+	query := r.URL.Query()
+
+	marker, err := parseClampedInt(query.Get("part-number-marker"), 0, 0, math.MaxInt64)
+	if err != nil {
+		return ErrInvalidURI
+	}
+
+	maxParts, err := parseClampedInt(query.Get("max-parts"), DefaultMaxUploadParts, 0, MaxUploadPartsLimit)
+	if err != nil {
+		return ErrInvalidURI
+	}
+
+	out, err := g.uploader.ListParts(bucket, object, uploadID, int(marker), maxParts)
+	if err != nil {
+		return err
+	}
+
+	return g.xmlEncoder(w).Encode(out)
+}
+
+func (g *Yts3) putMultipartUploadPart(bucket, object string, uploadID UploadID, w http.ResponseWriter, r *http.Request) error {
+	logrus.Println(LogInfo, "put multipart upload", bucket, object, uploadID)
+
+	partNumber, err := strconv.ParseInt(r.URL.Query().Get("partNumber"), 10, 0)
+	if err != nil || partNumber <= 0 || partNumber > MaxUploadPartNumber {
+		return ErrInvalidPart
+	}
+
+	size, err := strconv.ParseInt(r.Header.Get("Content-Length"), 10, 64)
+	if err != nil || size <= 0 {
+		return ErrMissingContentLength
+	}
+
+	upload, err := g.uploader.Get(bucket, object, uploadID)
+	if err != nil {
+		return err
+	}
+
+	defer r.Body.Close()
+	var rdr io.Reader = r.Body
+
+	if g.integrityCheck {
+		md5Base64 := r.Header.Get("Content-MD5")
+		if _, ok := r.Header[textproto.CanonicalMIMEHeaderKey("Content-MD5")]; ok && md5Base64 == "" {
+			return ErrInvalidDigest
+		}
+
+		if md5Base64 != "" {
+			var err error
+			rdr, err = newHashingReader(rdr, md5Base64)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	body, err := ReadAll(rdr, size)
+	if err != nil {
+		return err
+	}
+
+	if int64(len(body)) != r.ContentLength {
+		return ErrIncompleteBody
+	}
+
+	etag, err := upload.AddPart(int(partNumber), g.timeSource.Now(), body)
+	if err != nil {
+		return err
+	}
+
+	w.Header().Add("ETag", etag)
+	return nil
+}
+
+func (g *Yts3) abortMultipartUpload(bucket, object string, uploadID UploadID, w http.ResponseWriter, r *http.Request) error {
+	g.log.Print(LogInfo, "abort multipart upload", bucket, object, uploadID)
+	if _, err := g.uploader.Complete(bucket, object, uploadID); err != nil {
+		return err
+	}
+	w.WriteHeader(http.StatusNoContent)
+	return nil
+}
+
+func (g *Yts3) completeMultipartUpload(bucket, object string, uploadID UploadID, w http.ResponseWriter, r *http.Request) error {
+	logrus.Println(LogInfo, "complete multipart upload", bucket, object, uploadID)
+
+	var in CompleteMultipartUploadRequest
+	if err := g.xmlDecodeBody(r.Body, &in); err != nil {
+		return err
+	}
+
+	upload, err := g.uploader.Complete(bucket, object, uploadID)
+	if err != nil {
+		return err
+	}
+
+	fileBody, etag, err := upload.Reassemble(&in)
+	if err != nil {
+		return err
+	}
+	publicKey := ""
+	result, err := g.storage.PutObject(publicKey, bucket, object, upload.Meta, bytes.NewReader(fileBody), int64(len(fileBody)))
+	if err != nil {
+		return err
+	}
+	if result.VersionID != "" {
+		w.Header().Set("x-amz-version-id", string(result.VersionID))
+	}
+
+	return g.xmlEncoder(w).Encode(&CompleteMultipartUploadResult{
+		ETag:   etag,
+		Bucket: bucket,
+		Key:    object,
+	})
+}
+
+func (g *Yts3) xmlDecodeBody(rdr io.ReadCloser, into interface{}) error {
+	body, err := ioutil.ReadAll(rdr)
+	defer rdr.Close()
+	if err != nil {
+		return err
+	}
+
+	if err := xml.Unmarshal(body, into); err != nil {
+		return ErrorMessage(ErrMalformedXML, err.Error())
+	}
+
+	return nil
+}
+
+func (g *Yts3) listMultipartUploads(bucket string, w http.ResponseWriter, r *http.Request) error {
+	query := r.URL.Query()
+	prefix := prefixFromQuery(query)
+	marker := uploadListMarkerFromQuery(query)
+
+	maxUploads, err := parseClampedInt(query.Get("max-uploads"), DefaultMaxUploads, 0, MaxUploadsLimit)
+	if err != nil {
+		return ErrInvalidURI
+	}
+	if maxUploads == 0 {
+		maxUploads = DefaultMaxUploads
+	}
+
+	out, err := g.uploader.List(bucket, marker, prefix, maxUploads)
+	if err != nil {
+		return err
+	}
+
+	return g.xmlEncoder(w).Encode(out)
+}
+
+func (g *Yts3) initiateMultipartUpload(bucket, object string, w http.ResponseWriter, r *http.Request) error {
+	logrus.Println(LogInfo, "initiate multipart upload", bucket, object)
+
+	meta, err := metadataHeaders(r.Header, g.timeSource.Now(), g.metadataSizeLimit)
+	if err != nil {
+		return err
+	}
+	if err := g.ensureBucketExists(bucket); err != nil {
+		return err
+	}
+
+	upload := g.uploader.Begin(bucket, object, meta, g.timeSource.Now())
+	out := InitiateMultipartUpload{
+		UploadID: upload.ID,
+		Bucket:   bucket,
+		Key:      object,
+	}
+	return g.xmlEncoder(w).Encode(out)
+}
+
+func (g *Yts3) ensureBucketExists(bucket string) error {
+	exists, err := g.storage.BucketExists(bucket)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return ResourceError(ErrNoSuchBucket, bucket)
+	}
 	return nil
 }
