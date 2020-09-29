@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -12,12 +13,14 @@ import (
 	"net/http"
 	"net/textproto"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/yottachain/YTS3/conf"
 )
 
 type Yts3 struct {
@@ -708,7 +711,7 @@ func (g *Yts3) putMultipartUploadPart(bucket, object string, uploadID UploadID, 
 		return ErrIncompleteBody
 	}
 
-	etag, err := upload.AddPart(int(partNumber), g.timeSource.Now(), body)
+	etag, err := upload.AddPart(bucket, object, int(partNumber), g.timeSource.Now(), body)
 	if err != nil {
 		return err
 	}
@@ -729,11 +732,15 @@ func (g *Yts3) abortMultipartUpload(bucket, object string, uploadID UploadID, w 
 func (g *Yts3) completeMultipartUpload(bucket, object string, uploadID UploadID, w http.ResponseWriter, r *http.Request) error {
 	logrus.Println(LogInfo, "complete multipart upload", bucket, object, uploadID)
 
+	Authorization := r.Header.Get("Authorization")
+	publicKey := GetBetweenStr(Authorization, "YTA", "/")
+	content := publicKey[3:]
+
 	var in CompleteMultipartUploadRequest
 	if err := g.xmlDecodeBody(r.Body, &in); err != nil {
 		return err
 	}
-
+	defer r.Body.Close()
 	upload, err := g.uploader.Complete(bucket, object, uploadID)
 	if err != nil {
 		return err
@@ -743,8 +750,7 @@ func (g *Yts3) completeMultipartUpload(bucket, object string, uploadID UploadID,
 	if err != nil {
 		return err
 	}
-	publicKey := ""
-	result, err := g.storage.PutObject(publicKey, bucket, object, upload.Meta, bytes.NewReader(fileBody), int64(len(fileBody)))
+	result, err := g.storage.PutObject(content, bucket, object, upload.Meta, bytes.NewReader(fileBody), int64(len(fileBody)))
 	if err != nil {
 		return err
 	}
@@ -796,6 +802,33 @@ func (g *Yts3) listMultipartUploads(bucket string, w http.ResponseWriter, r *htt
 
 func (g *Yts3) initiateMultipartUpload(bucket, object string, w http.ResponseWriter, r *http.Request) error {
 	logrus.Println(LogInfo, "initiate multipart upload", bucket, object)
+
+	iniPath := "conf/yotta_config.ini"
+	cfg, err := conf.CreateConfig(iniPath)
+	cache := cfg.GetCacheInfo("directory")
+	directory := cache + "/" + bucket
+	if err != nil {
+		panic(err)
+	}
+
+	s, err := os.Stat(directory)
+	if err != nil {
+		if !os.IsExist(err) {
+			err = os.MkdirAll(directory, os.ModePerm)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	} else {
+		if !s.IsDir() {
+			return errors.New("The specified path is not a directory.")
+		}
+	}
+	if !strings.HasSuffix(directory, "/") {
+		directory = directory + "/"
+	}
 
 	meta, err := metadataHeaders(r.Header, g.timeSource.Now(), g.metadataSizeLimit)
 	if err != nil {

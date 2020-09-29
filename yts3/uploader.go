@@ -3,9 +3,13 @@ package yts3
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"io"
 	"math/big"
 	"net/url"
+	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -322,7 +326,11 @@ type multipartUpload struct {
 	mu sync.Mutex
 }
 
-func (mpu *multipartUpload) AddPart(partNumber int, at time.Time, body []byte) (etag string, err error) {
+func (mpu *multipartUpload) AddPart(bucketName, objectName string, partNumber int, at time.Time, body []byte) (etag string, err error) {
+	// iniPath := "conf/yotta_config.ini"
+	// cfg, err := conf.CreateConfig(iniPath)
+	// cache := cfg.GetCacheInfo("directory")
+	// directory := cache + "/" + bucketName
 	if partNumber > MaxUploadPartNumber {
 		return "", ErrInvalidPart
 	}
@@ -344,7 +352,56 @@ func (mpu *multipartUpload) AddPart(partNumber int, at time.Time, body []byte) (
 		mpu.parts = append(mpu.parts, make([]*multipartUploadPart, partNumber-len(mpu.parts)+1)...)
 	}
 	mpu.parts[partNumber] = &part
+	// fileName := objectName + "-" + string(partNumber)
+	// errw := writeCacheFile(directory, fileName, bytes.NewReader(body))
+	// if errw != nil {
+	// }
+
 	return etag, nil
+}
+
+func writeCacheFile(directory, fileName string, input io.Reader) error {
+
+	s, err := os.Stat(directory)
+	if err != nil {
+		if !os.IsExist(err) {
+			err = os.MkdirAll(directory, os.ModePerm)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	} else {
+		if !s.IsDir() {
+			return errors.New("The specified path is not a directory.")
+		}
+	}
+	if !strings.HasSuffix(directory, "/") {
+		directory = directory + "/"
+	}
+	filePath := directory + fileName
+	f, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	readbuf := make([]byte, 8192)
+	for {
+		num, err := input.Read(readbuf)
+		if err != nil && err != io.EOF {
+			return err
+		}
+		if num > 0 {
+			bs := readbuf[0:num]
+			f.Write(bs)
+		}
+		if err != nil && err == io.EOF {
+			break
+		}
+	}
+	return nil
 }
 
 func (mpu *multipartUpload) Reassemble(input *CompleteMultipartUploadRequest) (body []byte, etag string, err error) {

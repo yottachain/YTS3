@@ -159,7 +159,7 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 					name:         v.FileName,
 					hash:         hash,
 					metadata:     meta,
-					lastModified: v.FileId.Timestamp(),
+					lastModified: yts3.Stamp2Time(v.FileId.Timestamp().Unix()),
 				},
 			})
 		}
@@ -177,6 +177,63 @@ func (db *Backend) BucketExists(name string) (exists bool, err error) {
 	defer db.lock.RUnlock()
 	return db.buckets[name] != nil, nil
 }
+
+//PutBigObject 分片上传
+// func (db *Backend) PutBigObject(publicKey, bucketName, objectName, etag string, meta map[string]string, size int64) (result yts3.PutObjectResult, err error) {
+// 	db.lock.Lock()
+// 	defer db.lock.Unlock()
+
+// 	bucket := db.buckets[bucketName]
+// 	if bucket == nil {
+// 		return result, yts3.BucketNotFound(bucketName)
+// 	}
+// 	c := api.GetClient(publicKey)
+// 	upload := c.NewUploadObject()
+// 	iniPath := "conf/yotta_config.ini"
+// 	cfg, err := conf.CreateConfig(iniPath)
+// 	cache := cfg.GetCacheInfo("directory")
+// 	directory := cache + "/" + bucketName
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	var bts []byte
+// 	var header map[string]string
+// 	header = make(map[string]string)
+// 	filePath := directory + "/" + objectName
+// 	hashw, erre := upload.UploadFile(filePath)
+// 	if erre != nil {
+// 		return
+// 	}
+// 	logrus.Info("upload hash result:", hex.EncodeToString(hashw))
+
+// 	item := &bucketData{
+// 		name:         objectName,
+// 		body:         bts,
+// 		hash:         hashw[:],
+// 		etag:         `"` + etag + `"`,
+// 		metadata:     meta,
+// 		lastModified: db.timeSource.Now(),
+// 	}
+// 	item.metadata["ETag"] = item.etag
+// 	header["ETag"] = etag
+// 	header["contentLength"] = strconv.FormatInt(size, 10)
+// 	metadata2, err2 := api.FileMetaMapTobytes(header)
+
+// 	if err2 != nil {
+// 		logrus.Errorf("[FileMetaMapTobytes ]:%s\n", err2)
+// 		return
+// 	}
+
+// 	logrus.Println("bucket name is [" + bucketName + "]")
+// 	err3 := c.NewObjectAccessor().CreateObject(bucketName, objectName, upload.VNU, metadata2)
+// 	if err3 != nil {
+// 		logrus.Errorf("[Save meta data ]:%s\n", err3)
+// 		return
+// 	}
+// 	deleteCacheFile(filePath)
+
+// 	return result, nil
+// }
 
 //PutObject upload file
 func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[string]string, input io.Reader, size int64) (result yts3.PutObjectResult, err error) {
