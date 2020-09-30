@@ -373,7 +373,7 @@ func (g *Yts3) timeSkewMiddleware(handler http.Handler) http.Handler {
 
 		if timeHdr != "" {
 			logrus.Printf("rq timeHdr=%s\n", timeHdr)
-			rqTime, _ := time.Parse("20060102T150405Z", timeHdr)
+			rqTime, _ := time.Parse("Mon, 02 Jan 2006 15:04:05 +0000", timeHdr)
 			at := g.timeSource.Now()
 
 			logrus.Printf("rq time=%s\n", rqTime.String())
