@@ -24,7 +24,7 @@ func DefaultTimeSource() TimeSource {
 		// time.LoadLocation, which requires zoneinfo.zip to be available and
 		// can break spectacularly on Windows (https://github.com/golang/go/issues/21881)
 		// or Docker.
-		timeLocation: time.FixedZone("GMT", 0),
+		timeLocation: time.FixedZone("GMT", 8),
 	}
 }
 
