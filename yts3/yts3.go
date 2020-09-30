@@ -374,6 +374,10 @@ func (g *Yts3) timeSkewMiddleware(handler http.Handler) http.Handler {
 		if timeHdr != "" {
 			rqTime, _ := time.Parse("20060102T150405Z", timeHdr)
 			at := g.timeSource.Now()
+
+			logrus.Printf("rq time=%s\n", rqTime.String())
+			logrus.Printf("current time=%s\n", at.String())
+
 			skew := at.Sub(rqTime)
 
 			if skew < -g.timeSkew || skew > g.timeSkew {
