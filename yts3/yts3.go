@@ -372,6 +372,7 @@ func (g *Yts3) timeSkewMiddleware(handler http.Handler) http.Handler {
 		timeHdr := rq.Header.Get("x-amz-date")
 
 		if timeHdr != "" {
+			logrus.Printf("rq timeHdr=%s\n", timeHdr)
 			rqTime, _ := time.Parse("20060102T150405Z", timeHdr)
 			at := g.timeSource.Now()
 
