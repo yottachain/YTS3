@@ -112,7 +112,7 @@ func getContentByMeta(meta map[string]string) *yts3.Content {
 		}
 	}
 	if lastModifyString, ok := meta["x-amz-meta-s3b-last-modified"]; ok {
-		lastModifyTime, err := time.Parse("20190108T135030Z", lastModifyString)
+		lastModifyTime, err := time.Parse("20060102T150405Z", lastModifyString)
 		if err == nil {
 			content.LastModified = yts3.ContentTime{lastModifyTime}
 		}
@@ -144,6 +144,10 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 			if err != nil {
 				continue
 			}
+			t := time.Unix(v.FileId.Timestamp().Unix(), 0)
+			s := t.Format("20060102T150405Z")
+			//ts, _ := time.ParseInLocation("2006-01-02 15:04:05", s, time.Local)
+			meta["x-amz-meta-s3b-last-modified"] = s
 			content := getContentByMeta(meta)
 			content.Key = v.FileName
 			content.Owner = &yts3.UserInfo{
@@ -159,7 +163,7 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 					name:         v.FileName,
 					hash:         hash,
 					metadata:     meta,
-					lastModified: yts3.Stamp2Time(v.FileId.Timestamp().Unix()),
+					lastModified: content.LastModified.Time,
 				},
 			})
 		}
