@@ -127,7 +127,7 @@ func run() error {
 	values.attach(flagSet)
 	values.backendKind = "mem"
 	values.initialBucket = "bucket"
-	values.fsPath = "ttttt"
+	values.fsPath = "test"
 
 	if err := flagSet.Parse(os.Args[1:]); err != nil {
 		return err
