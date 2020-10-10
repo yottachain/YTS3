@@ -1,20 +1,26 @@
 package yts3
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"math"
 	"net/http"
 	"net/textproto"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/yottachain/YTS3/conf"
 )
 
 type Yts3 struct {
@@ -76,7 +82,14 @@ func (g *Yts3) listBuckets(w http.ResponseWriter, r *http.Request) error {
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
-	fmt.Println("publicKey:", content)
+	logrus.Info("publicKey:", content)
+	fmt.Println("publicKey size:", len(content))
+	if len(content) > 50 {
+		publicKeyLength := strings.Index(content, ":")
+		contentNew := content[:publicKeyLength]
+		fmt.Println("new::::", contentNew)
+		content = contentNew
+	}
 
 	buckets, err := g.storage.ListBuckets(content)
 	if err != nil {
@@ -96,7 +109,7 @@ func (g *Yts3) listBuckets(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (g *Yts3) getBucketLocation(bucketName string, w http.ResponseWriter, r *http.Request) error {
-	g.log.Print(LogInfo, "GET BUCKET LOCATION")
+	logrus.Println(LogInfo, "GET BUCKET LOCATION")
 
 	result := GetBucketLocation{
 		Xmlns:              "http://s3.amazonaws.com/doc/2006-03-01/",
@@ -107,10 +120,17 @@ func (g *Yts3) getBucketLocation(bucketName string, w http.ResponseWriter, r *ht
 }
 
 func (g *Yts3) listBucket(bucketName string, w http.ResponseWriter, r *http.Request) error {
-	logrus.Print(LogInfo, "LIST BUCKET")
+	logrus.Println(LogInfo, "LIST BUCKET")
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
+	fmt.Println("publicKey:", len(content))
+	if len(content) > 50 {
+		publicKeyLength := strings.Index(content, ":")
+		contentNew := content[:publicKeyLength]
+		fmt.Println("new::::", contentNew)
+		content = contentNew
+	}
 
 	q := r.URL.Query()
 	prefix := prefixFromQuery(q)
@@ -211,11 +231,17 @@ func listBucketPageFromQuery(query url.Values) (page ListBucketPage, rerr error)
 }
 
 func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *http.Request) (err error) {
-	logrus.Print(LogInfo, "CREATE OBJECT:", bucket, object)
+	logrus.Println(LogInfo, "CREATE OBJECT:", bucket, object)
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
-
+	fmt.Println("publicKey:", len(content))
+	if len(content) > 50 {
+		publicKeyLength := strings.Index(content, ":")
+		contentNew := content[:publicKeyLength]
+		fmt.Println("new::::", contentNew)
+		content = contentNew
+	}
 	meta, err := metadataHeaders(r.Header, g.timeSource.Now(), g.metadataSizeLimit)
 	if err != nil {
 		return err
@@ -271,12 +297,18 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 }
 
 func (g *Yts3) createBucket(bucket string, w http.ResponseWriter, r *http.Request) error {
-	logrus.Print(LogInfo, "CREATE BUCKET:", bucket)
+	logrus.Println(LogInfo, "CREATE BUCKET:", bucket)
 
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
-
+	fmt.Println("publicKey:", len(content))
+	if len(content) > 50 {
+		publicKeyLength := strings.Index(content, ":")
+		contentNew := content[:publicKeyLength]
+		fmt.Println("new::::", contentNew)
+		content = contentNew
+	}
 	if err := ValidateBucketName(bucket); err != nil {
 		return err
 	}
@@ -366,14 +398,14 @@ func (g *Yts3) timeSkewMiddleware(handler http.Handler) http.Handler {
 		timeHdr := rq.Header.Get("x-amz-date")
 
 		if timeHdr != "" {
-			rqTime, _ := time.Parse("20060102T150405Z", timeHdr)
-			at := g.timeSource.Now()
-			skew := at.Sub(rqTime)
+			// rqTime, _ := time.ParseInLocation("20060102T150405Z", timeHdr, time.Local)
+			// at := g.timeSource.Now()
+			// skew := at.Sub(rqTime)
 
-			if skew < -g.timeSkew || skew > g.timeSkew {
-				g.httpError(w, rq, requestTimeTooSkewed(at, g.timeSkew))
-				return
-			}
+			// if skew < -g.timeSkew || skew > g.timeSkew {
+			// 	g.httpError(w, rq, requestTimeTooSkewed(at, g.timeSkew))
+			// 	return
+			// }
 		}
 
 		handler.ServeHTTP(w, rq)
@@ -398,18 +430,26 @@ func (g *Yts3) hostBucketMiddleware(handler http.Handler) http.Handler {
 
 func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.ResponseWriter, r *http.Request) error {
 
-	logrus.Print(LogInfo, "GET OBJECT")
-	logrus.Print(LogInfo, "Bucket:", bucket)
-	logrus.Print(LogInfo, "└── Object:", object)
+	logrus.Println(LogInfo, "GET OBJECT")
+	logrus.Println(LogInfo, "Bucket:", bucket)
+	logrus.Println(LogInfo, "└── Object:", object)
 	Authorization := r.Header.Get("Authorization")
 
 	// debug 调试用
 	if Authorization == "" {
-		Authorization="YTA7YW7xoyFzUPBQh4T2wj6hfrGLukBWYBZLUjiE1MkeVLFymMS21"
+		logrus.Info("publicKey is null")
+		// return
 	}
-	
+
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
+	fmt.Println("publicKey:", len(content))
+	if len(content) > 50 {
+		publicKeyLength := strings.Index(content, ":")
+		contentNew := content[:publicKeyLength]
+		fmt.Println("new::::", contentNew)
+		content = contentNew
+	}
 	rnge, err := parseRangeHeader(r.Header.Get("Range"))
 	if err != nil {
 		return err
@@ -447,12 +487,7 @@ func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.Resp
 	return nil
 }
 
-func (g *Yts3) headObject(
-	bucket, object string,
-	versionID VersionID,
-	w http.ResponseWriter,
-	r *http.Request,
-) error {
+func (g *Yts3) headObject(bucket, object string, versionID VersionID, w http.ResponseWriter, r *http.Request) error {
 
 	logrus.Println(LogInfo, "HEAD OBJECT")
 	logrus.Println(LogInfo, "Bucket:", bucket)
@@ -460,6 +495,13 @@ func (g *Yts3) headObject(
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
+	fmt.Println("publicKey:", len(content))
+	if len(content) > 50 {
+		publicKeyLength := strings.Index(content, ":")
+		contentNew := content[:publicKeyLength]
+		fmt.Println("new::::", contentNew)
+		content = contentNew
+	}
 	obj, err := g.storage.HeadObject(content, bucket, object)
 	if err != nil {
 		return err
@@ -503,6 +545,13 @@ func (g *Yts3) deleteMulti(bucket string, w http.ResponseWriter, r *http.Request
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
+	fmt.Println("publicKey:", len(content))
+	if len(content) > 50 {
+		publicKeyLength := strings.Index(content, ":")
+		contentNew := content[:publicKeyLength]
+		fmt.Println("new::::", contentNew)
+		content = contentNew
+	}
 	var in DeleteRequest
 
 	defer r.Body.Close()
@@ -533,6 +582,13 @@ func (g *Yts3) createObjectBrowserUpload(bucket string, w http.ResponseWriter, r
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
+	fmt.Println("publicKey:", len(content))
+	if len(content) > 50 {
+		publicKeyLength := strings.Index(content, ":")
+		contentNew := content[:publicKeyLength]
+		fmt.Println("new::::", contentNew)
+		content = contentNew
+	}
 	const _24MB = (1 << 20) * 24
 	if err := r.ParseMultipartForm(_24MB); nil != err {
 		return ErrMalformedPOSTRequest
@@ -612,6 +668,13 @@ func (g *Yts3) deleteObject(bucket, object string, w http.ResponseWriter, r *htt
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
+	fmt.Println("publicKey:", len(content))
+	if len(content) > 50 {
+		publicKeyLength := strings.Index(content, ":")
+		contentNew := content[:publicKeyLength]
+		fmt.Println("new::::", contentNew)
+		content = contentNew
+	}
 	result, err := g.storage.DeleteObject(content, bucket, object)
 	if err != nil {
 		return err
@@ -628,5 +691,243 @@ func (g *Yts3) deleteObject(bucket, object string, w http.ResponseWriter, r *htt
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+	return nil
+}
+
+func (g *Yts3) deleteBucket(bucket string, w http.ResponseWriter, r *http.Request) error {
+	logrus.Print(LogInfo, "DELETE BUCKET:", bucket)
+	Authorization := r.Header.Get("Authorization")
+	publicKey := GetBetweenStr(Authorization, "YTA", "/")
+	content := publicKey[3:]
+	fmt.Println("publicKey:", len(content))
+	if len(content) > 50 {
+		publicKeyLength := strings.Index(content, ":")
+		contentNew := content[:publicKeyLength]
+		fmt.Println("new::::", contentNew)
+		content = contentNew
+	}
+	if err := g.storage.DeleteBucket(content, bucket); err != nil {
+		return err
+	}
+	w.WriteHeader(http.StatusNoContent)
+	return nil
+}
+
+func (g *Yts3) listMultipartUploadParts(bucket, object string, uploadID UploadID, w http.ResponseWriter, r *http.Request) error {
+	query := r.URL.Query()
+
+	marker, err := parseClampedInt(query.Get("part-number-marker"), 0, 0, math.MaxInt64)
+	if err != nil {
+		return ErrInvalidURI
+	}
+
+	maxParts, err := parseClampedInt(query.Get("max-parts"), DefaultMaxUploadParts, 0, MaxUploadPartsLimit)
+	if err != nil {
+		return ErrInvalidURI
+	}
+
+	out, err := g.uploader.ListParts(bucket, object, uploadID, int(marker), maxParts)
+	if err != nil {
+		return err
+	}
+
+	return g.xmlEncoder(w).Encode(out)
+}
+
+func (g *Yts3) putMultipartUploadPart(bucket, object string, uploadID UploadID, w http.ResponseWriter, r *http.Request) error {
+	logrus.Println(LogInfo, "put multipart upload", bucket, object, uploadID)
+
+	partNumber, err := strconv.ParseInt(r.URL.Query().Get("partNumber"), 10, 0)
+	if err != nil || partNumber <= 0 || partNumber > MaxUploadPartNumber {
+		return ErrInvalidPart
+	}
+
+	size, err := strconv.ParseInt(r.Header.Get("Content-Length"), 10, 64)
+	if err != nil || size <= 0 {
+		return ErrMissingContentLength
+	}
+
+	upload, err := g.uploader.Get(bucket, object, uploadID)
+	if err != nil {
+		return err
+	}
+
+	defer r.Body.Close()
+	var rdr io.Reader = r.Body
+
+	if g.integrityCheck {
+		md5Base64 := r.Header.Get("Content-MD5")
+		if _, ok := r.Header[textproto.CanonicalMIMEHeaderKey("Content-MD5")]; ok && md5Base64 == "" {
+			return ErrInvalidDigest
+		}
+
+		if md5Base64 != "" {
+			var err error
+			rdr, err = newHashingReader(rdr, md5Base64)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	body, err := ReadAll(rdr, size)
+	if err != nil {
+		return err
+	}
+
+	if int64(len(body)) != r.ContentLength {
+		return ErrIncompleteBody
+	}
+
+	etag, err := upload.AddPart(bucket, object, int(partNumber), g.timeSource.Now(), body)
+	if err != nil {
+		return err
+	}
+
+	w.Header().Add("ETag", etag)
+	return nil
+}
+
+func (g *Yts3) abortMultipartUpload(bucket, object string, uploadID UploadID, w http.ResponseWriter, r *http.Request) error {
+	g.log.Print(LogInfo, "abort multipart upload", bucket, object, uploadID)
+	if _, err := g.uploader.Complete(bucket, object, uploadID); err != nil {
+		return err
+	}
+	w.WriteHeader(http.StatusNoContent)
+	return nil
+}
+
+func (g *Yts3) completeMultipartUpload(bucket, object string, uploadID UploadID, w http.ResponseWriter, r *http.Request) error {
+	logrus.Println(LogInfo, "complete multipart upload", bucket, object, uploadID)
+
+	Authorization := r.Header.Get("Authorization")
+	publicKey := GetBetweenStr(Authorization, "YTA", "/")
+	content := publicKey[3:]
+	fmt.Println("publicKey:", len(content))
+	if len(content) > 50 {
+		publicKeyLength := strings.Index(content, ":")
+		contentNew := content[:publicKeyLength]
+		fmt.Println("new::::", contentNew)
+		content = contentNew
+	}
+	var in CompleteMultipartUploadRequest
+	if err := g.xmlDecodeBody(r.Body, &in); err != nil {
+		return err
+	}
+	defer r.Body.Close()
+	upload, err := g.uploader.Complete(bucket, object, uploadID)
+	if err != nil {
+		return err
+	}
+
+	fileBody, etag, err := upload.Reassemble(&in)
+	if err != nil {
+		return err
+	}
+	result, err := g.storage.PutObject(content, bucket, object, upload.Meta, bytes.NewReader(fileBody), int64(len(fileBody)))
+	if err != nil {
+		return err
+	}
+	if result.VersionID != "" {
+		w.Header().Set("x-amz-version-id", string(result.VersionID))
+	}
+
+	return g.xmlEncoder(w).Encode(&CompleteMultipartUploadResult{
+		ETag:   etag,
+		Bucket: bucket,
+		Key:    object,
+	})
+}
+
+func (g *Yts3) xmlDecodeBody(rdr io.ReadCloser, into interface{}) error {
+	body, err := ioutil.ReadAll(rdr)
+	defer rdr.Close()
+	if err != nil {
+		return err
+	}
+
+	if err := xml.Unmarshal(body, into); err != nil {
+		return ErrorMessage(ErrMalformedXML, err.Error())
+	}
+
+	return nil
+}
+
+func (g *Yts3) listMultipartUploads(bucket string, w http.ResponseWriter, r *http.Request) error {
+	query := r.URL.Query()
+	prefix := prefixFromQuery(query)
+	marker := uploadListMarkerFromQuery(query)
+
+	maxUploads, err := parseClampedInt(query.Get("max-uploads"), DefaultMaxUploads, 0, MaxUploadsLimit)
+	if err != nil {
+		return ErrInvalidURI
+	}
+	if maxUploads == 0 {
+		maxUploads = DefaultMaxUploads
+	}
+
+	out, err := g.uploader.List(bucket, marker, prefix, maxUploads)
+	if err != nil {
+		return err
+	}
+
+	return g.xmlEncoder(w).Encode(out)
+}
+
+func (g *Yts3) initiateMultipartUpload(bucket, object string, w http.ResponseWriter, r *http.Request) error {
+	logrus.Println(LogInfo, "initiate multipart upload", bucket, object)
+
+	iniPath := "conf/yotta_config.ini"
+	cfg, err := conf.CreateConfig(iniPath)
+	cache := cfg.GetCacheInfo("directory")
+	directory := cache + "/" + bucket
+	if err != nil {
+		panic(err)
+	}
+
+	s, err := os.Stat(directory)
+	if err != nil {
+		if !os.IsExist(err) {
+			err = os.MkdirAll(directory, os.ModePerm)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	} else {
+		if !s.IsDir() {
+			return errors.New("The specified path is not a directory.")
+		}
+	}
+	if !strings.HasSuffix(directory, "/") {
+		directory = directory + "/"
+	}
+
+	meta, err := metadataHeaders(r.Header, g.timeSource.Now(), g.metadataSizeLimit)
+	if err != nil {
+		return err
+	}
+	if err := g.ensureBucketExists(bucket); err != nil {
+		return err
+	}
+
+	upload := g.uploader.Begin(bucket, object, meta, g.timeSource.Now())
+	out := InitiateMultipartUpload{
+		UploadID: upload.ID,
+		Bucket:   bucket,
+		Key:      object,
+	}
+	return g.xmlEncoder(w).Encode(out)
+}
+
+func (g *Yts3) ensureBucketExists(bucket string) error {
+	exists, err := g.storage.BucketExists(bucket)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return ResourceError(ErrNoSuchBucket, bucket)
+	}
 	return nil
 }

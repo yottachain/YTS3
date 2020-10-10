@@ -17,14 +17,16 @@ import (
 
 	"log"
 
+	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
 	"github.com/yottachain/YTS3/backend/s3mem"
+	"github.com/yottachain/YTS3/conf"
+	"github.com/yottachain/YTS3/routers"
 	"github.com/yottachain/YTS3/yts3"
 )
 
 func main() {
 	flag.Parse()
-
 	var path string
 	if len(os.Args) > 1 {
 		if os.Args[1] != "" {
@@ -32,30 +34,23 @@ func main() {
 		} else {
 			path = "conf/yotta_config.ini"
 		}
-
 	} else {
 		path = "conf/yotta_config.ini"
 	}
-
 	cfg, err := conf.CreateConfig(path)
 	if err != nil {
 		panic(err)
 	}
 
-	////初始化SDK服务
-	//env.Console = true
-	//api.StartApi()
-	//
 	go func() {
-
 		router := routers.InitRouter()
 		port := cfg.GetHTTPInfo("port")
-		lsn,err:=net.Listen("tcp4",port)
-		if err !=nil {
-			logrus.Printf("HTTPServer start error %s\n",err)
+		lsn, err := net.Listen("tcp4", port)
+		if err != nil {
+			logrus.Printf("HTTPServer start error %s\n", err)
 			return
 		}
-		logrus.Printf("HTTPServer start Success %s\n",port)
+		logrus.Printf("HTTPServer start Success %s\n", port)
 		err1 := router.RunListener(lsn)
 		if err1 != nil {
 			panic(err1)
@@ -63,25 +58,9 @@ func main() {
 	}()
 	env.Console = true
 	api.StartApi()
-
-	go func() {
-		for {
-
-			_, err := api.NewClient("devtestuser4", "5JDYRHvNaWENtEpuugw9xqb8MS2AbefpBQvaFg3iq3cxPALg6XZ")
-			if err == nil {
-				break
-			} else {
-				time.Sleep(time.Second * 5)
-				api.NewClient("devtestuser4", "5JDYRHvNaWENtEpuugw9xqb8MS2AbefpBQvaFg3iq3cxPALg6XZ")
-			}
-		}
-		// logrus.Info("User Register Success,UserName:" + c.Username)
-		// fmt.Println("UserID:", c.UserId)
-	}()
 	if err := run(); err != nil {
 		log.Fatal(err)
 	}
-
 }
 
 type yts3Flags struct {
@@ -104,28 +83,13 @@ type yts3Flags struct {
 }
 
 func (f *yts3Flags) attach(flagSet *flag.FlagSet) {
-	flagSet.StringVar(&f.host, "host", ":9000", "Host to run the service")
+	flagSet.StringVar(&f.host, "host", ":8083", "Host to run the service")
 	flagSet.StringVar(&f.fixedTimeStr, "time", "", "RFC3339 format. If passed, the server's clock will always see this time; does not affect existing stored dates.")
 	flagSet.StringVar(&f.initialBucket, "initialbucket", "", "If passed, this bucket will be created on startup if it does not already exist.")
 	flagSet.BoolVar(&f.noIntegrity, "no-integrity", false, "Pass this flag to disable Content-MD5 validation when uploading.")
 	flagSet.BoolVar(&f.hostBucket, "hostbucket", false, "If passed, the bucket name will be extracted from the first segment of the hostname, rather than the first part of the URL path.")
-
-	// Backend specific:
-	flagSet.StringVar(&f.backendKind, "backend", "", "Backend to use to store data (memory, bolt, directfs, fs)")
-	flagSet.StringVar(&f.boltDb, "bolt.db", "locals3.db", "Database path / name when using bolt backend")
-	flagSet.StringVar(&f.directFsPath, "directfs.path", "", "File path to serve using S3. You should not modify the contents of this path outside gofakes3 while it is running as it can cause inconsistencies.")
-	flagSet.StringVar(&f.directFsMeta, "directfs.meta", "", "Optional path for storing S3 metadata for your bucket. If not passed, metadata will not persist between restarts of gofakes3.")
-	flagSet.StringVar(&f.directFsBucket, "directfs.bucket", "mybucket", "Name of the bucket for your file path; this will be the only supported bucket by the 'directfs' backend for the duration of your run.")
-	flagSet.StringVar(&f.fsPath, "fs.path", "", "Path to your S3 buckets. Buckets are stored under the '/buckets' subpath.")
-	flagSet.StringVar(&f.fsMeta, "fs.meta", "", "Optional path for storing S3 metadata for your buckets. Defaults to the '/metadata' subfolder of -fs.path if not passed.")
-
-	// Debugging:
-	flagSet.StringVar(&f.debugHost, "debug.host", "", "Run the debug server on this host")
-	flagSet.StringVar(&f.debugCPU, "debug.cpu", "", "Create CPU profile in this file")
-
-	// Deprecated:
-	flagSet.StringVar(&f.boltDb, "db", "locals3.db", "Deprecated; use -bolt.db")
 	flagSet.StringVar(&f.initialBucket, "bucket", "", `Deprecated; use -initialbucket`)
+
 }
 
 func (f *yts3Flags) timeOptions() (source yts3.TimeSource, skewLimit time.Duration, err error) {
@@ -160,20 +124,13 @@ func debugServer(host string) {
 }
 
 func run() error {
-
-	// c, err := api.NewClient("qiyufengxing", "5J8FvWrq26M86nqF48MamCjQWV8N6S3FrPFnH4KjjnD2CCEKvF3")
-	// if err != nil {
-
-	// }
-	// logrus.Info("User Register Success,UserName:" + c.Username)
-	// fmt.Println("UserID:", c.UserId)
 	var values yts3Flags
 
 	flagSet := flag.NewFlagSet("", 0)
 	values.attach(flagSet)
 	values.backendKind = "mem"
 	values.initialBucket = "bucket"
-	values.fsPath = "ttttt"
+	values.fsPath = "test"
 
 	if err := flagSet.Parse(os.Args[1:]); err != nil {
 		return err
@@ -234,7 +191,7 @@ func listenAndServe(addr string, handler http.Handler) error {
 
 	log.Println("using port:", listener.Addr().(*net.TCPAddr).Port)
 	server := &http.Server{Addr: addr, Handler: handler}
-
+	env.SetVersionID("2.0.0.1")
 	return server.Serve(listener)
 }
 

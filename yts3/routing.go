@@ -29,10 +29,10 @@ func (g *Yts3) routeBase(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if uploadID := UploadID(query.Get("uploadId")); uploadID != "" {
-		// err = g.routeMultipartUpload(bucket, object, uploadID, w, r)
+		err = g.routeMultipartUpload(bucket, object, uploadID, w, r)
 
 	} else if _, ok := query["uploads"]; ok {
-		// err = g.routeMultipartUploadBase(bucket, object, w, r)
+		err = g.routeMultipartUploadBase(bucket, object, w, r)
 
 	} else if _, ok := query["versioning"]; ok {
 		// err = g.routeVersioning(bucket, w, r)
@@ -62,6 +62,21 @@ func (g *Yts3) routeBase(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (g *Yts3) routeMultipartUpload(bucket, object string, uploadID UploadID, w http.ResponseWriter, r *http.Request) error {
+	switch r.Method {
+	case "GET":
+		return g.listMultipartUploadParts(bucket, object, uploadID, w, r)
+	case "PUT":
+		return g.putMultipartUploadPart(bucket, object, uploadID, w, r)
+	case "DELETE":
+		return g.abortMultipartUpload(bucket, object, uploadID, w, r)
+	case "POST":
+		return g.completeMultipartUpload(bucket, object, uploadID, w, r)
+	default:
+		return ErrMethodNotAllowed
+	}
+}
+
 // routeObject oandles URLs that contain both a bucket path segment and an
 // object path segment.
 func (g *Yts3) routeObject(bucket, object string, w http.ResponseWriter, r *http.Request) (err error) {
@@ -69,7 +84,8 @@ func (g *Yts3) routeObject(bucket, object string, w http.ResponseWriter, r *http
 	case "GET":
 		return g.getObject(bucket, object, "", w, r)
 	case "HEAD":
-		return g.headObject(bucket, object, "", w, r)
+		// return g.headObject(bucket, object, "", w, r)
+		return g.getObject(bucket, object, "", w, r)
 	case "PUT":
 		return g.createObject(bucket, object, w, r)
 	case "DELETE":
@@ -91,6 +107,8 @@ func (g *Yts3) routeBucket(bucket string, w http.ResponseWriter, r *http.Request
 		}
 	case "PUT":
 		return g.createBucket(bucket, w, r)
+	case "DELETE":
+		return g.deleteBucket(bucket, w, r)
 
 	case "POST":
 		if _, ok := r.URL.Query()["delete"]; ok {
@@ -103,16 +121,16 @@ func (g *Yts3) routeBucket(bucket string, w http.ResponseWriter, r *http.Request
 	}
 }
 
-// func (g *Yts3) routeMultipartUploadBase(bucket, object string, w http.ResponseWriter, r *http.Request) error {
-// 	switch r.Method {
-// 	case "GET":
-// 		return g.listMultipartUploads(bucket, w, r)
-// 	case "POST":
-// 		return g.initiateMultipartUpload(bucket, object, w, r)
-// 	default:
-// 		return ErrMethodNotAllowed
-// 	}
-// }
+func (g *Yts3) routeMultipartUploadBase(bucket, object string, w http.ResponseWriter, r *http.Request) error {
+	switch r.Method {
+	case "GET":
+		return g.listMultipartUploads(bucket, w, r)
+	case "POST":
+		return g.initiateMultipartUpload(bucket, object, w, r)
+	default:
+		return ErrMethodNotAllowed
+	}
+}
 
 func versionFromQuery(qv []string) string {
 	// The versionId subresource may be the string 'null'; this has been

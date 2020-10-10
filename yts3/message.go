@@ -3,6 +3,7 @@ package yts3
 import (
 	"encoding/xml"
 	"fmt"
+	"sort"
 	"time"
 )
 
@@ -116,6 +117,23 @@ type ListBucketResultV2 struct {
 type VersionItem interface {
 	GetVersionID() VersionID
 	setVersionID(v VersionID)
+}
+
+type CompleteMultipartUploadRequest struct {
+	Parts []CompletedPart `xml:"Part"`
+}
+
+func (c CompleteMultipartUploadRequest) partsAreSorted() bool {
+	return sort.IntsAreSorted(c.partIDs())
+}
+
+func (c CompleteMultipartUploadRequest) partIDs() []int {
+	inParts := make([]int, 0, len(c.Parts))
+	for _, inputPart := range c.Parts {
+		inParts = append(inParts, inputPart.PartNumber)
+	}
+	sort.Ints(inParts)
+	return inParts
 }
 
 type DeleteMarker struct {

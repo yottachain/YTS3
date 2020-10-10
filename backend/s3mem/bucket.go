@@ -10,6 +10,7 @@ import (
 	"github.com/yottachain/YTCoreService/api"
 	"github.com/yottachain/YTS3/internal/s3io"
 	"github.com/yottachain/YTS3/yts3"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type versionGenFunc func() yts3.VersionID
@@ -49,22 +50,22 @@ func newBucket(publicKey, bucketName string, at time.Time, versionGen versionGen
 }
 
 type bucketObject struct {
-	name     string
-	data     *bucketData
-	versions *skiplist.SkipList
+	name string
+	data *bucketData
+	// versions *skiplist.SkipList
 }
 
-func (b *bucketObject) Iterator() *bucketObjectIterator {
-	var iter skiplist.Iterator
-	if b.versions != nil {
-		iter = b.versions.Iterator()
-	}
+// func (b *bucketObject) Iterator() *bucketObjectIterator {
+// 	var iter skiplist.Iterator
+// 	if b.versions != nil {
+// 		iter = b.versions.Iterator()
+// 	}
 
-	return &bucketObjectIterator{
-		data: b.data,
-		iter: iter,
-	}
-}
+// 	return &bucketObjectIterator{
+// 		data: b.data,
+// 		iter: iter,
+// 	}
+// }
 
 type bucketObjectIterator struct {
 	data     *bucketData
@@ -153,7 +154,7 @@ func (bi *bucketData) toObject(rangeRequest *yts3.ObjectRangeRequest, withBody b
 		}
 
 		if rnge != nil {
-			data = data[rnge.Start : rnge.Start+rnge.Length]
+			// data =
 		}
 
 		// The data slice should be completely replaced if the bucket item is edited, so
@@ -194,25 +195,25 @@ func (b *bucket) object(objectName string) (obj *bucketObject) {
 	return obj
 }
 
-func (b *bucket) objectVersion(objectName string, versionID yts3.VersionID) (*bucketData, error) {
-	obj := b.object(objectName)
-	if obj == nil {
-		return nil, yts3.KeyNotFound(objectName)
-	}
+// func (b *bucket) objectVersion(objectName string, versionID yts3.VersionID) (*bucketData, error) {
+// 	obj := b.object(objectName)
+// 	if obj == nil {
+// 		return nil, yts3.KeyNotFound(objectName)
+// 	}
 
-	if obj.data != nil && obj.data.versionID == versionID {
-		return obj.data, nil
-	}
-	if obj.versions == nil {
-		return nil, yts3.ErrNoSuchVersion
-	}
-	versionIface, _ := obj.versions.Get(versionID)
-	if versionIface == nil {
-		return nil, yts3.ErrNoSuchVersion
-	}
+// 	if obj.data != nil && obj.data.versionID == versionID {
+// 		return obj.data, nil
+// 	}
+// 	if obj.versions == nil {
+// 		return nil, yts3.ErrNoSuchVersion
+// 	}
+// 	versionIface, _ := obj.versions.Get(versionID)
+// 	if versionIface == nil {
+// 		return nil, yts3.ErrNoSuchVersion
+// 	}
 
-	return versionIface.(*bucketData), nil
-}
+// 	return versionIface.(*bucketData), nil
+// }
 
 func (b *bucket) put(publicKey, name string, item *bucketData) {
 	item.versionID = b.versionGen()
@@ -223,38 +224,42 @@ func (b *bucket) put(publicKey, name string, item *bucketData) {
 		b.objects.Set(name, object)
 	}
 
-	if b.versioning == yts3.VersioningEnabled {
-		if object.data != nil {
-			if object.versions == nil {
-				object.versions = skiplist.NewCustomMap(func(l, r interface{}) bool {
-					return l.(yts3.VersionID) < r.(yts3.VersionID)
-				})
-			}
-			object.versions.Set(object.data.versionID, object.data)
-		}
-	}
+	// if b.versioning == yts3.VersioningEnabled {
+	// 	if object.data != nil {
+	// 		if object.versions == nil {
+	// 			object.versions = skiplist.NewCustomMap(func(l, r interface{}) bool {
+	// 				return l.(yts3.VersionID) < r.(yts3.VersionID)
+	// 			})
+	// 		}
+	// 		object.versions.Set(object.data.versionID, object.data)
+	// 	}
+	// }
 
 	object.data = item
 }
 
-func (b *bucket) rm(publicKey, name string, at time.Time) (result yts3.ObjectDeleteResult, rerr error) {
-	object := b.object(name)
+func (b *bucket) rm(publicKey, bucketName, objectName string, at time.Time) (result yts3.ObjectDeleteResult, rerr error) {
+	object := b.object(objectName)
 	if object == nil {
 		// S3 does not report an error when attemping to delete a key that does not exist
 		return result, nil
 	}
 
 	if b.versioning == yts3.VersioningEnabled {
-		item := &bucketData{lastModified: at, name: name, deleteMarker: true}
-		b.put(publicKey, name, item)
+		item := &bucketData{lastModified: at, name: objectName, deleteMarker: true}
+		b.put(publicKey, objectName, item)
 		result.IsDeleteMarker = true
 		result.VersionID = item.versionID
 
 	} else {
-		object.data = nil
-		if object.versions == nil || object.versions.Len() == 0 {
-			b.objects.Delete(name)
+		c := api.GetClient(publicKey)
+		objectAccessor := c.NewObjectAccessor()
+		err := objectAccessor.DeleteObject(bucketName, objectName, primitive.ObjectID{})
+		if err != nil {
+			return
 		}
+		b.objects.Delete(objectName)
+
 	}
 
 	return result, nil

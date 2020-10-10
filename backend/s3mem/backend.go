@@ -3,16 +3,21 @@ package s3mem
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"github.com/ryszard/goskiplist/skiplist"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"io"
+	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/ryszard/goskiplist/skiplist"
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
+	"github.com/yottachain/YTS3/conf"
 	"github.com/yottachain/YTS3/yts3"
 )
 
@@ -107,9 +112,9 @@ func getContentByMeta(meta map[string]string)*yts3.Content{
 		if err == nil {
 			content.Size = size
 		}
-	}	
-	if lastModifyString,ok:=meta["x-amz-meta-s3b-last-modified"];ok {
-		lastModifyTime,err:=time.Parse("20190108T135030Z",lastModifyString)
+	}
+	if lastModifyString, ok := meta["x-amz-meta-s3b-last-modified"]; ok {
+		lastModifyTime, err := time.Parse("20060102T150405Z", lastModifyString)
 		if err == nil {
 			content.LastModified = yts3.ContentTime{lastModifyTime}
 		}
@@ -134,12 +139,17 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 		if err != nil {
 			return response,fmt.Errorf(err.String())
 		}
-		logrus.Printf("items len %d\n",len(items))
-		for _,v:= range items {
-			meta,err:=api.BytesToFileMetaMap(v.Meta,v.VersionId)
+		logrus.Printf("items len %d\n", len(items))
+		for _, v := range items {
+			meta, err := api.BytesToFileMetaMap(v.Meta, primitive.ObjectID{})
+
 			if err != nil {
 				continue
 			}
+			t := time.Unix(v.FileId.Timestamp().Unix(), 0)
+			s := t.Format("20060102T150405Z")
+			//ts, _ := time.ParseInLocation("2006-01-02 15:04:05", s, time.Local)
+			meta["x-amz-meta-s3b-last-modified"] = s
 			content := getContentByMeta(meta)
 			content.Key = v.FileName
 			content.Owner = &yts3.UserInfo{
@@ -148,13 +158,13 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 			}
 			response.Contents = append(response.Contents,content)
 			filename = v.FileName
-			hash,_:= hex.DecodeString(meta["ETag"])
-			sklist.Set(v.FileName,&bucketObject{
-				name:v.FileName,
+			hash, _ := hex.DecodeString(meta["ETag"])
+			sklist.Set(v.FileName, &bucketObject{
+				name: v.FileName,
 				data: &bucketData{
-					name: v.FileName,
-					hash: hash,
-					metadata:meta,
+					name:         v.FileName,
+					hash:         hash,
+					metadata:     meta,
 					lastModified: content.LastModified.Time,
 				},
 			})
@@ -174,11 +184,98 @@ func (db *Backend) BucketExists(name string) (exists bool, err error) {
 	return db.buckets[name] != nil, nil
 }
 
+//PutBigObject 分片上传
+// func (db *Backend) PutBigObject(publicKey, bucketName, objectName, etag string, meta map[string]string, size int64) (result yts3.PutObjectResult, err error) {
+// 	db.lock.Lock()
+// 	defer db.lock.Unlock()
+
+// 	bucket := db.buckets[bucketName]
+// 	if bucket == nil {
+// 		return result, yts3.BucketNotFound(bucketName)
+// 	}
+// 	c := api.GetClient(publicKey)
+// 	upload := c.NewUploadObject()
+// 	iniPath := "conf/yotta_config.ini"
+// 	cfg, err := conf.CreateConfig(iniPath)
+// 	cache := cfg.GetCacheInfo("directory")
+// 	directory := cache + "/" + bucketName
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	var bts []byte
+// 	var header map[string]string
+// 	header = make(map[string]string)
+// 	filePath := directory + "/" + objectName
+// 	hashw, erre := upload.UploadFile(filePath)
+// 	if erre != nil {
+// 		return
+// 	}
+// 	logrus.Info("upload hash result:", hex.EncodeToString(hashw))
+
+// 	item := &bucketData{
+// 		name:         objectName,
+// 		body:         bts,
+// 		hash:         hashw[:],
+// 		etag:         `"` + etag + `"`,
+// 		metadata:     meta,
+// 		lastModified: db.timeSource.Now(),
+// 	}
+// 	item.metadata["ETag"] = item.etag
+// 	header["ETag"] = etag
+// 	header["contentLength"] = strconv.FormatInt(size, 10)
+// 	metadata2, err2 := api.FileMetaMapTobytes(header)
+
+// 	if err2 != nil {
+// 		logrus.Errorf("[FileMetaMapTobytes ]:%s\n", err2)
+// 		return
+// 	}
+
+// 	logrus.Println("bucket name is [" + bucketName + "]")
+// 	err3 := c.NewObjectAccessor().CreateObject(bucketName, objectName, upload.VNU, metadata2)
+// 	if err3 != nil {
+// 		logrus.Errorf("[Save meta data ]:%s\n", err3)
+// 		return
+// 	}
+// 	deleteCacheFile(filePath)
+
+// 	return result, nil
+// }
+
 //PutObject upload file
 func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[string]string, input io.Reader, size int64) (result yts3.PutObjectResult, err error) {
-	bts, err := yts3.ReadAll(input, size)
+	c := api.GetClient(publicKey)
+	upload := c.NewUploadObject()
+	iniPath := "conf/yotta_config.ini"
+	cfg, err := conf.CreateConfig(iniPath)
+	cache := cfg.GetCacheInfo("directory")
+	directory := cache + "/" + bucketName
 	if err != nil {
-		return result, err
+		panic(err)
+	}
+
+	var hash [16]byte
+	var bts []byte
+	var header map[string]string
+	header = make(map[string]string)
+	if size >= 10485760 {
+
+		errw := writeCacheFile(directory, objectName, input)
+		if errw != nil {
+			return
+		}
+		filePath := directory + "/" + objectName
+		hashw, erre := upload.UploadFile(filePath)
+		if erre != nil {
+			return
+		}
+		logrus.Info("upload hash result:", hex.EncodeToString(hashw))
+	} else {
+		bts, err = yts3.ReadAll(input, size)
+		if err != nil {
+			return result, err
+		}
+		hash = md5.Sum(bts)
+		logrus.Println("length:::", len(bts))
 	}
 
 	db.lock.Lock()
@@ -189,8 +286,6 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 		return result, yts3.BucketNotFound(bucketName)
 	}
 
-	hash := md5.Sum(bts)
-
 	item := &bucketData{
 		name:         objectName,
 		body:         bts,
@@ -200,31 +295,93 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 		lastModified: db.timeSource.Now(),
 	}
 	item.metadata["ETag"] = item.etag
-	c := api.GetClient(publicKey)
-	upload := c.NewUploadObject()
-	resulthash, err1 := upload.UploadBytes(item.body)
-	if err1 != nil {
-		logrus.Printf("ERR", err1)
-	}
 	logrus.Info("upload hash etag:", item.etag)
-	logrus.Info("upload hash result:", hex.EncodeToString(resulthash))
+	// logrus.Info("fileSize:::::::::", len(item.body))
+
+	if size < 10485760 {
+		resulthash, err1 := upload.UploadBytes(item.body)
+		if err1 != nil {
+			logrus.Printf("ERR", err1)
+			return
+		}
+		logrus.Info("upload hash result:", hex.EncodeToString(resulthash))
+	}
+
 	//update meta data
-	var header map[string]string
-	header = make(map[string]string)
+
 	header["ETag"] = hex.EncodeToString(hash[:])
-	header["x-amz-date"] = item.metadata["X-Amz-Date"]
 	header["contentLength"] = strconv.FormatInt(size, 10)
 	metadata2, err2 := api.FileMetaMapTobytes(header)
+
 	if err2 != nil {
 		logrus.Errorf("[FileMetaMapTobytes ]:%s\n", err2)
 		return
 	}
 
+	logrus.Println("bucket name is [" + bucketName + "]")
 	err3 := c.NewObjectAccessor().CreateObject(bucketName, objectName, upload.VNU, metadata2)
 	if err3 != nil {
 		logrus.Errorf("[Save meta data ]:%s\n", err3)
 	}
+	if size >= 10485760 {
+		filePath := directory + "/" + objectName
+		deleteCacheFile(filePath)
+	}
+
 	return result, nil
+}
+
+//deleteCacheFile 删除缓存文件
+func deleteCacheFile(path string) {
+	del := os.Remove(path)
+	if del != nil {
+		fmt.Println(del)
+	}
+}
+
+func writeCacheFile(directory, fileName string, input io.Reader) error {
+
+	// path := directory + "/" + fileName
+	s, err := os.Stat(directory)
+	if err != nil {
+		if !os.IsExist(err) {
+			err = os.MkdirAll(directory, os.ModePerm)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	} else {
+		if !s.IsDir() {
+			return errors.New("The specified path is not a directory.")
+		}
+	}
+	if !strings.HasSuffix(directory, "/") {
+		directory = directory + "/"
+	}
+	filePath := directory + fileName
+	f, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	readbuf := make([]byte, 8192)
+	for {
+		num, err := input.Read(readbuf)
+		if err != nil && err != io.EOF {
+			return err
+		}
+		if num > 0 {
+			bs := readbuf[0:num]
+			f.Write(bs)
+		}
+		if err != nil && err == io.EOF {
+			break
+		}
+	}
+	return nil
 }
 
 //CreateBucket create bucket
@@ -258,7 +415,7 @@ func (db *Backend) DeleteMulti(publicKey, bucketName string, objects ...string) 
 	now := db.timeSource.Now()
 
 	for _, object := range objects {
-		dresult, err := bucket.rm(publicKey, object, now)
+		dresult, err := bucket.rm(publicKey, bucketName, object, now)
 		_ = dresult // FIXME: what to do with rm result in multi delete?
 
 		if err != nil {
@@ -313,7 +470,7 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 	if err != nil {
 		return nil, err
 	}
-	content:=getContentByMeta(result.Metadata)
+	content := getContentByMeta(result.Metadata)
 	result.Size = content.Size
 
 	if bucket.versioning != yts3.VersioningEnabled {
@@ -321,11 +478,11 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 	}
 
 	c := api.GetClient(publicKey)
-	download,errMsg := c.NewDownloadFile(bucketName,objectName,primitive.NilObjectID)
+	download, errMsg := c.NewDownloadFile(bucketName, objectName, primitive.NilObjectID)
 	if errMsg != nil {
-		logrus.Printf("%v\n",errMsg)
+		logrus.Printf("%v\n", errMsg)
 	}
-	result.Contents=download.Load().(io.ReadCloser)
+	result.Contents = download.Load().(io.ReadCloser)
 
 	return result, nil
 }
@@ -339,22 +496,26 @@ func (db *Backend) DeleteObject(publicKey, bucketName, objectName string) (resul
 		return result, yts3.BucketNotFound(bucketName)
 	}
 
-	return bucket.rm(publicKey, objectName, db.timeSource.Now())
+	return bucket.rm(publicKey, bucketName, objectName, db.timeSource.Now())
 }
 
-func (db *Backend) DeleteBucket(publicKey, name string) error {
+func (db *Backend) DeleteBucket(publicKey, bucketName string) error {
 	db.lock.Lock()
 	defer db.lock.Unlock()
 
-	if db.buckets[name] == nil {
+	if db.buckets[bucketName] == nil {
 		return yts3.ErrNoSuchBucket
 	}
 
-	if db.buckets[name].objects.Len() > 0 {
-		return yts3.ResourceError(yts3.ErrBucketNotEmpty, name)
+	if db.buckets[bucketName].objects.Len() > 0 {
+		return yts3.ResourceError(yts3.ErrBucketNotEmpty, bucketName)
 	}
-
-	delete(db.buckets, name)
+	c := api.GetClient(publicKey)
+	bucketAccessor := c.NewBucketAccessor()
+	err := bucketAccessor.DeleteBucket(bucketName)
+	if err != nil {
+		logrus.Println(err)
+	}
 
 	return nil
 }
