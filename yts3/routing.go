@@ -84,8 +84,8 @@ func (g *Yts3) routeObject(bucket, object string, w http.ResponseWriter, r *http
 	case "GET":
 		return g.getObject(bucket, object, "", w, r)
 	case "HEAD":
-		// return g.headObject(bucket, object, "", w, r)
-		return g.getObject(bucket, object, "", w, r)
+		return g.headObject(bucket, object, "", w, r)
+		// return g.getObject(bucket, object, "", w, r)
 	case "PUT":
 		return g.createObject(bucket, object, w, r)
 	case "DELETE":

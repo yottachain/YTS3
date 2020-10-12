@@ -141,9 +141,9 @@ func (g *Yts3) listBucket(bucketName string, w http.ResponseWriter, r *http.Requ
 
 	isVersion2 := q.Get("list-type") == "2"
 
-	g.log.Print(LogInfo, "bucketname:", bucketName)
-	g.log.Print(LogInfo, "prefix    :", prefix)
-	g.log.Print(LogInfo, "page      :", fmt.Sprintf("%+v", page))
+	logrus.Println(LogInfo, "bucketname:", bucketName)
+	logrus.Println(LogInfo, "prefix    :", prefix)
+	logrus.Println(LogInfo, "page      :", fmt.Sprintf("%+v", page))
 
 	objects, err := g.storage.ListBucket(content, bucketName, &prefix, page)
 
@@ -507,7 +507,7 @@ func (g *Yts3) headObject(bucket, object string, versionID VersionID, w http.Res
 		return err
 	}
 	if obj == nil {
-		g.log.Print(LogErr, "unexpected nil object for key", bucket, object)
+		logrus.Println(LogErr, "unexpected nil object for key", bucket, object)
 		return ErrInternal
 	}
 	defer obj.Contents.Close()
@@ -699,13 +699,15 @@ func (g *Yts3) deleteBucket(bucket string, w http.ResponseWriter, r *http.Reques
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
-	fmt.Println("publicKey:", len(content))
+	// fmt.Println("publicKey:", len(content))
+	logrus.Info("publicKey1:: ", content)
 	if len(content) > 50 {
 		publicKeyLength := strings.Index(content, ":")
 		contentNew := content[:publicKeyLength]
 		fmt.Println("new::::", contentNew)
 		content = contentNew
 	}
+	logrus.Info("publicKey2:: ", content)
 	if err := g.storage.DeleteBucket(content, bucket); err != nil {
 		return err
 	}

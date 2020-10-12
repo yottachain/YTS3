@@ -147,7 +147,6 @@ func (bi *bucketData) toObject(rangeRequest *yts3.ObjectRangeRequest, withBody b
 	var rnge *yts3.ObjectRange
 
 	if withBody {
-		// In case of a range request the correct part of the slice is extracted:
 		rnge, err = rangeRequest.Range(sz)
 		if err != nil {
 			return nil, err
@@ -193,26 +192,6 @@ func (b *bucket) object(objectName string) (obj *bucketObject) {
 	obj, _ = objIface.(*bucketObject)
 	return obj
 }
-
-// func (b *bucket) objectVersion(objectName string, versionID yts3.VersionID) (*bucketData, error) {
-// 	obj := b.object(objectName)
-// 	if obj == nil {
-// 		return nil, yts3.KeyNotFound(objectName)
-// 	}
-
-// 	if obj.data != nil && obj.data.versionID == versionID {
-// 		return obj.data, nil
-// 	}
-// 	if obj.versions == nil {
-// 		return nil, yts3.ErrNoSuchVersion
-// 	}
-// 	versionIface, _ := obj.versions.Get(versionID)
-// 	if versionIface == nil {
-// 		return nil, yts3.ErrNoSuchVersion
-// 	}
-
-// 	return versionIface.(*bucketData), nil
-// }
 
 func (b *bucket) put(publicKey, name string, item *bucketData) {
 	item.versionID = b.versionGen()
