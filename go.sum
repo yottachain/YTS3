@@ -636,8 +636,8 @@ github.com/yottachain/P2PHost v1.0.1-0.20200330065720-69572fdc7d92 h1:NG1tqZYyp+
 github.com/yottachain/P2PHost v1.0.1-0.20200330065720-69572fdc7d92/go.mod h1:V7g0oufx1cRzGw+1aUsMPkmD/+Uvdiax7dZiiC+afoM=
 github.com/yottachain/P2PHost v1.0.2-0.20200921072702-609d35770f59 h1:FZHYTMNf39jebg8BP4Zr7C6aSu2lLz5GKk5rldGJZh0=
 github.com/yottachain/P2PHost v1.0.2-0.20200921072702-609d35770f59/go.mod h1:4ZBTjWbVgjQbVAjLDWsj0VSB723F02mau38rGp1W5yU=
-github.com/yottachain/YTCoreService v0.0.0-20200928080454-9875834c640e h1:aZWHy02r3fouTDeyMOh9Y+kEQPk3VM4c3DfvX8ba3lg=
-github.com/yottachain/YTCoreService v0.0.0-20200928080454-9875834c640e/go.mod h1:NTN1npwegPYY8VtVu6G+q2woZwNIYPdAvbmQwW7wvlE=
+github.com/yottachain/YTCoreService v0.0.0-20201012080935-60e37e1765fb h1:5YgVhCLieasp3L6tXVdNS2LMK0NDlHMjAuDuNm60uIs=
+github.com/yottachain/YTCoreService v0.0.0-20201012080935-60e37e1765fb/go.mod h1:NTN1npwegPYY8VtVu6G+q2woZwNIYPdAvbmQwW7wvlE=
 github.com/yottachain/YTCrypto v0.0.0-20200122165219-0ea35dc29812 h1:XG9TtLosanLdwqSoporMr8OASUOjxuaj6cJDlut1c9s=
 github.com/yottachain/YTCrypto v0.0.0-20200122165219-0ea35dc29812/go.mod h1:jDJUVGeQ1clW7k9OTRBAFtCMwGs9B9fGQ9QY64SKqlk=
 github.com/yottachain/YTDNMgmt v0.0.0-20200928075751-7465c0ee1543 h1:HAJU0ZR1m7XiOxymPDfG9xb6d+UQLQPcIJRAwZpuPLE=
