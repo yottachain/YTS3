@@ -426,9 +426,9 @@ func (mpu *multipartUpload) Reassemble(input *CompleteMultipartUploadRequest) (b
 		}
 
 		upPart := mpu.parts[inPart.PartNumber]
-		if inPart.ETag != upPart.ETag {
-			return nil, "", ErrorMessagef(ErrInvalidPart, "unexpected part etag for number %d in complete request", inPart.PartNumber)
-		}
+		// if inPart.ETag != upPart.ETag {
+		// 	return nil, "", ErrorMessagef(ErrInvalidPart, "unexpected part etag for number %d in complete request", inPart.PartNumber)
+		// }
 
 		size += int64(len(upPart.Body))
 	}
