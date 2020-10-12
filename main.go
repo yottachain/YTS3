@@ -17,11 +17,8 @@ import (
 
 	"log"
 
-	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
 	"github.com/yottachain/YTS3/backend/s3mem"
-	"github.com/yottachain/YTS3/conf"
-	"github.com/yottachain/YTS3/routers"
 	"github.com/yottachain/YTS3/yts3"
 )
 
