@@ -133,7 +133,7 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 	filename := ""
 	for {
 		objectAccessor := c.NewObjectAccessor()
-		items, err := objectAccessor.ListObject(name, filename, "", false, primitive.ObjectID{}, 1000)
+		items, err := objectAccessor.ListObject(name, filename, prefix.Prefix, false, primitive.ObjectID{}, 1000)
 		if err != nil {
 			return response, fmt.Errorf(err.String())
 		}
