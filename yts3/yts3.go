@@ -832,7 +832,7 @@ func (g *Yts3) completeMultipartUpload(bucket, object string, uploadID UploadID,
 	result, err := g.storage.PutObject(content, bucket, object, upload.Meta, bytes.NewReader(fileBody), int64(len(fileBody)))
 	if err != nil {
 		logrus.Info("put boject ERR :", err)
-		return err
+		// return err
 	}
 	if result.VersionID != "" {
 		w.Header().Set("x-amz-version-id", string(result.VersionID))
