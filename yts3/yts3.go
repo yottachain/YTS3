@@ -814,20 +814,24 @@ func (g *Yts3) completeMultipartUpload(bucket, object string, uploadID UploadID,
 	}
 	var in CompleteMultipartUploadRequest
 	if err := g.xmlDecodeBody(r.Body, &in); err != nil {
+		logrus.Info("xmlDecodeBody ERR :", err)
 		return err
 	}
 	defer r.Body.Close()
 	upload, err := g.uploader.Complete(bucket, object, uploadID)
 	if err != nil {
+		logrus.Info("upload complete ERR :", err)
 		return err
 	}
 
 	fileBody, etag, err := upload.Reassemble(&in)
 	if err != nil {
+		logrus.Info("fileBody, etag ERR :", err)
 		return err
 	}
 	result, err := g.storage.PutObject(content, bucket, object, upload.Meta, bytes.NewReader(fileBody), int64(len(fileBody)))
 	if err != nil {
+		logrus.Info("put boject ERR :", err)
 		return err
 	}
 	if result.VersionID != "" {
