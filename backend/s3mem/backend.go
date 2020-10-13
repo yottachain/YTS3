@@ -452,10 +452,6 @@ func (db *Backend) HeadObject(publicKey, bucketName, objectName string) (*yts3.O
 	if err != nil {
 		return nil,err
 	}
-	result.Range = &yts3.ObjectRange{
-		Start:  0,
-		Length: result.Size,
-	}
 	return result,err
 }
 
@@ -490,10 +486,14 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 	if errMsg != nil {
 		logrus.Printf("%v\n", errMsg)
 	}
-	result.Contents = download.Load().(io.ReadCloser)
-	result.Range = &yts3.ObjectRange{
-		Start:  0,
-		Length: result.Size,
+	if rangeRequest != nil {
+		result.Contents = download.LoadRange(rangeRequest.Start,rangeRequest.End).(io.ReadCloser)
+		result.Range = &yts3.ObjectRange{
+			Start:  rangeRequest.Start,
+			Length: rangeRequest.End-rangeRequest.Start,
+		}
+	} else {
+		result.Contents = download.Load().(io.ReadCloser)
 	}
 	hash,err:=hex.DecodeString(content.ETag)
 	if err != nil {
