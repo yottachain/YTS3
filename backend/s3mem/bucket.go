@@ -234,6 +234,7 @@ func (b *bucket) rm(publicKey, bucketName, objectName string, at time.Time) (res
 		objectAccessor := c.NewObjectAccessor()
 		err := objectAccessor.DeleteObject(bucketName, objectName, primitive.ObjectID{})
 		if err != nil {
+			logrus.Println(err)
 			return
 		}
 		b.objects.Delete(objectName)
