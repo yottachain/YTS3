@@ -448,10 +448,19 @@ func (db *Backend) HeadObject(publicKey, bucketName, objectName string) (*yts3.O
 	if obj == nil || obj.data.deleteMarker {
 		return nil, yts3.KeyNotFound(objectName)
 	}
-	return obj.data.toObject(nil, false)
+	result,err := obj.data.toObject(nil, false)
+	if err != nil {
+		return nil,err
+	}
+	result.Range = &yts3.ObjectRange{
+		Start:  0,
+		Length: result.Size,
+	}
+	return result,err
 }
 
 func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequest *yts3.ObjectRangeRequest) (*yts3.Object, error) {
+
 	db.lock.RLock()
 	defer db.lock.RUnlock()
 
@@ -482,7 +491,10 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 		logrus.Printf("%v\n", errMsg)
 	}
 	result.Contents = download.Load().(io.ReadCloser)
-
+	result.Range = &yts3.ObjectRange{
+		Start:  0,
+		Length: result.Size,
+	}
 	return result, nil
 }
 
