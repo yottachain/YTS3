@@ -495,6 +495,12 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 		Start:  0,
 		Length: result.Size,
 	}
+	hash,err:=hex.DecodeString(content.ETag)
+	if err != nil {
+		fmt.Println(err)
+	}
+	result.Hash = hash
+	fmt.Println("result",result)
 	return result, nil
 }
 
