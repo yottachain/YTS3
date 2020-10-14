@@ -465,16 +465,17 @@ func (cr *ContentReader)Close()error  {
 
 func (cr *ContentReader)Read(buf []byte) (int,error)  {
 	var nc int
+	var err2 error
 	for i:=0;i<5;i++ {
 		n,err:=cr.ReadCloser.Read(buf)
 		if err == nil {
-			nc+=n
-		}
-		if nc >= len(buf) {
+			nc =n
 			break
+		} else {
+			err2 = err
 		}
 	}
-	return nc,nil
+	return nc,err2
 }
 
 func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequest *yts3.ObjectRangeRequest) (*yts3.Object, error) {
