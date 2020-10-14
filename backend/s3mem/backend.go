@@ -510,7 +510,7 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 		logrus.Printf("%v\n", errMsg)
 	}
 	if rangeRequest != nil {
-		result.Contents = download.LoadRange(rangeRequest.Start,rangeRequest.End).(io.ReadCloser)
+		result.Contents = &ContentReader{download.LoadRange(rangeRequest.Start,rangeRequest.End).(io.ReadCloser)}
 		result.Range = &yts3.ObjectRange{
 			Start:  rangeRequest.Start,
 			Length: rangeRequest.End-rangeRequest.Start,
