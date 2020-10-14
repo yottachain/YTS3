@@ -455,6 +455,28 @@ func (db *Backend) HeadObject(publicKey, bucketName, objectName string) (*yts3.O
 	return result,err
 }
 
+type ContentReader struct {
+	io.ReadCloser
+}
+
+func (cr *ContentReader)Close()error  {
+	return cr.Close()
+}
+
+func (cr *ContentReader)Read(buf []byte) (int,error)  {
+	var nc int
+	for {
+		n,err:=cr.Read(buf)
+		if err == nil {
+			nc+=n
+		}
+		if nc == len(buf) {
+			break
+		}
+	}
+	return nc,nil
+}
+
 func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequest *yts3.ObjectRangeRequest) (*yts3.Object, error) {
 
 	db.lock.RLock()
@@ -493,7 +515,7 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 			Length: rangeRequest.End-rangeRequest.Start,
 		}
 	} else {
-		result.Contents = download.Load().(io.ReadCloser)
+		result.Contents = &ContentReader{download.Load().(io.ReadCloser)}
 	}
 	hash,err:=hex.DecodeString(content.ETag)
 	if err != nil {
