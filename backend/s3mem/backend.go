@@ -460,7 +460,7 @@ type ContentReader struct {
 }
 
 func (cr *ContentReader)Close()error  {
-	return cr.Close()
+	return cr.ReadCloser.Close()
 }
 
 func (cr *ContentReader)Read(buf []byte) (int,error)  {
