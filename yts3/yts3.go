@@ -443,11 +443,9 @@ func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.Resp
 
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
-	fmt.Println("publicKey:", len(content))
 	if len(content) > 50 {
 		publicKeyLength := strings.Index(content, ":")
 		contentNew := content[:publicKeyLength]
-		fmt.Println("new::::", contentNew)
 		content = contentNew
 	}
 	rnge, err := parseRangeHeader(r.Header.Get("Range"))
@@ -501,6 +499,7 @@ func (g *Yts3) headObject(bucket, object string, versionID VersionID, w http.Res
 
 		content = contentNew
 	}
+	logrus.Infof("publicKey=", content)
 	obj, err := g.storage.HeadObject(content, bucket, object)
 	if err != nil {
 		return err
