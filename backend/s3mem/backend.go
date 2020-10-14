@@ -512,8 +512,9 @@ func (db *Backend) DeleteBucket(publicKey, bucketName string) error {
 	bucketAccessor := c.NewBucketAccessor()
 	err := bucketAccessor.DeleteBucket(bucketName)
 	if err != nil {
-		logrus.Println(err)
+		logrus.Errorf("Error msg:", err)
 	}
+	delete(db.buckets, bucketName)
 
 	return nil
 }
