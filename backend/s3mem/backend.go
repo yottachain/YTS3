@@ -465,12 +465,12 @@ func (cr *ContentReader)Close()error  {
 
 func (cr *ContentReader)Read(buf []byte) (int,error)  {
 	var nc int
-	for {
-		n,err:=cr.Read(buf)
+	for i:=0;i<5;i++ {
+		n,err:=cr.ReadCloser.Read(buf)
 		if err == nil {
 			nc+=n
 		}
-		if nc == len(buf) {
+		if nc >= len(buf) {
 			break
 		}
 	}
