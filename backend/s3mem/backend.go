@@ -121,15 +121,65 @@ func getContentByMeta(meta map[string]string) *yts3.Content {
 }
 
 //ListBucket s3 listObjects
+// func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page yts3.ListBucketPage) (*yts3.ObjectList, error) {
+// 	db.lock.RLock()
+// 	defer db.lock.RUnlock()
+
+// 	var response = yts3.NewObjectList()
+
+// 	c := api.GetClient(publicKey)
+// 	sklist := skiplist.NewStringMap()
+
+// 	filename := ""
+// 	for {
+// 		objectAccessor := c.NewObjectAccessor()
+// 		items, err := objectAccessor.ListObject(name, filename, prefix.Prefix, false, primitive.ObjectID{}, 1000)
+// 		if err != nil {
+// 			return response, fmt.Errorf(err.String())
+// 		}
+// 		logrus.Printf("items len %d\n", len(items))
+// 		for _, v := range items {
+// 			meta, err := api.BytesToFileMetaMap(v.Meta, primitive.ObjectID{})
+
+// 			if err != nil {
+// 				continue
+// 			}
+// 			t := time.Unix(v.FileId.Timestamp().Unix(), 0)
+// 			s := t.Format("20060102T150405Z")
+// 			//ts, _ := time.ParseInLocation("2006-01-02 15:04:05", s, time.Local)
+// 			meta["x-amz-meta-s3b-last-modified"] = s
+// 			content := getContentByMeta(meta)
+// 			content.Key = v.FileName
+// 			content.Owner = &yts3.UserInfo{
+// 				ID:          c.Username,
+// 				DisplayName: c.Username,
+// 			}
+// 			response.Contents = append(response.Contents, content)
+// 			filename = v.FileName
+// 			hash, _ := hex.DecodeString(meta["ETag"])
+// 			sklist.Set(v.FileName, &bucketObject{
+// 				name: v.FileName,
+// 				data: &bucketData{
+// 					name:         v.FileName,
+// 					hash:         hash,
+// 					metadata:     meta,
+// 					lastModified: content.LastModified.Time,
+// 				},
+// 			})
+// 		}
+// 		if len(items) < 1000 {
+// 			break
+// 		}
+// 	}
+// 	db.buckets[name].objects = sklist
+// 	return response, nil
+// }
 func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page yts3.ListBucketPage) (*yts3.ObjectList, error) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
-
 	var response = yts3.NewObjectList()
-
 	c := api.GetClient(publicKey)
 	sklist := skiplist.NewStringMap()
-
 	filename := ""
 	for {
 		objectAccessor := c.NewObjectAccessor()
@@ -140,7 +190,6 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 		logrus.Printf("items len %d\n", len(items))
 		for _, v := range items {
 			meta, err := api.BytesToFileMetaMap(v.Meta, primitive.ObjectID{})
-
 			if err != nil {
 				continue
 			}
@@ -450,41 +499,71 @@ func (db *Backend) HeadObject(publicKey, bucketName, objectName string) (*yts3.O
 	return obj.data.toObject(nil, false)
 }
 
+type ContentReader struct {
+	io.ReadCloser
+}
+
+func (cr *ContentReader) Close() error {
+	return cr.ReadCloser.Close()
+}
+
+func (cr *ContentReader) Read(buf []byte) (int, error) {
+	var nc int
+	var err2 error
+	for i := 0; i < 5; i++ {
+		n, err := cr.ReadCloser.Read(buf)
+		if err == nil {
+			nc = n
+			break
+		} else {
+			err2 = err
+		}
+	}
+	return nc, err2
+}
+
 func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequest *yts3.ObjectRangeRequest) (*yts3.Object, error) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
-
 	bucket := db.buckets[bucketName]
 	if bucket == nil {
 		return nil, yts3.BucketNotFound(bucketName)
 	}
-
 	obj := bucket.object(objectName)
 	if obj == nil || obj.data.deleteMarker {
 		return nil, yts3.KeyNotFound(objectName)
 	}
-
 	result, err := obj.data.toObject(rangeRequest, true)
 	if err != nil {
 		return nil, err
 	}
 	content := getContentByMeta(result.Metadata)
 	result.Size = content.Size
-
 	if bucket.versioning != yts3.VersioningEnabled {
 		result.VersionID = ""
 	}
-
 	c := api.GetClient(publicKey)
 	download, errMsg := c.NewDownloadFile(bucketName, objectName, primitive.NilObjectID)
 	if errMsg != nil {
 		logrus.Printf("%v\n", errMsg)
 	}
-	result.Contents = download.Load().(io.ReadCloser)
-
+	if rangeRequest != nil {
+		result.Contents = &ContentReader{download.LoadRange(rangeRequest.Start, rangeRequest.End).(io.ReadCloser)}
+		result.Range = &yts3.ObjectRange{
+			Start:  rangeRequest.Start,
+			Length: rangeRequest.End - rangeRequest.Start,
+		}
+	} else {
+		result.Contents = &ContentReader{download.Load().(io.ReadCloser)}
+	}
+	hash, err := hex.DecodeString(content.ETag)
+	if err != nil {
+		fmt.Println(err)
+	}
+	result.Hash = hash
+	fmt.Println("result", result)
 	return result, nil
 }
-
 func (db *Backend) DeleteObject(publicKey, bucketName, objectName string) (result yts3.ObjectDeleteResult, rerr error) {
 	db.lock.Lock()
 	defer db.lock.Unlock()
@@ -509,7 +588,9 @@ func (db *Backend) DeleteBucket(publicKey, bucketName string) error {
 		return yts3.ResourceError(yts3.ErrBucketNotEmpty, bucketName)
 	}
 	c := api.GetClient(publicKey)
+
 	bucketAccessor := c.NewBucketAccessor()
+
 	err := bucketAccessor.DeleteBucket(bucketName)
 	if err != nil {
 		logrus.Errorf("Error msg:", err)
