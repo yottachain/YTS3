@@ -584,9 +584,9 @@ func (db *Backend) DeleteBucket(publicKey, bucketName string) error {
 		return yts3.ErrNoSuchBucket
 	}
 
-	if db.buckets[bucketName].objects.Len() > 0 {
-		return yts3.ResourceError(yts3.ErrBucketNotEmpty, bucketName)
-	}
+	// if db.buckets[bucketName].objects.Len() > 0 {
+	// 	return yts3.ResourceError(yts3.ErrBucketNotEmpty, bucketName)
+	// }
 	c := api.GetClient(publicKey)
 
 	bucketAccessor := c.NewBucketAccessor()
