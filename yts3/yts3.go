@@ -697,6 +697,7 @@ func (g *Yts3) deleteBucket(bucket string, w http.ResponseWriter, r *http.Reques
 		contentNew := content[:publicKeyLength]
 		content = contentNew
 	}
+	fmt.Println("publicKey:", content)
 	if err := g.storage.DeleteBucket(content, bucket); err != nil {
 		logrus.Errorf("Error Msg:", err)
 		return err
