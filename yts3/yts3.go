@@ -82,12 +82,11 @@ func (g *Yts3) listBuckets(w http.ResponseWriter, r *http.Request) error {
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
-	logrus.Infof("publicKey:", content)
+	logrus.Infof("publicKey:%s\n", content)
 	fmt.Println("publicKey size:", len(content))
 	if len(content) > 50 {
 		publicKeyLength := strings.Index(content, ":")
 		contentNew := content[:publicKeyLength]
-		fmt.Println("new::::", contentNew)
 		content = contentNew
 	}
 
@@ -141,9 +140,9 @@ func (g *Yts3) listBucket(bucketName string, w http.ResponseWriter, r *http.Requ
 
 	isVersion2 := q.Get("list-type") == "2"
 
-	logrus.Infof("bucketname:", bucketName)
-	logrus.Infof("prefix    :", prefix)
-	logrus.Infof("page      :", fmt.Sprintf("%+v", page))
+	logrus.Infof("bucketname:%s\n", bucketName)
+	logrus.Infof("prefix    :%s\n", prefix)
+	logrus.Infof("page      :%s\n", fmt.Sprintf("%+v", page))
 
 	objects, err := g.storage.ListBucket(content, bucketName, &prefix, page)
 
@@ -231,15 +230,13 @@ func listBucketPageFromQuery(query url.Values) (page ListBucketPage, rerr error)
 }
 
 func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *http.Request) (err error) {
-	logrus.Infof("CREATE OBJECT:", bucket, object)
+	logrus.Infof("CREATE OBJECT:%s %s\n", bucket, object)
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
-	fmt.Println("publicKey:", len(content))
 	if len(content) > 50 {
 		publicKeyLength := strings.Index(content, ":")
 		contentNew := content[:publicKeyLength]
-		fmt.Println("new::::", contentNew)
 		content = contentNew
 	}
 	meta, err := metadataHeaders(r.Header, g.timeSource.Now(), g.metadataSizeLimit)
@@ -288,7 +285,7 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 	}
 
 	if result.VersionID != "" {
-		logrus.Infof("CREATED VERSION:", bucket, object, result.VersionID)
+		logrus.Infof("CREATED VERSION:%s%s%d\n", bucket, object, result.VersionID)
 		w.Header().Set("x-amz-version-id", string(result.VersionID))
 	}
 	w.Header().Set("ETag", `"`+hex.EncodeToString(rdr.Sum(nil))+`"`)
@@ -297,16 +294,14 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 }
 
 func (g *Yts3) createBucket(bucket string, w http.ResponseWriter, r *http.Request) error {
-	logrus.Infof("CREATE BUCKET:", bucket)
+	logrus.Infof("CREATE BUCKET:%d\n", bucket)
 
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
-	fmt.Println("publicKey:", len(content))
 	if len(content) > 50 {
 		publicKeyLength := strings.Index(content, ":")
 		contentNew := content[:publicKeyLength]
-		fmt.Println("new::::", contentNew)
 		content = contentNew
 	}
 	if err := ValidateBucketName(bucket); err != nil {
@@ -431,8 +426,8 @@ func (g *Yts3) hostBucketMiddleware(handler http.Handler) http.Handler {
 func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.ResponseWriter, r *http.Request) error {
 
 	logrus.Infof("GET OBJECT")
-	logrus.Infof("Bucket:", bucket)
-	logrus.Infof("└── Object:", object)
+	logrus.Infof("Bucket:%s\n", bucket)
+	logrus.Infof("└── Object:%s\n", object)
 	Authorization := r.Header.Get("Authorization")
 
 	// debug 调试用
@@ -467,7 +462,7 @@ func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.Resp
 	}
 
 	if obj == nil {
-		logrus.Errorf("unexpected nil object for key", bucket, object)
+		logrus.Errorf("unexpected nil object for key:%s%s\n", bucket, object)
 		return ErrInternal
 	}
 	defer obj.Contents.Close()
@@ -488,8 +483,8 @@ func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.Resp
 func (g *Yts3) headObject(bucket, object string, versionID VersionID, w http.ResponseWriter, r *http.Request) error {
 
 	logrus.Infof("HEAD OBJECT")
-	logrus.Infof("Bucket:", bucket)
-	logrus.Infof("└── Object:", object)
+	logrus.Infof("Bucket:%s\n", bucket)
+	logrus.Infof("└── Object:%s\n", object)
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
@@ -499,13 +494,12 @@ func (g *Yts3) headObject(bucket, object string, versionID VersionID, w http.Res
 
 		content = contentNew
 	}
-	logrus.Infof("publicKey=", content)
 	obj, err := g.storage.HeadObject(content, bucket, object)
 	if err != nil {
 		return err
 	}
 	if obj == nil {
-		logrus.Errorf("unexpected nil object for key", bucket, object)
+		logrus.Errorf("unexpected nil object for key ： %s%s\n", bucket, object)
 		return ErrInternal
 	}
 	defer obj.Contents.Close()
@@ -539,7 +533,7 @@ func (g *Yts3) writeGetOrHeadObjectResponse(obj *Object, w http.ResponseWriter, 
 }
 
 func (g *Yts3) deleteMulti(bucket string, w http.ResponseWriter, r *http.Request) error {
-	logrus.Infof("delete multi", bucket)
+	logrus.Infof("delete multi : %s\n", bucket)
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
@@ -594,8 +588,8 @@ func (g *Yts3) createObjectBrowserUpload(bucket string, w http.ResponseWriter, r
 	}
 	key := keyValues[0]
 
-	logrus.Infof("(BUC)", bucket)
-	logrus.Infof("(KEY)", key)
+	logrus.Infof("(BUC)%s\n", bucket)
+	logrus.Infof("(KEY)%s\n", key)
 
 	fileValues := r.MultipartForm.File["file"]
 	if len(fileValues) != 1 {
@@ -658,7 +652,7 @@ func ErrorResultFromError(err error) ErrorResult {
 }
 
 func (g *Yts3) deleteObject(bucket, object string, w http.ResponseWriter, r *http.Request) error {
-	logrus.Infof("DELETE:", bucket, object)
+	logrus.Infof("DELETE:%s%s\n", bucket, object)
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
@@ -669,7 +663,7 @@ func (g *Yts3) deleteObject(bucket, object string, w http.ResponseWriter, r *htt
 	}
 	result, err := g.storage.DeleteObject(content, bucket, object)
 	if err != nil {
-		logrus.Errorf("Error:", err)
+		logrus.Errorf("Error:%s\n", err)
 		return err
 	}
 
@@ -688,7 +682,7 @@ func (g *Yts3) deleteObject(bucket, object string, w http.ResponseWriter, r *htt
 }
 
 func (g *Yts3) deleteBucket(bucket string, w http.ResponseWriter, r *http.Request) error {
-	logrus.Infof("DELETE BUCKET:", bucket)
+	logrus.Infof("DELETE BUCKET:%s\n", bucket)
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
@@ -699,7 +693,7 @@ func (g *Yts3) deleteBucket(bucket string, w http.ResponseWriter, r *http.Reques
 	}
 	fmt.Println("publicKey:", content)
 	if err := g.storage.DeleteBucket(content, bucket); err != nil {
-		logrus.Errorf("Error Msg:", err)
+		logrus.Errorf("Error Msg:%s\n", err)
 		return err
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -711,19 +705,19 @@ func (g *Yts3) listMultipartUploadParts(bucket, object string, uploadID UploadID
 
 	marker, err := parseClampedInt(query.Get("part-number-marker"), 0, 0, math.MaxInt64)
 	if err != nil {
-		logrus.Errorf("Error Msg:", err)
+		logrus.Errorf("Error Msg:%s\n", err)
 		return ErrInvalidURI
 	}
 
 	maxParts, err := parseClampedInt(query.Get("max-parts"), DefaultMaxUploadParts, 0, MaxUploadPartsLimit)
 	if err != nil {
-		logrus.Errorf("Error Msg:", err)
+		logrus.Errorf("Error Msg:%s\n", err)
 		return ErrInvalidURI
 	}
 
 	out, err := g.uploader.ListParts(bucket, object, uploadID, int(marker), maxParts)
 	if err != nil {
-		logrus.Errorf("Error Msg:", err)
+		logrus.Errorf("Error Msg:%s\n", err)
 		return err
 	}
 
@@ -744,7 +738,7 @@ func (g *Yts3) putMultipartUploadPart(bucket, object string, uploadID UploadID, 
 
 	upload, err := g.uploader.Get(bucket, object, uploadID)
 	if err != nil {
-		logrus.Errorf("PutMultipartUploadPart Error Msg:", err)
+		logrus.Errorf("PutMultipartUploadPart Error Msg:%s\n", err)
 		return err
 	}
 
@@ -785,7 +779,7 @@ func (g *Yts3) putMultipartUploadPart(bucket, object string, uploadID UploadID, 
 }
 
 func (g *Yts3) abortMultipartUpload(bucket, object string, uploadID UploadID, w http.ResponseWriter, r *http.Request) error {
-	logrus.Infof("abort multipart upload", bucket, object, uploadID)
+	logrus.Infof("abort multipart upload :%s%s%d\n", bucket, object, uploadID)
 	if _, err := g.uploader.Complete(bucket, object, uploadID); err != nil {
 		return err
 	}
@@ -794,7 +788,7 @@ func (g *Yts3) abortMultipartUpload(bucket, object string, uploadID UploadID, w 
 }
 
 func (g *Yts3) completeMultipartUpload(bucket, object string, uploadID UploadID, w http.ResponseWriter, r *http.Request) error {
-	logrus.Infof("complete multipart upload", bucket, object, uploadID)
+	logrus.Infof("complete multipart upload%s%s%d\n", bucket, object, uploadID)
 
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
@@ -806,19 +800,19 @@ func (g *Yts3) completeMultipartUpload(bucket, object string, uploadID UploadID,
 	}
 	var in CompleteMultipartUploadRequest
 	if err := g.xmlDecodeBody(r.Body, &in); err != nil {
-		logrus.Errorf("xmlDecodeBody ERR :", err)
+		logrus.Errorf("xmlDecodeBody ERR :%s\n", err)
 		return err
 	}
 	defer r.Body.Close()
 	upload, err := g.uploader.Complete(bucket, object, uploadID)
 	if err != nil {
-		logrus.Errorf("upload complete ERR :", err)
+		logrus.Errorf("upload complete ERR :%s\n", err)
 		return err
 	}
 
 	fileBody, etag, err := upload.Reassemble(&in)
 	if err != nil {
-		logrus.Errorf("fileBody, etag ERR :", err)
+		logrus.Errorf("fileBody, etag ERR :%s\n", err)
 		return err
 	}
 	// go func(){
@@ -826,7 +820,7 @@ func (g *Yts3) completeMultipartUpload(bucket, object string, uploadID UploadID,
 	// }()
 	result, err := g.storage.PutObject(content, bucket, object, upload.Meta, bytes.NewReader(fileBody), int64(len(fileBody)))
 	if err != nil {
-		logrus.Errorf("put boject ERR :", err)
+		logrus.Errorf("put boject ERR :%s\n", err)
 		// return err
 	}
 	if result.VersionID != "" {
@@ -881,7 +875,7 @@ func (g *Yts3) initiateMultipartUpload(bucket, object string, w http.ResponseWri
 	iniPath := "conf/yotta_config.ini"
 	cfg, err := conf.CreateConfig(iniPath)
 	if err != nil {
-		logrus.Errorf("Error Msg:", err)
+		logrus.Errorf("Error Msg:%s\n", err)
 		return err
 	}
 	cache := cfg.GetCacheInfo("directory")
