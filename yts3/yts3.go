@@ -83,7 +83,6 @@ func (g *Yts3) listBuckets(w http.ResponseWriter, r *http.Request) error {
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
 	logrus.Infof("publicKey:%s\n", content)
-	fmt.Println("publicKey size:", len(content))
 	if len(content) > 50 {
 		publicKeyLength := strings.Index(content, ":")
 		contentNew := content[:publicKeyLength]

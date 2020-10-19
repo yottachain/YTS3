@@ -545,7 +545,7 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 	c := api.GetClient(publicKey)
 	download, errMsg := c.NewDownloadFile(bucketName, objectName, primitive.NilObjectID)
 	if errMsg != nil {
-		logrus.Printf("%v\n", errMsg)
+		logrus.Errorf("Err:%s\n", errMsg)
 	}
 	if rangeRequest != nil {
 		result.Contents = &ContentReader{download.LoadRange(rangeRequest.Start, rangeRequest.End).(io.ReadCloser)}
@@ -561,7 +561,6 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 		fmt.Println(err)
 	}
 	result.Hash = hash
-	fmt.Println("result", result)
 	return result, nil
 }
 func (db *Backend) DeleteObject(publicKey, bucketName, objectName string) (result yts3.ObjectDeleteResult, rerr error) {
