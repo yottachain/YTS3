@@ -821,6 +821,9 @@ func (g *Yts3) completeMultipartUpload(bucket, object string, uploadID UploadID,
 		logrus.Errorf("fileBody, etag ERR :", err)
 		return err
 	}
+	// go func(){
+
+	// }()
 	result, err := g.storage.PutObject(content, bucket, object, upload.Meta, bytes.NewReader(fileBody), int64(len(fileBody)))
 	if err != nil {
 		logrus.Errorf("put boject ERR :", err)

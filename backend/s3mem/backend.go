@@ -15,6 +15,7 @@ import (
 	"github.com/ryszard/goskiplist/skiplist"
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
+	"github.com/yottachain/YTCoreService/pkt"
 	"github.com/yottachain/YTS3/conf"
 	"github.com/yottachain/YTS3/yts3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -584,15 +585,17 @@ func (db *Backend) DeleteBucket(publicKey, bucketName string) error {
 		return yts3.ErrNoSuchBucket
 	}
 
-	// if db.buckets[bucketName].objects.Len() > 0 {
-	// 	return yts3.ResourceError(yts3.ErrBucketNotEmpty, bucketName)
-	// }
 	c := api.GetClient(publicKey)
 
 	bucketAccessor := c.NewBucketAccessor()
 
 	err := bucketAccessor.DeleteBucket(bucketName)
 	if err != nil {
+		if err.Code == pkt.BUCKET_NOT_EMPTY {
+			return yts3.ResourceError(yts3.ErrBucketNotEmpty, bucketName)
+		} else if err.Code == pkt.INVALID_BUCKET_NAME {
+			return yts3.ResourceError(yts3.ErrNoSuchBucket, bucketName)
+		}
 		logrus.Errorf("Error msg:", err)
 	}
 	delete(db.buckets, bucketName)
