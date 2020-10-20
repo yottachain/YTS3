@@ -312,11 +312,11 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 			return
 		}
 		filePath := directory + "/" + objectName
-		hashw, erre := upload.UploadFile(filePath)
+		_, erre := upload.UploadFile(filePath)
 		if erre != nil {
+			logrus.Errorf("Err: %s\n", erre)
 			return
 		}
-		logrus.Infof("upload hash result:%s\n", hex.EncodeToString(hashw))
 	} else {
 		bts, err = yts3.ReadAll(input, size)
 		if err != nil {
@@ -347,12 +347,15 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 	// logrus.Info("fileSize:::::::::", len(item.body))
 
 	if size < 10485760 {
-		resulthash, err1 := upload.UploadBytes(item.body)
-		if err1 != nil {
-			logrus.Printf("ERR:%s\n", err1)
-			return
+		if size > 0 {
+			resulthash, err1 := upload.UploadBytes(item.body)
+			if err1 != nil {
+				logrus.Printf("ERR:%s\n", err1)
+				return
+			}
+			logrus.Info("upload hash result:%s\n", hex.EncodeToString(resulthash))
 		}
-		logrus.Info("upload hash result:%s\n", hex.EncodeToString(resulthash))
+
 	}
 
 	//update meta data

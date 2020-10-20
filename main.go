@@ -53,7 +53,7 @@ func main() {
 			panic(err1)
 		}
 	}()
-	env.Console = true
+	// env.Console = true
 	api.StartApi()
 	if err := run(); err != nil {
 		log.Fatal(err)
