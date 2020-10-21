@@ -48,7 +48,6 @@ func UploadFile(g *gin.Context) {
 
 	fileSize := getFileSize(files)
 
-	fmt.Println("contentLength::::::", strconv.FormatInt(fileSize, 10))
 	header["ETag"] = hex.EncodeToString(hash)
 	header["x-amz-date"] = string(timeUnix)
 	header["contentLength"] = strconv.FormatInt(fileSize, 10)
