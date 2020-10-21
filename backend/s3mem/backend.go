@@ -113,7 +113,7 @@ func getContentByMeta(meta map[string]string) *yts3.Content {
 		}
 	}
 	if lastModifyString, ok := meta["x-amz-meta-s3b-last-modified"]; ok {
-		lastModifyTime, err := time.Parse("20060102T150405Z", lastModifyString)
+		lastModifyTime, err := time.ParseInLocation("20060102T150405Z", lastModifyString, time.Local)
 		if err == nil {
 			content.LastModified = yts3.ContentTime{lastModifyTime}
 		}
