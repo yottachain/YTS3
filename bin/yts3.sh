@@ -49,37 +49,37 @@ REALDIR=`dirname "$REALPATH"`
 # Normalize the path
 REALDIR=`cd "${REALDIR}/../"; pwd`
 
-export YTS3_HOME=$REALDIR
+export YTFS_HOME=$REALDIR
 
-if [ -z $YTS3_HOME ]; then  
+if [ -z $YTFS_HOME ]; then  
     echo "Environment variable 'YTS3_HOME' not found "
     exit 0;
 fi 
 
-echo "YTS3_HOME:$YTS3_HOME"
+echo "YTFS_HOME:$YTFS_HOME"
 
-source $YTS3_HOME/bin/yts3.ev
+source $YTFS_HOME/bin/yts3.ev
 
-cd $YTS3_HOME
+cd $YTFS_HOME
 
 case "$1" in
 start)
-    ./yts3 start  
+    ./YTS3 start  
     ;;
 stop)
-    ./yts3 stop
+    ./YTS3 stop
     ;;
 console)
-    ./yts3 console
+    ./YTS3 console
     ;;
 restart)
-    ./yts3 restart
+    ./YTS3 restart
     ;;
 install)
-    ./yts3 install
+    ./YTS3 install
     ;;
 uninstall)
-    ./yts3 uninstall
+    ./YTS3 uninstall
     ;;
 *)
     echo "usage: $0 console|start|stop|restart|install|uninstall"
