@@ -326,11 +326,10 @@ type multipartUpload struct {
 	mu sync.Mutex
 }
 
-func (mpu *multipartUpload) AddPart(bucketName, objectName string, partNumber int, at time.Time, body []byte) (etag string, err error) {
-	// iniPath := "conf/yotta_config.ini"
-	// cfg, err := conf.CreateConfig(iniPath)
-	// cache := cfg.GetCacheInfo("directory")
-	// directory := cache + "/" + bucketName
+func (mpu *multipartUpload) AddPart(bucketName, objectName string, partNumber int, at time.Time, rdr io.Reader, size int64) (etag string, err error) {
+
+	body, _ := ReadAll(rdr, size)
+
 	if partNumber > MaxUploadPartNumber {
 		return "", ErrInvalidPart
 	}
@@ -341,7 +340,19 @@ func (mpu *multipartUpload) AddPart(bucketName, objectName string, partNumber in
 	hash := md5.New()
 	hash.Write([]byte(body))
 	etag = fmt.Sprintf(`"%s"`, hex.EncodeToString(hash.Sum(nil)))
+	// iniPath := "conf/yotta_config.ini"
+	// cfg, err := conf.CreateConfig(iniPath)
+	// cache := cfg.GetCacheInfo("directory")
+	// directory := cache + "/" + bucketName
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// partName := objectName + "_" + fmt.Sprintf("%d", partNumber)
 
+	// err3 := writeCacheFilePatr(directory, objectName, partName, rdr)
+	// if err3 != nil {
+
+	// }
 	part := multipartUploadPart{
 		PartNumber:   partNumber,
 		Body:         body,
@@ -352,12 +363,52 @@ func (mpu *multipartUpload) AddPart(bucketName, objectName string, partNumber in
 		mpu.parts = append(mpu.parts, make([]*multipartUploadPart, partNumber-len(mpu.parts)+1)...)
 	}
 	mpu.parts[partNumber] = &part
-	// fileName := objectName + "-" + string(partNumber)
-	// errw := writeCacheFile(directory, fileName, bytes.NewReader(body))
-	// if errw != nil {
-	// }
 
 	return etag, nil
+}
+
+func writeCacheFilePatr(directory, fileName, partName string, input io.Reader) error {
+
+	s, err := os.Stat(directory)
+	if err != nil {
+		if !os.IsExist(err) {
+			err = os.MkdirAll(directory, os.ModePerm)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	} else {
+		if !s.IsDir() {
+			return errors.New("The specified path is not a directory.")
+		}
+	}
+	if !strings.HasSuffix(directory, "/") {
+		directory = directory + "/" + fileName + "/"
+	}
+	filePath := directory + partName
+	f, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	readbuf := make([]byte, 8192)
+	for {
+		num, err := input.Read(readbuf)
+		if err != nil && err != io.EOF {
+			return err
+		}
+		if num > 0 {
+			bs := readbuf[0:num]
+			f.Write(bs)
+		}
+		if err != nil && err == io.EOF {
+			break
+		}
+	}
+	return nil
 }
 
 func writeCacheFile(directory, fileName string, input io.Reader) error {

@@ -83,7 +83,6 @@ github.com/coreos/bbolt v1.3.3/go.mod h1:iRUV2dpdMOn7Bo10OQBFzIJO9kkE559Wcmn+qkE
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
 github.com/coreos/etcd v3.3.13+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
 github.com/coreos/etcd v3.3.18+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
-github.com/coreos/etcd v3.3.22+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
 github.com/coreos/go-etcd v2.0.0+incompatible/go.mod h1:Jez6KQU2B/sWsbdaef3ED8NzMklzPG4d5KIOhIy30Tk=
 github.com/coreos/go-semver v0.2.0/go.mod h1:nnelYz7RCh+5ahJtPPxZlU+153eP4D4r3EedlOD2RNk=
 github.com/coreos/go-semver v0.3.0/go.mod h1:nnelYz7RCh+5ahJtPPxZlU+153eP4D4r3EedlOD2RNk=
@@ -321,6 +320,7 @@ github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7V
 github.com/julienschmidt/httprouter v1.3.0/go.mod h1:JR6WtHb+2LUe8TCKY3cZOxFyyO8IZAc4RVcycCCAKdM=
 github.com/kami-zh/go-capturer v0.0.0-20171211120116-e492ea43421d/go.mod h1:P2viExyCEfeWGU259JnaQ34Inuec4R38JCyBx2edgD0=
 github.com/karalabe/usb v0.0.0-20190919080040-51dc0efba356/go.mod h1:Od972xHfMJowv7NGVDiWVxk2zxnWgjLlJzE+F4F7AGU=
+github.com/kardianos/service v1.1.0 h1:QV2SiEeWK42P0aEmGcsAgjApw/lRxkwopvT+Gu6t1/0=
 github.com/kardianos/service v1.1.0/go.mod h1:RrJI2xn5vve/r32U5suTbeaSGoMU6GbNPoj36CVYcHc=
 github.com/karrick/godirwalk v1.8.0/go.mod h1:H5KPZjojv4lE+QYImBI8xVtrBRgYrIVsaRPx4tDPEn4=
 github.com/karrick/godirwalk v1.10.3/go.mod h1:RoGL9dQei4vP9ilrpETWE8CLOZ1kiN0LhBygSwrAsHA=
@@ -635,12 +635,14 @@ github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
 github.com/yottachain/P2PHost v1.0.1-0.20200330065720-69572fdc7d92 h1:NG1tqZYyp+I36QSeNw4oXe+Ea8AKKOYFcKxBDovydVk=
 github.com/yottachain/P2PHost v1.0.1-0.20200330065720-69572fdc7d92/go.mod h1:V7g0oufx1cRzGw+1aUsMPkmD/+Uvdiax7dZiiC+afoM=
-github.com/yottachain/YTCoreService v0.0.0-20201013030711-fd5ef5be3070 h1:FGXH//VY+1jiphW+KUrk5Prl30RG2oeIq1x8ZwIzd9U=
-github.com/yottachain/YTCoreService v0.0.0-20201013030711-fd5ef5be3070/go.mod h1:MTG73k6RfLzPGNW/Iaf/8bCN58AHugJVjwm8Gwz+6wc=
+github.com/yottachain/P2PHost v1.0.2-0.20200921072702-609d35770f59 h1:FZHYTMNf39jebg8BP4Zr7C6aSu2lLz5GKk5rldGJZh0=
+github.com/yottachain/P2PHost v1.0.2-0.20200921072702-609d35770f59/go.mod h1:4ZBTjWbVgjQbVAjLDWsj0VSB723F02mau38rGp1W5yU=
+github.com/yottachain/YTCoreService v0.0.0-20201020035257-632935358e0a h1:YHUwEKaMyBVVuqUanAbopQ4t8GF2/Ck0o8I6r1ttSBk=
+github.com/yottachain/YTCoreService v0.0.0-20201020035257-632935358e0a/go.mod h1:bg0EjZ+9c3oCwTweFE9swRmVt3BE8WjH0ML9UECRHI8=
 github.com/yottachain/YTCrypto v0.0.0-20200122165219-0ea35dc29812 h1:XG9TtLosanLdwqSoporMr8OASUOjxuaj6cJDlut1c9s=
 github.com/yottachain/YTCrypto v0.0.0-20200122165219-0ea35dc29812/go.mod h1:jDJUVGeQ1clW7k9OTRBAFtCMwGs9B9fGQ9QY64SKqlk=
-github.com/yottachain/YTDNMgmt v0.0.0-20201013024725-ce588d7ed5f2 h1:b82ipOK77ZDJMYnlEnDQhBRVTr8AN9GSf/VogxrEakY=
-github.com/yottachain/YTDNMgmt v0.0.0-20201013024725-ce588d7ed5f2/go.mod h1:54ncBoypTn1yxf7rQShg50gqRYrPeN81z9e08afPet0=
+github.com/yottachain/YTDNMgmt v0.0.0-20201020034239-37c5dac308b7 h1:zzexnY/npnWowlXOuTHkSRSat007/3owGdxyxdJrGr4=
+github.com/yottachain/YTDNMgmt v0.0.0-20201020034239-37c5dac308b7/go.mod h1:aAy0R01g6gHj8oLp1ZKayseDUGAnGv1RlQ3ptXOzm8M=
 github.com/yottachain/YTHost v1.0.2-0.20200330065027-fd1b316f47cb/go.mod h1:PMIX6FcFzZ5xaexcI1ivumzoo9nblL2wZc5it/R3SeU=
 github.com/yottachain/YTHost v1.0.2-0.20200703084155-b2658f82b387/go.mod h1:PMIX6FcFzZ5xaexcI1ivumzoo9nblL2wZc5it/R3SeU=
 github.com/yottachain/YTHost v1.0.2-0.20200918110720-68f155ccc541 h1:jZK4hDasAo+ubFlbi0l7uJoXizoKFkpSaUcbW6Fw/pA=
