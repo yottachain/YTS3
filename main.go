@@ -148,11 +148,14 @@ func s3StartServer() {
 	// } else {
 	// 	path = "conf/yotta_config.ini"
 	// }
+	api.StartApi()
 	path = "conf/yotta_config.ini"
 	cfg, err := conf.CreateConfig(path)
 	if err != nil {
-		panic(err)
+		logrus.Info("read config file error")
+		// panic(err)
 	}
+
 	go func() {
 		router := routers.InitRouter()
 		port := cfg.GetHTTPInfo("port")
@@ -168,7 +171,7 @@ func s3StartServer() {
 		}
 	}()
 	// env.Console = true
-	api.StartApi()
+
 	if err := run(); err != nil {
 		log.Fatal(err)
 	}
