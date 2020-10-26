@@ -30,25 +30,25 @@ var serviceConfig = &service.Config{
 	Description: "go yts3 daemons service",
 }
 
-type s3Program struct{}
+type S3Program struct{}
 
-func (p *s3Program) Start(s service.Service) error {
+func (p *S3Program) Start(s service.Service) error {
 	go p.run()
 	return nil
 }
 
-func (p *s3Program) Stop(s service.Service) error {
+func (p *S3Program) Stop(s service.Service) error {
 	s3StopServer()
 	return nil
 }
 
-func (p *s3Program) run() {
+func (p *S3Program) run() {
 	api.StartApi()
 	//s3StartServer()
 }
 
 func main() {
-	prog := &s3Program{}
+	prog := &S3Program{}
 	s, err := service.New(prog, serviceConfig)
 	if err != nil {
 		panic(err)
