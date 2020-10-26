@@ -63,7 +63,7 @@ func main() {
 			return
 		}
 		if cmd == "console" {
-			env.Console = true
+			// env.Console = true
 			err = s.Run()
 			if err != nil {
 				logger.Info("Run err:", err.Error())
