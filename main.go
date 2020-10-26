@@ -43,8 +43,8 @@ func (p *S3Program) Stop(s service.Service) error {
 }
 
 func (p *S3Program) run() {
-	api.StartApi()
-	//s3StartServer()
+	// api.StartApi()
+	s3StartServer()
 }
 
 func main() {
