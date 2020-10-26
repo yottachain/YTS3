@@ -43,7 +43,8 @@ func (p *s3Program) Stop(s service.Service) error {
 }
 
 func (p *s3Program) run() {
-	s3StartServer()
+	api.StartApi()
+	//s3StartServer()
 }
 
 func main() {
@@ -152,7 +153,6 @@ func s3StartServer() {
 	if err != nil {
 		panic(err)
 	}
-
 	go func() {
 		router := routers.InitRouter()
 		port := cfg.GetHTTPInfo("port")
