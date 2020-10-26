@@ -149,7 +149,8 @@ func s3StartServer() {
 	// 	path = "conf/yotta_config.ini"
 	// }
 	api.StartApi()
-	path = "conf/yotta_config.ini"
+	path = env.YTFS_HOME + "conf/yotta_config.ini"
+	// path = "../conf/yotta_config.ini"
 	cfg, err := conf.CreateConfig(path)
 	if err != nil {
 		logrus.Info("read config file error")
