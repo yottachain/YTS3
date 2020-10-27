@@ -118,7 +118,7 @@ func (g *Yts3) getBucketLocation(bucketName string, w http.ResponseWriter, r *ht
 }
 
 func (g *Yts3) listBucket(bucketName string, w http.ResponseWriter, r *http.Request) error {
-	logrus.Infof("LIST BUCKET")
+	logrus.Infof("LIST BUCKET\n")
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
@@ -424,7 +424,7 @@ func (g *Yts3) hostBucketMiddleware(handler http.Handler) http.Handler {
 
 func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.ResponseWriter, r *http.Request) error {
 
-	logrus.Infof("GET OBJECT")
+	logrus.Infof("GET OBJECT\n")
 	logrus.Infof("Bucket:%s\n", bucket)
 	logrus.Infof("└── Object:%s\n", object)
 	Authorization := r.Header.Get("Authorization")
@@ -481,7 +481,7 @@ func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.Resp
 
 func (g *Yts3) headObject(bucket, object string, versionID VersionID, w http.ResponseWriter, r *http.Request) error {
 
-	logrus.Infof("HEAD OBJECT")
+	logrus.Infof("HEAD OBJECT\n")
 	logrus.Infof("Bucket:%s\n", bucket)
 	logrus.Infof("└── Object:%s\n", object)
 	Authorization := r.Header.Get("Authorization")
@@ -567,7 +567,7 @@ func (g *Yts3) deleteMulti(bucket string, w http.ResponseWriter, r *http.Request
 }
 
 func (g *Yts3) createObjectBrowserUpload(bucket string, w http.ResponseWriter, r *http.Request) error {
-	logrus.Infof("CREATE OBJECT THROUGH BROWSER UPLOAD")
+	logrus.Infof("CREATE OBJECT THROUGH BROWSER UPLOAD\n")
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
@@ -759,16 +759,16 @@ func (g *Yts3) putMultipartUploadPart(bucket, object string, uploadID UploadID, 
 		}
 	}
 
-	body, err := ReadAll(rdr, size)
-	if err != nil {
-		return err
-	}
+	// body, err := ReadAll(rdr, size)
+	// if err != nil {
+	// 	return err
+	// }
 
-	if int64(len(body)) != r.ContentLength {
-		return ErrIncompleteBody
-	}
+	// if int64(len(body)) != r.ContentLength {
+	// 	return ErrIncompleteBody
+	// }
 
-	etag, err := upload.AddPart(bucket, object, int(partNumber), g.timeSource.Now(), body)
+	etag, err := upload.AddPart(bucket, object, int(partNumber), g.timeSource.Now(), rdr, size)
 	if err != nil {
 		return err
 	}
@@ -869,7 +869,7 @@ func (g *Yts3) listMultipartUploads(bucket string, w http.ResponseWriter, r *htt
 }
 
 func (g *Yts3) initiateMultipartUpload(bucket, object string, w http.ResponseWriter, r *http.Request) error {
-	logrus.Infof("initiate multipart upload")
+	logrus.Infof("initiate multipart upload\n")
 
 	iniPath := "conf/yotta_config.ini"
 	cfg, err := conf.CreateConfig(iniPath)
