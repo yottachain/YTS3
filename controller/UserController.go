@@ -35,6 +35,7 @@ func Register(g *gin.Context) {
 	if err2 != nil {
 		// CheckErr(err2)
 		log.Info(err2)
+		return
 	}
 	log.Info("User Register Success,UserName:" + userName)
 	fmt.Println("UserID:", c.UserId)

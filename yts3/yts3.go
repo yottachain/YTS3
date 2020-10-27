@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/yottachain/YTCoreService/env"
 	"github.com/yottachain/YTS3/conf"
 )
 
@@ -871,7 +872,7 @@ func (g *Yts3) listMultipartUploads(bucket string, w http.ResponseWriter, r *htt
 func (g *Yts3) initiateMultipartUpload(bucket, object string, w http.ResponseWriter, r *http.Request) error {
 	logrus.Infof("initiate multipart upload\n")
 
-	iniPath := "conf/yotta_config.ini"
+	iniPath := env.YTFS_HOME + "conf/yotta_config.ini"
 	cfg, err := conf.CreateConfig(iniPath)
 	if err != nil {
 		logrus.Errorf("Error Msg:%s\n", err)
