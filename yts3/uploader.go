@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/ryszard/goskiplist/skiplist"
+	"github.com/yottachain/YTS3/conf"
 	"github.com/yottachain/YTS3/internal/goskipiter"
 )
 
@@ -264,7 +265,7 @@ func (u *uploader) Complete(bucket, object string, id UploadID) (*multipartUploa
 		return nil, err
 	}
 
-	u.buckets[bucket].remove(id)
+	// u.buckets[bucket].remove(id)
 
 	return up, nil
 }
@@ -327,9 +328,7 @@ type multipartUpload struct {
 }
 
 func (mpu *multipartUpload) AddPart(bucketName, objectName string, partNumber int, at time.Time, rdr io.Reader, size int64) (etag string, err error) {
-
-	body, _ := ReadAll(rdr, size)
-
+	// body, _ := ReadAll(rdr, size)
 	if partNumber > MaxUploadPartNumber {
 		return "", ErrInvalidPart
 	}
@@ -338,24 +337,24 @@ func (mpu *multipartUpload) AddPart(bucketName, objectName string, partNumber in
 	defer mpu.mu.Unlock()
 
 	hash := md5.New()
-	hash.Write([]byte(body))
+	// hash.Write([]byte(body))
 	etag = fmt.Sprintf(`"%s"`, hex.EncodeToString(hash.Sum(nil)))
-	// iniPath := "conf/yotta_config.ini"
-	// cfg, err := conf.CreateConfig(iniPath)
-	// cache := cfg.GetCacheInfo("directory")
-	// directory := cache + "/" + bucketName
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// partName := objectName + "_" + fmt.Sprintf("%d", partNumber)
+	iniPath := "conf/yotta_config.ini"
+	cfg, err := conf.CreateConfig(iniPath)
+	cache := cfg.GetCacheInfo("directory")
+	directory := cache + "/" + bucketName + "/" + objectName
+	if err != nil {
+		panic(err)
+	}
+	partName := objectName + "_" + fmt.Sprintf("%d", partNumber)
 
-	// err3 := writeCacheFilePatr(directory, objectName, partName, rdr)
-	// if err3 != nil {
+	err3 := writeCacheFilePart(directory, objectName, partName, rdr)
+	if err3 != nil {
 
-	// }
+	}
 	part := multipartUploadPart{
-		PartNumber:   partNumber,
-		Body:         body,
+		PartNumber: partNumber,
+		// Body:         body,
 		ETag:         etag,
 		LastModified: NewContentTime(at),
 	}
@@ -367,7 +366,7 @@ func (mpu *multipartUpload) AddPart(bucketName, objectName string, partNumber in
 	return etag, nil
 }
 
-func writeCacheFilePatr(directory, fileName, partName string, input io.Reader) error {
+func writeCacheFilePart(directory, fileName, partName string, input io.Reader) error {
 
 	s, err := os.Stat(directory)
 	if err != nil {
@@ -385,7 +384,7 @@ func writeCacheFilePatr(directory, fileName, partName string, input io.Reader) e
 		}
 	}
 	if !strings.HasSuffix(directory, "/") {
-		directory = directory + "/" + fileName + "/"
+		directory = directory + "/"
 	}
 	filePath := directory + partName
 	f, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
@@ -485,11 +484,11 @@ func (mpu *multipartUpload) Reassemble(input *CompleteMultipartUploadRequest) (b
 	}
 
 	body = make([]byte, 0, size)
-	for _, part := range input.Parts {
-		body = append(body, mpu.parts[part.PartNumber].Body...)
-	}
+	// for _, part := range input.Parts {
+	// 	body = append(body, mpu.parts[part.PartNumber].Body...)
+	// }
 
 	hash := fmt.Sprintf("%x", md5.Sum(body))
 
-	return body, hash, nil
+	return nil, hash, nil
 }

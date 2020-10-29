@@ -3,6 +3,8 @@ package yts3
 import (
 	"io"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 )
@@ -96,4 +98,35 @@ func Stamp2Time(stamp int64) time.Time {
 	stampStr := Stamp2Str(stamp)
 	timer := Str2Time(stampStr)
 	return timer
+}
+
+func ListDir(dirPth string) (files []string, files1 []string, err error) {
+
+	dir, err := ioutil.ReadDir(dirPth)
+	if err != nil {
+		return nil, nil, err
+	}
+	PthSep := string(os.PathSeparator)
+
+	for _, fi := range dir {
+
+		if fi.IsDir() {
+			files1 = append(files1, dirPth+PthSep+fi.Name())
+			ListDir(dirPth + PthSep + fi.Name())
+		} else {
+			files = append(files, dirPth+PthSep+fi.Name())
+		}
+	}
+	return files, files1, nil
+}
+
+func DirSize(path string) (int64, error) {
+	var size int64
+	err := filepath.Walk(path, func(_ string, info os.FileInfo, err error) error {
+		if !info.IsDir() {
+			size += info.Size()
+		}
+		return err
+	})
+	return size, err
 }
