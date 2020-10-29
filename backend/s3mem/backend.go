@@ -122,59 +122,6 @@ func getContentByMeta(meta map[string]string) *yts3.Content {
 }
 
 //ListBucket s3 listObjects
-// func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page yts3.ListBucketPage) (*yts3.ObjectList, error) {
-// 	db.lock.RLock()
-// 	defer db.lock.RUnlock()
-
-// 	var response = yts3.NewObjectList()
-
-// 	c := api.GetClient(publicKey)
-// 	sklist := skiplist.NewStringMap()
-
-// 	filename := ""
-// 	for {
-// 		objectAccessor := c.NewObjectAccessor()
-// 		items, err := objectAccessor.ListObject(name, filename, prefix.Prefix, false, primitive.ObjectID{}, 1000)
-// 		if err != nil {
-// 			return response, fmt.Errorf(err.String())
-// 		}
-// 		logrus.Printf("items len %d\n", len(items))
-// 		for _, v := range items {
-// 			meta, err := api.BytesToFileMetaMap(v.Meta, primitive.ObjectID{})
-
-// 			if err != nil {
-// 				continue
-// 			}
-// 			t := time.Unix(v.FileId.Timestamp().Unix(), 0)
-// 			s := t.Format("20060102T150405Z")
-// 			//ts, _ := time.ParseInLocation("2006-01-02 15:04:05", s, time.Local)
-// 			meta["x-amz-meta-s3b-last-modified"] = s
-// 			content := getContentByMeta(meta)
-// 			content.Key = v.FileName
-// 			content.Owner = &yts3.UserInfo{
-// 				ID:          c.Username,
-// 				DisplayName: c.Username,
-// 			}
-// 			response.Contents = append(response.Contents, content)
-// 			filename = v.FileName
-// 			hash, _ := hex.DecodeString(meta["ETag"])
-// 			sklist.Set(v.FileName, &bucketObject{
-// 				name: v.FileName,
-// 				data: &bucketData{
-// 					name:         v.FileName,
-// 					hash:         hash,
-// 					metadata:     meta,
-// 					lastModified: content.LastModified.Time,
-// 				},
-// 			})
-// 		}
-// 		if len(items) < 1000 {
-// 			break
-// 		}
-// 	}
-// 	db.buckets[name].objects = sklist
-// 	return response, nil
-// }
 func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page yts3.ListBucketPage) (*yts3.ObjectList, error) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
@@ -287,7 +234,6 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 	}
 	item.metadata["ETag"] = item.etag
 	logrus.Infof("upload hash etag:%s\n", item.etag)
-	// logrus.Info("fileSize:::::::::", len(item.body))
 
 	if size < 10485760 {
 		if size > 0 {
@@ -300,9 +246,7 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 		}
 
 	}
-
 	//update meta data
-
 	header["ETag"] = hex.EncodeToString(hash[:])
 	header["contentLength"] = strconv.FormatInt(size, 10)
 	metadata2, err2 := api.FileMetaMapTobytes(header)
@@ -319,6 +263,66 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 	if size >= 10485760 {
 		filePath := directory + "/" + objectName
 		deleteCacheFile(filePath)
+	}
+
+	return result, nil
+}
+
+//MultipartUpload 分段上传
+func (db *Backend) MultipartUpload(publicKey, bucketName, objectName string, partsPath []string, size int64) (result yts3.PutObjectResult, err error) {
+	c := api.GetClient(publicKey)
+	upload := c.NewUploadObject()
+
+	if err != nil {
+		panic(err)
+	}
+
+	var meta map[string]string
+
+	var hash [16]byte
+	var bts []byte
+	var header map[string]string
+	header = make(map[string]string)
+
+	hash1, errB := upload.UploadMultiFile(partsPath)
+	if errB != nil {
+		logrus.Errorf("errB:%s", errB)
+		return
+	}
+	hash = md5.Sum(hash1)
+
+	db.lock.Lock()
+	defer db.lock.Unlock()
+
+	bucket := db.buckets[bucketName]
+	if bucket == nil {
+		return result, yts3.BucketNotFound(bucketName)
+	}
+
+	item := &bucketData{
+		name:         objectName,
+		body:         bts,
+		hash:         hash[:],
+		etag:         `"` + hex.EncodeToString(hash[:]) + `"`,
+		metadata:     meta,
+		lastModified: db.timeSource.Now(),
+	}
+	logrus.Infof("upload hash etag:%s\n", item.etag)
+
+	//update meta data
+
+	header["ETag"] = hex.EncodeToString(hash[:])
+	header["contentLength"] = strconv.FormatInt(size, 10)
+	metadata2, err2 := api.FileMetaMapTobytes(header)
+
+	if err2 != nil {
+		logrus.Errorf("[FileMetaMapTobytes ]:%s\n", err2)
+		return
+	}
+
+	err3 := c.NewObjectAccessor().CreateObject(bucketName, objectName, upload.VNU, metadata2)
+	if err3 != nil {
+		logrus.Errorf("[Save meta data ]:%s\n", err3)
 	}
 
 	return result, nil

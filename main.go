@@ -57,7 +57,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	if len(os.Args) > 1 {
+		logger.Info("Path:", os.Args[0])
 		cmd := os.Args[1]
 		if cmd == "version" {
 			fmt.Println(env.VersionID)
@@ -67,7 +69,7 @@ func main() {
 			// env.Console = true
 			err = s.Run()
 			if err != nil {
-				logger.Info("Run err:", err.Error())
+				logger.Info("Run console err:", err.Error())
 			}
 			return
 		}

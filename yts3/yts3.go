@@ -1,7 +1,6 @@
 package yts3
 
 import (
-	"bytes"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/xml"
@@ -760,15 +759,6 @@ func (g *Yts3) putMultipartUploadPart(bucket, object string, uploadID UploadID, 
 		}
 	}
 
-	// body, err := ReadAll(rdr, size)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// if int64(len(body)) != r.ContentLength {
-	// 	return ErrIncompleteBody
-	// }
-
 	etag, err := upload.AddPart(bucket, object, int(partNumber), g.timeSource.Now(), rdr, size)
 	if err != nil {
 		return err
@@ -779,7 +769,7 @@ func (g *Yts3) putMultipartUploadPart(bucket, object string, uploadID UploadID, 
 }
 
 func (g *Yts3) abortMultipartUpload(bucket, object string, uploadID UploadID, w http.ResponseWriter, r *http.Request) error {
-	logrus.Infof("abort multipart upload :%s%s%d\n", bucket, object, uploadID)
+	logrus.Infof("abort multipart upload : %s %s %d\n", bucket, object, uploadID)
 	if _, err := g.uploader.Complete(bucket, object, uploadID); err != nil {
 		return err
 	}
@@ -788,7 +778,7 @@ func (g *Yts3) abortMultipartUpload(bucket, object string, uploadID UploadID, w 
 }
 
 func (g *Yts3) completeMultipartUpload(bucket, object string, uploadID UploadID, w http.ResponseWriter, r *http.Request) error {
-	logrus.Infof("complete multipart upload%s%s%d\n", bucket, object, uploadID)
+	logrus.Infof("complete multipart upload %s %s %d\n", bucket, object, uploadID)
 
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
@@ -815,18 +805,36 @@ func (g *Yts3) completeMultipartUpload(bucket, object string, uploadID UploadID,
 		logrus.Errorf("fileBody, etag ERR :%s\n", err)
 		return err
 	}
-	// go func(){
 
-	// }()
-	result, err := g.storage.PutObject(content, bucket, object, upload.Meta, bytes.NewReader(fileBody), int64(len(fileBody)))
+	logrus.Info(len(fileBody))
+
+	iniPath := "conf/yotta_config.ini"
+	cfg, err := conf.CreateConfig(iniPath)
+	if err != nil {
+		return err
+	}
+	cache := cfg.GetCacheInfo("directory")
+	directory := cache + "/" + bucket + "/" + object
+	files, _, _ := ListDir(directory)
+	size, _ := DirSize(directory)
+	result, err := g.storage.MultipartUpload(content, bucket, object, files, size)
 	if err != nil {
 		logrus.Errorf("put boject ERR :%s\n", err)
-		// return err
+		return err
 	}
 	if result.VersionID != "" {
 		w.Header().Set("x-amz-version-id", string(result.VersionID))
 	}
-
+	for _, s := range files {
+		del := os.Remove(s)
+		if del != nil {
+			fmt.Println(del)
+		}
+	}
+	del := os.Remove(directory)
+	if del != nil {
+		fmt.Println(del)
+	}
 	return g.xmlEncoder(w).Encode(&CompleteMultipartUploadResult{
 		ETag:   etag,
 		Bucket: bucket,
