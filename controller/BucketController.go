@@ -21,7 +21,7 @@ type Bucket struct {
 
 //CreateBucket 创建bucket
 func CreateBucket(g *gin.Context) {
-	defer env.TracePanic()
+	defer env.TracePanic("CreateBucket")
 
 	bucket := g.Query("bucketName")
 
@@ -56,7 +56,7 @@ func CreateBucket(g *gin.Context) {
 
 //ListBucket list all bucket
 func ListBucket(g *gin.Context) {
-	defer env.TracePanic()
+	// defer env.TracePanic("ListBucket")
 	publicKey := g.Query("publicKey")
 	content := publicKey[3:]
 

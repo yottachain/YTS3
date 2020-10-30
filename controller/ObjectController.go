@@ -21,7 +21,7 @@ type ObjectItem struct {
 
 //GetObjects 获取文件列表
 func GetObjects(g *gin.Context) {
-	defer env.TracePanic()
+	defer env.TracePanic("GetObjects")
 	var objectItems []ObjectItem
 	item := ObjectItem{}
 	bucketName := g.Query("bucketName")
@@ -98,7 +98,7 @@ func listObjects(publicKey, buck, fileName, prefix string, wversion bool, nVerid
 
 //GetFileBlockDetails 查询文件分块信息
 func GetFileBlockDetails(g *gin.Context) {
-	defer env.TracePanic()
+	defer env.TracePanic("GetFileBlockDetails")
 	fileName := g.Query("fileName")
 	bucketName := g.Query("bucketName")
 	publicKey := g.Query("publicKey")

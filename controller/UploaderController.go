@@ -21,7 +21,7 @@ var upload_progress_CACHE = cache.New(time.Duration(600000)*time.Second, time.Du
 
 //UploadFile 根据路径上传文件
 func UploadFile(g *gin.Context) {
-	// defer env.TracePanic()
+	defer env.TracePanic("UploadFile")
 	bucketName := g.PostForm("bucketName")
 
 	publicKey := g.PostForm("publicKey")
@@ -65,7 +65,7 @@ func UploadFile(g *gin.Context) {
 
 //GetProgress 查询上传进度
 func GetProgress(g *gin.Context) {
-	defer env.TracePanic()
+	defer env.TracePanic("GetProgress")
 	publicKey := g.Query("publicKey")
 	bucketName := g.Query("bucketName")
 	fileName := g.Query("fileName")
