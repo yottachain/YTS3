@@ -1,11 +1,10 @@
 package controller
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/prometheus/common/log"
+	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
 	"github.com/yottachain/YTCoreService/env"
 )
@@ -31,14 +30,13 @@ func Register(g *gin.Context) {
 	// log.Info("privateKey : " + privateKey)
 
 	// if count == 0 {
-	c, err2 := api.NewClient(userName, privateKey)
+	_, err2 := api.NewClient(userName, privateKey)
 	if err2 != nil {
 		// CheckErr(err2)
-		log.Info(err2)
+		logrus.Infof("err:%s\n", err2)
 		return
 	}
-	log.Info("User Register Success,UserName:" + userName)
-	fmt.Println("UserID:", c.UserId)
+	logrus.Infof("User Register Success,UserName: %s\n", userName)
 	// }
 	g.JSON(http.StatusOK, gin.H{"status": "Register success " + userName})
 }
