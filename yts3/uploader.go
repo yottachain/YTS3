@@ -336,9 +336,9 @@ func (mpu *multipartUpload) AddPart(bucketName, objectName string, partNumber in
 	mpu.mu.Lock()
 	defer mpu.mu.Unlock()
 
-	hash := md5.New()
+	// hash := md5.New()
 	// hash.Write([]byte(body))
-	etag = fmt.Sprintf(`"%s"`, hex.EncodeToString(hash.Sum(nil)))
+	// etag = fmt.Sprintf(`"%s"`, hex.EncodeToString(hash.Sum(nil)))
 	iniPath := "conf/yotta_config.ini"
 	cfg, err := conf.CreateConfig(iniPath)
 	cache := cfg.GetCacheInfo("directory")
@@ -348,7 +348,7 @@ func (mpu *multipartUpload) AddPart(bucketName, objectName string, partNumber in
 	}
 	partName := objectName + "_" + fmt.Sprintf("%d", partNumber)
 
-	err3 := writeCacheFilePart(directory, objectName, partName, rdr)
+	etag, err3 := writeCacheFilePart(directory, objectName, partName, rdr)
 	if err3 != nil {
 
 	}
@@ -366,21 +366,22 @@ func (mpu *multipartUpload) AddPart(bucketName, objectName string, partNumber in
 	return etag, nil
 }
 
-func writeCacheFilePart(directory, fileName, partName string, input io.Reader) error {
+func writeCacheFilePart(directory, fileName, partName string, input io.Reader) (etag string, err error) {
+	var partEtag string
 
 	s, err := os.Stat(directory)
 	if err != nil {
 		if !os.IsExist(err) {
 			err = os.MkdirAll(directory, os.ModePerm)
 			if err != nil {
-				return err
+				return partEtag, err
 			}
 		} else {
-			return err
+			return partEtag, err
 		}
 	} else {
 		if !s.IsDir() {
-			return errors.New("The specified path is not a directory.")
+			return partEtag, errors.New("The specified path is not a directory.")
 		}
 	}
 	if !strings.HasSuffix(directory, "/") {
@@ -389,25 +390,29 @@ func writeCacheFilePart(directory, fileName, partName string, input io.Reader) e
 	filePath := directory + partName
 	f, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 	if err != nil {
-		return err
+		return partEtag, err
 	}
 	defer f.Close()
+	hash := md5.New()
+	// hash.Write([]byte(body))
 
 	readbuf := make([]byte, 8192)
 	for {
 		num, err := input.Read(readbuf)
 		if err != nil && err != io.EOF {
-			return err
+			return partEtag, err
 		}
 		if num > 0 {
 			bs := readbuf[0:num]
 			f.Write(bs)
+			hash.Write(bs)
 		}
 		if err != nil && err == io.EOF {
 			break
 		}
 	}
-	return nil
+	partEtag = fmt.Sprintf(`"%s"`, hex.EncodeToString(hash.Sum(nil)))
+	return partEtag, nil
 }
 
 func writeCacheFile(directory, fileName string, input io.Reader) error {

@@ -18,7 +18,7 @@ type User struct {
 
 //Register 用户注册
 func Register(g *gin.Context) {
-	defer env.TracePanic()
+	defer env.TracePanic("Register")
 	var json User
 
 	if err := g.Bind(&json); err != nil {

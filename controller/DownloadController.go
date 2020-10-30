@@ -15,7 +15,6 @@ import (
 	"github.com/patrickmn/go-cache"
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
-	"github.com/yottachain/YTCoreService/env"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -153,7 +152,7 @@ func getDirList(dirpath string) ([]string, error) {
 
 //DownloadFileOld 指定下载路径下载文件
 func DownloadFileOld(g *gin.Context) {
-	defer env.TracePanic()
+	// defer env.TracePanic()
 	bucketName := g.Query("bucketName")
 
 	objectKey := g.Query("key")
@@ -192,7 +191,7 @@ func DownloadFileOld(g *gin.Context) {
 
 //DownloadFile 下载
 func DownloadFile(g *gin.Context) {
-	defer env.TracePanic()
+	// defer env.TracePanic()
 	bucketName := g.Query("bucketName")
 
 	fileName := g.Query("fileName")
@@ -239,7 +238,7 @@ func putDownloadObject(bucketName, fileName, publicKey string, upload *api.Downl
 
 //GetDownloadProgress 查询上传进度
 func GetDownloadProgress(g *gin.Context) {
-	defer env.TracePanic()
+	// defer env.TracePanic()
 	publicKey := g.Query("publicKey")
 	bucketName := g.Query("bucketName")
 	fileName := g.Query("fileName")
