@@ -243,7 +243,7 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 				logrus.Printf("ERR:%s\n", err1)
 				return
 			}
-			logrus.Info("upload hash result:%s\n", hex.EncodeToString(resulthash))
+			logrus.Infof("upload hash result:%s\n", hex.EncodeToString(resulthash))
 		}
 
 	}
