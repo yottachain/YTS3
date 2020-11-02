@@ -786,7 +786,7 @@ func (g *Yts3) abortMultipartUpload(bucket, object string, uploadID UploadID, w 
 }
 
 func (g *Yts3) completeMultipartUpload(bucket, object string, uploadID UploadID, w http.ResponseWriter, r *http.Request) error {
-	logrus.Infof("complete multipart upload %s %s %d\n", bucket, object, uploadID)
+	logrus.Infof("complete multipart upload %s %s %s\n", bucket, object, uploadID)
 
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
