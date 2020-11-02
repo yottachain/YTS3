@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"github.com/ryszard/goskiplist/skiplist"
+	"github.com/sirupsen/logrus"
+	"github.com/yottachain/YTCoreService/env"
 	"github.com/yottachain/YTS3/conf"
 	"github.com/yottachain/YTS3/internal/goskipiter"
 )
@@ -328,29 +330,24 @@ type multipartUpload struct {
 }
 
 func (mpu *multipartUpload) AddPart(bucketName, objectName string, partNumber int, at time.Time, rdr io.Reader, size int64) (etag string, err error) {
-	// body, _ := ReadAll(rdr, size)
 	if partNumber > MaxUploadPartNumber {
+		logrus.Infof("AddPart  ErrInvalidPart")
 		return "", ErrInvalidPart
 	}
-
 	mpu.mu.Lock()
 	defer mpu.mu.Unlock()
 
-	// hash := md5.New()
-	// hash.Write([]byte(body))
-	// etag = fmt.Sprintf(`"%s"`, hex.EncodeToString(hash.Sum(nil)))
-	iniPath := "conf/yotta_config.ini"
+	iniPath := env.YTFS_HOME + "conf/yotta_config.ini"
 	cfg, err := conf.CreateConfig(iniPath)
-	cache := cfg.GetCacheInfo("directory")
-	directory := cache + "/" + bucketName + "/" + objectName
 	if err != nil {
 		panic(err)
 	}
-	partName := objectName + "_" + fmt.Sprintf("%d", partNumber)
+	cache := cfg.GetCacheInfo("directory")
+	directory := cache + "/" + bucketName + "/" + objectName
 
+	partName := objectName + "_" + fmt.Sprintf("%d", partNumber)
 	etag, err3 := writeCacheFilePart(directory, objectName, partName, rdr)
 	if err3 != nil {
-
 	}
 	part := multipartUploadPart{
 		PartNumber: partNumber,
@@ -362,7 +359,6 @@ func (mpu *multipartUpload) AddPart(bucketName, objectName string, partNumber in
 		mpu.parts = append(mpu.parts, make([]*multipartUploadPart, partNumber-len(mpu.parts)+1)...)
 	}
 	mpu.parts[partNumber] = &part
-
 	return etag, nil
 }
 
