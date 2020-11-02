@@ -178,6 +178,8 @@ func s3StartServer() {
 	if err := run(); err != nil {
 		log.Fatal(err)
 	}
+
+	select {}
 }
 
 type yts3Flags struct {

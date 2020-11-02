@@ -727,6 +727,7 @@ func (g *Yts3) putMultipartUploadPart(bucket, object string, uploadID UploadID, 
 
 	partNumber, err := strconv.ParseInt(r.URL.Query().Get("partNumber"), 10, 0)
 	if err != nil || partNumber <= 0 || partNumber > MaxUploadPartNumber {
+		logrus.Errorf("err:\n", err)
 		return ErrInvalidPart
 	}
 
@@ -743,7 +744,6 @@ func (g *Yts3) putMultipartUploadPart(bucket, object string, uploadID UploadID, 
 
 	defer r.Body.Close()
 	var rdr io.Reader = r.Body
-
 	if g.integrityCheck {
 		md5Base64 := r.Header.Get("Content-MD5")
 		fmt.Println(textproto.CanonicalMIMEHeaderKey("Content-MD5"))
@@ -764,7 +764,6 @@ func (g *Yts3) putMultipartUploadPart(bucket, object string, uploadID UploadID, 
 	if err != nil {
 		return err
 	}
-
 	w.Header().Add("ETag", etag)
 	return nil
 }
@@ -809,7 +808,7 @@ func (g *Yts3) completeMultipartUpload(bucket, object string, uploadID UploadID,
 
 	logrus.Info(len(fileBody))
 
-	iniPath := "conf/yotta_config.ini"
+	iniPath := env.YTFS_HOME + "conf/yotta_config.ini"
 	cfg, err := conf.CreateConfig(iniPath)
 	if err != nil {
 		return err
@@ -880,7 +879,6 @@ func (g *Yts3) listMultipartUploads(bucket string, w http.ResponseWriter, r *htt
 
 func (g *Yts3) initiateMultipartUpload(bucket, object string, w http.ResponseWriter, r *http.Request) error {
 	logrus.Infof("initiate multipart upload\n")
-
 	iniPath := env.YTFS_HOME + "conf/yotta_config.ini"
 	cfg, err := conf.CreateConfig(iniPath)
 	if err != nil {
@@ -908,15 +906,14 @@ func (g *Yts3) initiateMultipartUpload(bucket, object string, w http.ResponseWri
 	if !strings.HasSuffix(directory, "/") {
 		directory = directory + "/"
 	}
-
 	meta, err := metadataHeaders(r.Header, g.timeSource.Now(), g.metadataSizeLimit)
 	if err != nil {
+		logrus.Errorf("err::::: %s\n", err)
 		return err
 	}
 	if err := g.ensureBucketExists(bucket); err != nil {
 		return err
 	}
-
 	upload := g.uploader.Begin(bucket, object, meta, g.timeSource.Now())
 	out := InitiateMultipartUpload{
 		UploadID: upload.ID,

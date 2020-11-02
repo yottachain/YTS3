@@ -15,6 +15,7 @@ import (
 	"github.com/ryszard/goskiplist/skiplist"
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
+	"github.com/yottachain/YTCoreService/env"
 	"github.com/yottachain/YTCoreService/pkt"
 	"github.com/yottachain/YTS3/conf"
 	"github.com/yottachain/YTS3/yts3"
@@ -183,7 +184,7 @@ func (db *Backend) BucketExists(name string) (exists bool, err error) {
 func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[string]string, input io.Reader, size int64) (result yts3.PutObjectResult, err error) {
 	c := api.GetClient(publicKey)
 	upload := c.NewUploadObject()
-	iniPath := "conf/yotta_config.ini"
+	iniPath := env.YTFS_HOME + "conf/yotta_config.ini"
 	cfg, err := conf.CreateConfig(iniPath)
 	cache := cfg.GetCacheInfo("directory")
 	directory := cache + "/" + bucketName
