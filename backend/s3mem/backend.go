@@ -257,10 +257,18 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 		return
 	}
 
-	err3 := c.NewObjectAccessor().CreateObject(bucketName, objectName, upload.VNU, metadata2)
-	if err3 != nil {
-		logrus.Errorf("[Save meta data ]:%s\n", err3)
+	if size == 0 {
+		err := c.NewObjectAccessor().CreateObject(bucketName, objectName, primitive.ObjectID{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, metadata2)
+		if err != nil {
+			logrus.Errorf("[Save meta data ]:%s\n", err)
+		}
+	} else {
+		err3 := c.NewObjectAccessor().CreateObject(bucketName, objectName, upload.VNU, metadata2)
+		if err3 != nil {
+			logrus.Errorf("[Save meta data ]:%s\n", err3)
+		}
 	}
+
 	if size >= 10485760 {
 		filePath := directory + "/" + objectName
 		deleteCacheFile(filePath)
