@@ -487,13 +487,21 @@ func (g *Yts3) headObject(bucket, object string, versionID VersionID, w http.Res
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
+
 	if len(content) > 50 {
 		publicKeyLength := strings.Index(content, ":")
 		contentNew := content[:publicKeyLength]
 
 		content = contentNew
 	}
-	obj, err := g.storage.HeadObject(content, bucket, object)
+	// obj, err := g.storage.HeadObject(content, bucket, object)
+	rnge, err := parseRangeHeader(r.Header.Get("Range"))
+	if err != nil {
+		return err
+	}
+
+	var obj *Object
+	obj, err = g.storage.GetObject(content, bucket, object, rnge)
 	if err != nil {
 		return err
 	}
