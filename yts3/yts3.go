@@ -754,7 +754,6 @@ func (g *Yts3) putMultipartUploadPart(bucket, object string, uploadID UploadID, 
 	var rdr io.Reader = r.Body
 	if g.integrityCheck {
 		md5Base64 := r.Header.Get("Content-MD5")
-		fmt.Println(textproto.CanonicalMIMEHeaderKey("Content-MD5"))
 		if _, ok := r.Header[textproto.CanonicalMIMEHeaderKey("Content-MD5")]; ok && md5Base64 == "" {
 			return ErrInvalidDigest
 		}
