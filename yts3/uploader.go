@@ -345,7 +345,7 @@ func (mpu *multipartUpload) AddPart(bucketName, objectName string, partNumber in
 	cache := cfg.GetCacheInfo("directory")
 	directory := cache + "/" + bucketName + "/" + objectName
 
-	partName := objectName + "_" + fmt.Sprintf("%d", partNumber)
+	partName := fmt.Sprintf("%d", partNumber) + "_" + objectName
 	etag, err3 := writeCacheFilePart(directory, objectName, partName, rdr)
 	if err3 != nil {
 	}

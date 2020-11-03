@@ -38,7 +38,7 @@ func UploadFile(g *gin.Context) {
 
 	putUploadObject(bucketName, filename, publicKey, upload)
 
-	hash, err := upload.UploadFile(files)
+	err := upload.UploadFile(files)
 	if err != nil {
 		logrus.Errorf("[UploadFile ]AuthSuper ERR:%s\n", err)
 	}
@@ -47,7 +47,7 @@ func UploadFile(g *gin.Context) {
 	timeUnix := time.Now().Unix()
 
 	fileSize := getFileSize(files)
-
+	hash := upload.GetMD5()
 	header["ETag"] = hex.EncodeToString(hash)
 	header["x-amz-date"] = string(timeUnix)
 	header["contentLength"] = strconv.FormatInt(fileSize, 10)
