@@ -1,10 +1,13 @@
 package yts3
 
 import (
+	"encoding/binary"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"time"
 )
@@ -101,6 +104,7 @@ func Stamp2Time(stamp int64) time.Time {
 }
 
 func ListDir(dirPth string) (files []string, files1 []string, err error) {
+	var fileNames []string
 
 	dir, err := ioutil.ReadDir(dirPth)
 	if err != nil {
@@ -114,10 +118,47 @@ func ListDir(dirPth string) (files []string, files1 []string, err error) {
 			files1 = append(files1, dirPth+PthSep+fi.Name())
 			ListDir(dirPth + PthSep + fi.Name())
 		} else {
-			files = append(files, dirPth+PthSep+fi.Name())
+			fileNames = append(fileNames, fi.Name())
+
 		}
 	}
+	sort.Slice(
+		fileNames,
+		func(i, j int) bool {
+			return sortName(fileNames[i]) < sortName(fileNames[j])
+		},
+	)
+	fmt.Println(fileNames)
+	for _, file := range fileNames {
+		files = append(files, dirPth+PthSep+file)
+	}
+
 	return files, files1, nil
+}
+
+func sortName(filename string) string {
+	ext := filepath.Ext(filename)
+	name := filename[:len(filename)-len(ext)]
+	// split numeric suffix
+	i := len(name) - 1
+	for ; i >= 0; i-- {
+		if '0' > name[i] || name[i] > '9' {
+			break
+		}
+	}
+	i++
+	// string numeric suffix to uint64 bytes
+	// empty string is zero, so integers are plus one
+	b64 := make([]byte, 64/8)
+	s64 := name[i:]
+	if len(s64) > 0 {
+		u64, err := strconv.ParseUint(s64, 10, 64)
+		if err == nil {
+			binary.BigEndian.PutUint64(b64, u64+1)
+		}
+	}
+	// prefix + numeric-suffix + ext
+	return name[:i] + string(b64) + ext
 }
 
 func DirSize(path string) (int64, error) {
