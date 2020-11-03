@@ -293,7 +293,7 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 }
 
 func (g *Yts3) createBucket(bucket string, w http.ResponseWriter, r *http.Request) error {
-	logrus.Infof("CREATE BUCKET:%d\n", bucket)
+	logrus.Infof("CREATE BUCKET:%s\n", bucket)
 
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
@@ -832,17 +832,16 @@ func (g *Yts3) completeMultipartUpload(bucket, object string, uploadID UploadID,
 	if result.VersionID != "" {
 		w.Header().Set("x-amz-version-id", string(result.VersionID))
 	}
-	//临时屏蔽
-	// for _, s := range files {
-	// 	del := os.Remove(s)
-	// 	if del != nil {
-	// 		fmt.Println(del)
-	// 	}
-	// }
-	// del := os.Remove(directory)
-	// if del != nil {
-	// 	fmt.Println(del)
-	// }
+	for _, s := range files {
+		del := os.Remove(s)
+		if del != nil {
+			fmt.Println(del)
+		}
+	}
+	del := os.Remove(directory)
+	if del != nil {
+		fmt.Println(del)
+	}
 	return g.xmlEncoder(w).Encode(&CompleteMultipartUploadResult{
 		ETag:   etag,
 		Bucket: bucket,
