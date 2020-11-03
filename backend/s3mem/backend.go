@@ -1,7 +1,6 @@
 package s3mem
 
 import (
-	"crypto/md5"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -192,7 +191,7 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 		panic(err)
 	}
 
-	var hash [16]byte
+	var hash []byte
 	var bts []byte
 	var header map[string]string
 	header = make(map[string]string)
@@ -203,18 +202,17 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 			return
 		}
 		filePath := directory + "/" + objectName
-		_, erre := upload.UploadFile(filePath)
+		erre := upload.UploadFile(filePath)
 		if erre != nil {
 			logrus.Errorf("Err: %s\n", erre)
 			return
 		}
+		hash = upload.GetMD5()
 	} else {
 		bts, err = yts3.ReadAll(input, size)
 		if err != nil {
 			return result, err
 		}
-		hash = md5.Sum(bts)
-		logrus.Infof("length:%d\n", len(bts))
 	}
 
 	db.lock.Lock()
@@ -238,12 +236,13 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 
 	if size < 10485760 {
 		if size > 0 {
-			resulthash, err1 := upload.UploadBytes(item.body)
+			err1 := upload.UploadBytes(item.body)
 			if err1 != nil {
 				logrus.Printf("ERR:%s\n", err1)
 				return
 			}
-			logrus.Infof("upload hash result:%s\n", hex.EncodeToString(resulthash))
+			hash = upload.GetMD5()
+			logrus.Infof("upload hash result:%s\n", hex.EncodeToString(hash))
 		}
 
 	}
@@ -273,6 +272,7 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 		filePath := directory + "/" + objectName
 		deleteCacheFile(filePath)
 	}
+	logrus.Infof("File upload success,file md5 value : %s", hex.EncodeToString(hash[:]))
 
 	return result, nil
 }
@@ -288,17 +288,20 @@ func (db *Backend) MultipartUpload(publicKey, bucketName, objectName string, par
 
 	var meta map[string]string
 
-	var hash [16]byte
+	var hash []byte
 	var bts []byte
 	var header map[string]string
 	header = make(map[string]string)
 
-	hash1, errB := upload.UploadMultiFile(partsPath)
+	errB := upload.UploadMultiFile(partsPath)
 	if errB != nil {
 		logrus.Errorf("errB:%s", errB)
 		return
 	}
-	hash = md5.Sum(hash1)
+	sha256Hash := upload.GetSHA256()
+	hash = upload.GetMD5()
+	logrus.Infof("hash sha256:%s", hex.EncodeToString(sha256Hash))
+	// hash = md5.Sum(hash1)
 
 	db.lock.Lock()
 	defer db.lock.Unlock()
@@ -333,6 +336,8 @@ func (db *Backend) MultipartUpload(publicKey, bucketName, objectName string, par
 	if err3 != nil {
 		logrus.Errorf("[Save meta data ]:%s\n", err3)
 	}
+
+	logrus.Infof("File upload success,file md5 value : %s\n", hex.EncodeToString(hash[:]))
 
 	return result, nil
 }
