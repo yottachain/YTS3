@@ -786,7 +786,7 @@ func (g *Yts3) abortMultipartUpload(bucket, object string, uploadID UploadID, w 
 }
 
 func (g *Yts3) completeMultipartUpload(bucket, object string, uploadID UploadID, w http.ResponseWriter, r *http.Request) error {
-	logrus.Infof("complete multipart upload %s %s %d\n", bucket, object, uploadID)
+	logrus.Infof("complete multipart upload %s %s %s\n", bucket, object, uploadID)
 
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
@@ -833,16 +833,17 @@ func (g *Yts3) completeMultipartUpload(bucket, object string, uploadID UploadID,
 	if result.VersionID != "" {
 		w.Header().Set("x-amz-version-id", string(result.VersionID))
 	}
-	for _, s := range files {
-		del := os.Remove(s)
-		if del != nil {
-			fmt.Println(del)
-		}
-	}
-	del := os.Remove(directory)
-	if del != nil {
-		fmt.Println(del)
-	}
+	//临时屏蔽
+	// for _, s := range files {
+	// 	del := os.Remove(s)
+	// 	if del != nil {
+	// 		fmt.Println(del)
+	// 	}
+	// }
+	// del := os.Remove(directory)
+	// if del != nil {
+	// 	fmt.Println(del)
+	// }
 	return g.xmlEncoder(w).Encode(&CompleteMultipartUploadResult{
 		ETag:   etag,
 		Bucket: bucket,
