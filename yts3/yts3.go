@@ -423,7 +423,7 @@ func (g *Yts3) hostBucketMiddleware(handler http.Handler) http.Handler {
 }
 
 func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.ResponseWriter, r *http.Request) error {
-
+	env.TracePanic("getObject")
 	logrus.Infof("GET OBJECT\n")
 	logrus.Infof("Bucket:%s\n", bucket)
 	logrus.Infof("└── Object:%s\n", object)
@@ -531,8 +531,10 @@ func (g *Yts3) writeGetOrHeadObjectResponse(obj *Object, w http.ResponseWriter, 
 		w.Header().Set(mk, mv)
 	}
 	w.Header().Set("Accept-Ranges", "bytes")
-	w.Header().Set("ETag", `"`+hex.EncodeToString(obj.Hash)+`"`)
-
+	// w.Header().Set("ETag", `"`+hex.EncodeToString(obj.Hash)+`"`)
+	etag := obj.Metadata["ETag"]
+	newETag := etag[1 : len(etag)-1]
+	w.Header().Set("ETag", newETag)
 	if obj.VersionID != "" {
 		w.Header().Set("x-amz-version-id", string(obj.VersionID))
 	}
