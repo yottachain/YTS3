@@ -140,7 +140,7 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 		for _, v := range items {
 			meta, err := api.BytesToFileMetaMap(v.Meta, primitive.ObjectID{})
 			if err != nil {
-				// continue
+				continue
 			}
 			t := time.Unix(v.FileId.Timestamp().Unix(), 0)
 			s := t.Format("20060102T150405Z")
