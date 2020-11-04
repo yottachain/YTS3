@@ -506,20 +506,23 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 	if bucket.versioning != yts3.VersioningEnabled {
 		result.VersionID = ""
 	}
-	c := api.GetClient(publicKey)
-	download, errMsg := c.NewDownloadFile(bucketName, objectName, primitive.NilObjectID)
-	if errMsg != nil {
-		logrus.Errorf("Err:%s\n", errMsg)
-	}
-	if rangeRequest != nil {
-		result.Contents = &ContentReader{download.LoadRange(rangeRequest.Start, rangeRequest.End).(io.ReadCloser)}
-		result.Range = &yts3.ObjectRange{
-			Start:  rangeRequest.Start,
-			Length: rangeRequest.End - rangeRequest.Start,
+	if result.Size > 0 {
+		c := api.GetClient(publicKey)
+		download, errMsg := c.NewDownloadFile(bucketName, objectName, primitive.NilObjectID)
+		if errMsg != nil {
+			logrus.Errorf("Err:%s\n", errMsg)
 		}
-	} else {
-		result.Contents = &ContentReader{download.Load().(io.ReadCloser)}
+		if rangeRequest != nil {
+			result.Contents = &ContentReader{download.LoadRange(rangeRequest.Start, rangeRequest.End).(io.ReadCloser)}
+			result.Range = &yts3.ObjectRange{
+				Start:  rangeRequest.Start,
+				Length: rangeRequest.End - rangeRequest.Start,
+			}
+		} else {
+			result.Contents = &ContentReader{download.Load().(io.ReadCloser)}
+		}
 	}
+
 	hash, err := hex.DecodeString(content.ETag)
 	if err != nil {
 		fmt.Println(err)
