@@ -14,14 +14,12 @@ import (
 	"github.com/patrickmn/go-cache"
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
-	"github.com/yottachain/YTCoreService/env"
 )
 
 var upload_progress_CACHE = cache.New(time.Duration(600000)*time.Second, time.Duration(600000)*time.Second)
 
 //UploadFile 根据路径上传文件
 func UploadFile(g *gin.Context) {
-	defer env.TracePanic("UploadFile")
 	bucketName := g.PostForm("bucketName")
 
 	publicKey := g.PostForm("publicKey")
@@ -29,7 +27,6 @@ func UploadFile(g *gin.Context) {
 
 	var filename string
 	filename = filepath.Base(files)
-	fmt.Println("filename=", filename)
 	content := publicKey[3:]
 	c := api.GetClient(content)
 
@@ -65,7 +62,6 @@ func UploadFile(g *gin.Context) {
 
 //GetProgress 查询上传进度
 func GetProgress(g *gin.Context) {
-	defer env.TracePanic("GetProgress")
 	publicKey := g.Query("publicKey")
 	bucketName := g.Query("bucketName")
 	fileName := g.Query("fileName")
