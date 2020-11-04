@@ -1,6 +1,7 @@
 package s3mem
 
 import (
+	"crypto/md5"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -247,7 +248,14 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 
 	}
 	//update meta data
-	header["ETag"] = hex.EncodeToString(hash[:])
+	if size == 0 {
+		hashz := md5.Sum(bts)
+		logrus.Infof("zero file Etag:%s", hex.EncodeToString(hashz[:]))
+		header["ETag"] = hex.EncodeToString(hashz[:])
+	} else {
+		header["ETag"] = hex.EncodeToString(hash[:])
+	}
+
 	header["contentLength"] = strconv.FormatInt(size, 10)
 	metadata2, err2 := api.FileMetaMapTobytes(header)
 
@@ -257,7 +265,7 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 	}
 
 	if size == 0 {
-		err := c.NewObjectAccessor().CreateObject(bucketName, objectName, primitive.ObjectID{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, metadata2)
+		err := c.NewObjectAccessor().CreateObject(bucketName, objectName, primitive.NewObjectID(), metadata2)
 		if err != nil {
 			logrus.Errorf("[Save meta data ]:%s\n", err)
 		}

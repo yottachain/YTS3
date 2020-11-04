@@ -69,15 +69,12 @@ func GetFileAllInfo(g *gin.Context) {
 	for i := 0; i < len(list)-1; i++ {
 		blockinfo := Block{}
 		var shardslist []*Shard
-		// blockinfo.BlockID = i
-
 		blockName := "block" + strconv.FormatInt(int64(i), 10)
 		blockinfo.BlockNum = blockName
 		blockinfo.BlockEncPath = fileDirectory + "/" + fileName + "/" + blockName + "/block.enc"
 		blockinfo.BlockSrcPath = fileDirectory + "/" + fileName + "/" + blockName + "/block.src"
 		blockinfo.BlockZipPath = fileDirectory + "/" + fileName + "/" + blockName + "/block.zip"
 		blockDirectory := fileDirectory + "/" + fileName + "/" + blockName + "/"
-		// blockInList, err := getDirList(blockDirectory)
 		blockInList, err := ioutil.ReadDir(blockDirectory)
 		if err != nil {
 			fmt.Println(err)
@@ -215,11 +212,12 @@ func DownloadFile(g *gin.Context) {
 		logrus.Errorf("[DownloadFile ]AuthSuper ERR:%s\n", err)
 	}
 
-	errn := download.SaveToPath(savePath + "/" + fileName)
+	// errn := download.SaveToPath(savePath + "/" + fileName)
+	errn := download.SaveToFile(savePath + "/" + fileName)
 	if errn != nil {
 		logrus.Errorf("[DownloadFile ]AuthSuper ERR:%s\n", errn)
 	} else {
-		logrus.Info("[ " + fileName + " ]" + " is Download Success")
+		logrus.Infof("[ " + fileName + " ]" + " is Download Success")
 	}
 
 }
@@ -232,7 +230,7 @@ func putDownloadObject(bucketName, fileName, publicKey string, upload *api.Downl
 	data := []byte(key)
 	has := md5.Sum(data)
 	md5str := fmt.Sprintf("%x", has)
-	logrus.Info("md5str set::::", md5str)
+	logrus.Infof("md5str set : %s", md5str)
 	download_progress_CACHE.SetDefault(md5str, upload)
 }
 
@@ -256,10 +254,10 @@ func getDownloadProgress(bucketName, fileName, publicKey string) int32 {
 	data := []byte(key)
 	has := md5.Sum(data)
 	md5str := fmt.Sprintf("%x", has)
-	logrus.Info("md5str get::::", md5str)
+	logrus.Infof("md5str get : %s", md5str)
 	v, found := download_progress_CACHE.Get(md5str)
 
-	logrus.Info("key is value:::::::", found)
+	logrus.Infof("key is value : %s", found)
 	if found {
 		ii := v.(*api.DownloadObject).GetProgress()
 		num = ii

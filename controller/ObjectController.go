@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
@@ -73,7 +72,7 @@ func listObjects(publicKey, buck, fileName, prefix string, wversion bool, nVerid
 	ls, err := objectAccessor.ListObject(buck, fileName, prefix, wversion, nVerid, limit)
 
 	if err != nil {
-		log.Info("Pull objects is error ", err)
+		logrus.Infof("Pull objects is error:%s ", err)
 	}
 	// objItem := *[]ObjectItem
 	// objItem = ls

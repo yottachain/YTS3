@@ -56,7 +56,6 @@ func CreateBucket(g *gin.Context) {
 
 //ListBucket list all bucket
 func ListBucket(g *gin.Context) {
-	// defer env.TracePanic("ListBucket")
 	publicKey := g.Query("publicKey")
 	content := publicKey[3:]
 
@@ -70,6 +69,5 @@ func ListBucket(g *gin.Context) {
 		logrus.Errorf("[ListBucket ]AuthSuper ERR:%s\n", err)
 	}
 
-	// buckets.buckets := names
 	g.JSON(http.StatusOK, names)
 }
