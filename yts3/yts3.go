@@ -476,6 +476,7 @@ func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.Resp
 		return err
 	}
 
+	logrus.Infof("【" + object + "】 download successful.\n")
 	return nil
 }
 
@@ -516,7 +517,7 @@ func (g *Yts3) headObject(bucket, object string, versionID VersionID, w http.Res
 	}
 
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", obj.Size))
-
+	logrus.Infof("【" + object + "】 download successful.\n")
 	return nil
 }
 
