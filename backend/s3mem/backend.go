@@ -216,7 +216,7 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 			logrus.Errorf("Err: %s\n", erre)
 			return
 		}
-		hash = upload.GetMD5()
+		// hash = upload.GetMD5()
 	} else {
 		bts, err = yts3.ReadAll(input, size)
 		if err != nil {
