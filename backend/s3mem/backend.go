@@ -216,7 +216,7 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 			logrus.Errorf("Err: %s\n", erre)
 			return
 		}
-		// hash = upload.GetMD5()
+		hash = upload.GetMD5()
 	} else {
 		bts, err = yts3.ReadAll(input, size)
 		if err != nil {
@@ -266,14 +266,16 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 	}
 
 	if size == 0 {
-		err := c.NewObjectAccessor().CreateObject(bucketName, objectName, primitive.NewObjectID(), metadata2)
-		if err != nil {
-			logrus.Errorf("[Save meta data ]:%s\n", err)
+		errzero := c.NewObjectAccessor().CreateObject(bucketName, objectName, primitive.NewObjectID(), metadata2)
+		if errzero != nil {
+			logrus.Errorf("[Save meta data ]:%s\n", errzero)
+			return
 		}
 	} else {
 		err3 := c.NewObjectAccessor().CreateObject(bucketName, objectName, upload.VNU, metadata2)
 		if err3 != nil {
 			logrus.Errorf("[Save meta data ]:%s\n", err3)
+			return
 		}
 	}
 

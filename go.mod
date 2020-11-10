@@ -3,7 +3,6 @@ module github.com/yottachain/YTS3
 go 1.14
 
 require (
-	github.com/ethereum/go-ethereum v1.9.9
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-ini/ini v1.57.0
@@ -16,7 +15,7 @@ require (
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/afero v1.2.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/yottachain/YTCoreService v0.0.0-20201103021415-7e268eebcace
+	github.com/yottachain/YTCoreService v0.0.0-20201104025340-7410322edbfd
 	go.mongodb.org/mongo-driver v1.3.3
 	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc // indirect
 	golang.org/x/sys v0.0.0-20200819171115-d785dc25833f // indirect
