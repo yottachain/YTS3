@@ -522,6 +522,7 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 		download, errMsg := c.NewDownloadFile(bucketName, objectName, primitive.NilObjectID)
 		if errMsg != nil {
 			logrus.Errorf("Err:%s\n", errMsg)
+			return nil, err
 		}
 		if rangeRequest != nil {
 			result.Contents = &ContentReader{download.LoadRange(rangeRequest.Start, rangeRequest.End).(io.ReadCloser)}

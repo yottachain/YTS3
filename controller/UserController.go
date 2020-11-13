@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
 	"github.com/yottachain/YTCoreService/env"
+	"github.com/yottachain/YTS3/backend/s3mem"
 )
 
 //User 用户注册
@@ -30,12 +31,18 @@ func Register(g *gin.Context) {
 	// log.Info("privateKey : " + privateKey)
 
 	// if count == 0 {
-	_, err2 := api.NewClient(userName, privateKey)
+	client, err2 := api.NewClient(userName, privateKey)
 	if err2 != nil {
 		// CheckErr(err2)
 		logrus.Infof("err:%s\n", err2)
 		return
 	}
+	db := s3mem.New()
+	_, initerr := db.ListBuckets(client.AccessorKey)
+	if initerr != nil {
+		return
+	}
+
 	logrus.Infof("User Register Success,UserName: %s\n", userName)
 	// }
 	g.JSON(http.StatusOK, gin.H{"status": "Register success " + userName})
