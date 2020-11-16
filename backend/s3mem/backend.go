@@ -12,18 +12,22 @@ import (
 	"sync"
 	"time"
 
+	"github.com/patrickmn/go-cache"
 	"github.com/ryszard/goskiplist/skiplist"
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
 	"github.com/yottachain/YTCoreService/env"
 	"github.com/yottachain/YTCoreService/pkt"
 	"github.com/yottachain/YTS3/conf"
+
 	"github.com/yottachain/YTS3/yts3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var (
-	emptyPrefix = &yts3.Prefix{}
+	emptyPrefix         = &yts3.Prefix{}
+	RegDb               *Backend
+	UserAllBucketsCACHE = cache.New(time.Duration(6000000)*time.Minute, time.Duration(6000000)*time.Minute)
 	// emptyVersionsPage = &yts3.ListBucketVersionsPage{}
 )
 
@@ -34,7 +38,7 @@ type Backend struct {
 	versionSeed      int64
 	versionSeedSet   bool
 	versionScratch   []byte
-	lock             sync.RWMutex
+	Lock             sync.RWMutex
 }
 
 var _ yts3.Backend = &Backend{}
@@ -72,8 +76,8 @@ func New(opts ...Option) *Backend {
 
 //ListBuckets s3 list all buckets
 func (db *Backend) ListBuckets(publicKey string) ([]yts3.BucketInfo, error) {
-	db.lock.RLock()
-	defer db.lock.RUnlock()
+	db.Lock.RLock()
+	defer db.Lock.RUnlock()
 	c := api.GetClient(publicKey)
 	bucketAccessor := c.NewBucketAccessor()
 	names, err1 := bucketAccessor.ListBucket()
@@ -124,8 +128,18 @@ func getContentByMeta(meta map[string]string) *yts3.Content {
 
 //ListBucket s3 listObjects
 func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page yts3.ListBucketPage) (*yts3.ObjectList, error) {
-	db.lock.RLock()
-	defer db.lock.RUnlock()
+	db.Lock.RLock()
+	defer db.Lock.RUnlock()
+	if len(db.buckets) == 0 {
+		v, found := UserAllBucketsCACHE.Get(publicKey)
+		logrus.Infof("found::::", found)
+		logrus.Infof("value::", v)
+		RegDb = v.(*Backend)
+
+		if RegDb != nil {
+			db = RegDb
+		}
+	}
 	var response = yts3.NewObjectList()
 	c := api.GetClient(publicKey)
 	sklist := skiplist.NewStringMap()
@@ -175,16 +189,16 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 
 //BucketExists BucketExists
 func (db *Backend) BucketExists(name string) (exists bool, err error) {
-	db.lock.RLock()
-	defer db.lock.RUnlock()
+	db.Lock.RLock()
+	defer db.Lock.RUnlock()
 	return db.buckets[name] != nil, nil
 }
 
 //PutObject upload file
 func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[string]string, input io.Reader, size int64) (result yts3.PutObjectResult, err error) {
 
-	db.lock.Lock()
-	defer db.lock.Unlock()
+	db.Lock.Lock()
+	defer db.Lock.Unlock()
 
 	bucket := db.buckets[bucketName]
 	if bucket == nil {
@@ -314,8 +328,8 @@ func (db *Backend) MultipartUpload(publicKey, bucketName, objectName string, par
 	logrus.Infof("hash sha256:%s\n", hex.EncodeToString(sha256Hash))
 	// hash = md5.Sum(hash1)
 
-	db.lock.Lock()
-	defer db.lock.Unlock()
+	db.Lock.Lock()
+	defer db.Lock.Unlock()
 
 	bucket := db.buckets[bucketName]
 	if bucket == nil {
@@ -408,8 +422,8 @@ func writeCacheFile(directory, fileName string, input io.Reader) error {
 
 //CreateBucket create bucket
 func (db *Backend) CreateBucket(publicKey, name string) error {
-	db.lock.Lock()
-	defer db.lock.Unlock()
+	db.Lock.Lock()
+	defer db.Lock.Unlock()
 
 	if db.buckets[name] != nil {
 		return yts3.ResourceError(yts3.ErrBucketAlreadyExists, name)
@@ -426,8 +440,8 @@ func (db *Backend) nextVersion() yts3.VersionID {
 }
 
 func (db *Backend) DeleteMulti(publicKey, bucketName string, objects ...string) (result yts3.MultiDeleteResult, err error) {
-	db.lock.Lock()
-	defer db.lock.Unlock()
+	db.Lock.Lock()
+	defer db.Lock.Unlock()
 
 	bucket := db.buckets[bucketName]
 	if bucket == nil {
@@ -459,8 +473,8 @@ func (db *Backend) DeleteMulti(publicKey, bucketName string, objects ...string) 
 }
 
 func (db *Backend) HeadObject(publicKey, bucketName, objectName string) (*yts3.Object, error) {
-	db.lock.RLock()
-	defer db.lock.RUnlock()
+	db.Lock.RLock()
+	defer db.Lock.RUnlock()
 
 	bucket := db.buckets[bucketName]
 	if bucket == nil {
@@ -498,8 +512,8 @@ func (cr *ContentReader) Read(buf []byte) (int, error) {
 }
 
 func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequest *yts3.ObjectRangeRequest) (*yts3.Object, error) {
-	db.lock.RLock()
-	defer db.lock.RUnlock()
+	db.Lock.RLock()
+	defer db.Lock.RUnlock()
 	bucket := db.buckets[bucketName]
 	if bucket == nil {
 		return nil, yts3.BucketNotFound(bucketName)
@@ -543,8 +557,8 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 	return result, nil
 }
 func (db *Backend) DeleteObject(publicKey, bucketName, objectName string) (result yts3.ObjectDeleteResult, rerr error) {
-	db.lock.Lock()
-	defer db.lock.Unlock()
+	db.Lock.Lock()
+	defer db.Lock.Unlock()
 
 	bucket := db.buckets[bucketName]
 	if bucket == nil {
@@ -555,8 +569,8 @@ func (db *Backend) DeleteObject(publicKey, bucketName, objectName string) (resul
 }
 
 func (db *Backend) DeleteBucket(publicKey, bucketName string) error {
-	db.lock.Lock()
-	defer db.lock.Unlock()
+	db.Lock.Lock()
+	defer db.Lock.Unlock()
 
 	if db.buckets[bucketName] == nil {
 		return yts3.ErrNoSuchBucket
