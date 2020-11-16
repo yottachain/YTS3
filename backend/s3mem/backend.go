@@ -475,7 +475,14 @@ func (db *Backend) DeleteMulti(publicKey, bucketName string, objects ...string) 
 func (db *Backend) HeadObject(publicKey, bucketName, objectName string) (*yts3.Object, error) {
 	db.Lock.RLock()
 	defer db.Lock.RUnlock()
+	if len(db.buckets) == 0 {
+		v, _ := UserAllBucketsCACHE.Get(publicKey)
+		RegDb = v.(*Backend)
 
+		if RegDb != nil {
+			db = RegDb
+		}
+	}
 	bucket := db.buckets[bucketName]
 	if bucket == nil {
 		return nil, yts3.BucketNotFound(bucketName)
@@ -514,6 +521,14 @@ func (cr *ContentReader) Read(buf []byte) (int, error) {
 func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequest *yts3.ObjectRangeRequest) (*yts3.Object, error) {
 	db.Lock.RLock()
 	defer db.Lock.RUnlock()
+	if len(db.buckets) == 0 {
+		v, _ := UserAllBucketsCACHE.Get(publicKey)
+		RegDb = v.(*Backend)
+
+		if RegDb != nil {
+			db = RegDb
+		}
+	}
 	bucket := db.buckets[bucketName]
 	if bucket == nil {
 		return nil, yts3.BucketNotFound(bucketName)
