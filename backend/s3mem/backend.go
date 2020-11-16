@@ -131,9 +131,9 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 	db.Lock.RLock()
 	defer db.Lock.RUnlock()
 	if len(db.buckets) == 0 {
-		v, found := UserAllBucketsCACHE.Get(publicKey)
-		logrus.Infof("found::::", found)
-		logrus.Infof("value::", v)
+		v, _ := UserAllBucketsCACHE.Get(publicKey)
+		// logrus.Infof("found::::", found)
+		// logrus.Infof("value::", v)
 		RegDb = v.(*Backend)
 
 		if RegDb != nil {
