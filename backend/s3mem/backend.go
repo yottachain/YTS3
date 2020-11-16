@@ -199,7 +199,14 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 
 	db.Lock.Lock()
 	defer db.Lock.Unlock()
+	if len(db.buckets) == 0 {
+		v, _ := UserAllBucketsCACHE.Get(publicKey)
+		RegDb = v.(*Backend)
 
+		if RegDb != nil {
+			db = RegDb
+		}
+	}
 	bucket := db.buckets[bucketName]
 	if bucket == nil {
 		return result, yts3.BucketNotFound(bucketName)
@@ -330,7 +337,14 @@ func (db *Backend) MultipartUpload(publicKey, bucketName, objectName string, par
 
 	db.Lock.Lock()
 	defer db.Lock.Unlock()
+	if len(db.buckets) == 0 {
+		v, _ := UserAllBucketsCACHE.Get(publicKey)
+		RegDb = v.(*Backend)
 
+		if RegDb != nil {
+			db = RegDb
+		}
+	}
 	bucket := db.buckets[bucketName]
 	if bucket == nil {
 		return result, yts3.BucketNotFound(bucketName)
@@ -424,7 +438,14 @@ func writeCacheFile(directory, fileName string, input io.Reader) error {
 func (db *Backend) CreateBucket(publicKey, name string) error {
 	db.Lock.Lock()
 	defer db.Lock.Unlock()
+	if len(db.buckets) == 0 {
+		v, _ := UserAllBucketsCACHE.Get(publicKey)
+		RegDb = v.(*Backend)
 
+		if RegDb != nil {
+			db = RegDb
+		}
+	}
 	if db.buckets[name] != nil {
 		return yts3.ResourceError(yts3.ErrBucketAlreadyExists, name)
 	}
@@ -442,7 +463,14 @@ func (db *Backend) nextVersion() yts3.VersionID {
 func (db *Backend) DeleteMulti(publicKey, bucketName string, objects ...string) (result yts3.MultiDeleteResult, err error) {
 	db.Lock.Lock()
 	defer db.Lock.Unlock()
+	if len(db.buckets) == 0 {
+		v, _ := UserAllBucketsCACHE.Get(publicKey)
+		RegDb = v.(*Backend)
 
+		if RegDb != nil {
+			db = RegDb
+		}
+	}
 	bucket := db.buckets[bucketName]
 	if bucket == nil {
 		return result, yts3.BucketNotFound(bucketName)
