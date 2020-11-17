@@ -25,8 +25,10 @@ import (
 )
 
 var (
-	emptyPrefix         = &yts3.Prefix{}
-	RegDb               *Backend
+	emptyPrefix = &yts3.Prefix{}
+	//RegDb init
+	RegDb *Backend
+	//UserAllBucketsCACHE cache
 	UserAllBucketsCACHE = cache.New(time.Duration(6000000)*time.Minute, time.Duration(6000000)*time.Minute)
 	// emptyVersionsPage = &yts3.ListBucketVersionsPage{}
 )
@@ -311,6 +313,21 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 
 //MultipartUpload 分段上传
 func (db *Backend) MultipartUpload(publicKey, bucketName, objectName string, partsPath []string, size int64) (result yts3.PutObjectResult, err error) {
+	db.Lock.Lock()
+	defer db.Lock.Unlock()
+	if len(db.buckets) == 0 {
+		v, _ := UserAllBucketsCACHE.Get(publicKey)
+		RegDb = v.(*Backend)
+
+		if RegDb != nil {
+			db = RegDb
+		}
+	}
+	logrus.Infof("all buckets size: %d", len(db.buckets))
+	bucket := db.buckets[bucketName]
+	if bucket == nil {
+		return result, yts3.BucketNotFound(bucketName)
+	}
 	c := api.GetClient(publicKey)
 	upload := c.NewUploadObject()
 
@@ -334,21 +351,6 @@ func (db *Backend) MultipartUpload(publicKey, bucketName, objectName string, par
 	hash = upload.GetMD5()
 	logrus.Infof("hash sha256:%s\n", hex.EncodeToString(sha256Hash))
 	// hash = md5.Sum(hash1)
-
-	db.Lock.Lock()
-	defer db.Lock.Unlock()
-	if len(db.buckets) == 0 {
-		v, _ := UserAllBucketsCACHE.Get(publicKey)
-		RegDb = v.(*Backend)
-
-		if RegDb != nil {
-			db = RegDb
-		}
-	}
-	bucket := db.buckets[bucketName]
-	if bucket == nil {
-		return result, yts3.BucketNotFound(bucketName)
-	}
 
 	item := &bucketData{
 		name:         objectName,
