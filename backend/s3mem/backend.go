@@ -193,6 +193,7 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 func (db *Backend) BucketExists(name string) (exists bool, err error) {
 	db.Lock.RLock()
 	defer db.Lock.RUnlock()
+
 	return db.buckets[name] != nil, nil
 }
 
