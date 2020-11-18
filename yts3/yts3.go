@@ -921,9 +921,9 @@ func (g *Yts3) initiateMultipartUpload(bucket, object string, w http.ResponseWri
 		logrus.Errorf("err::::: %s\n", err)
 		return err
 	}
-	if err := g.ensureBucketExists(bucket); err != nil {
-		return err
-	}
+	// if err := g.ensureBucketExists(bucket); err != nil {
+	// 	return err
+	// }
 	upload := g.uploader.Begin(bucket, object, meta, g.timeSource.Now())
 	out := InitiateMultipartUpload{
 		UploadID: upload.ID,
