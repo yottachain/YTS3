@@ -9,6 +9,7 @@ import (
 	httppprof "net/http/pprof"
 	"os"
 	"runtime/pprof"
+	"strconv"
 	"time"
 
 	"log"
@@ -18,7 +19,6 @@ import (
 	"github.com/yottachain/YTCoreService/api"
 	"github.com/yottachain/YTCoreService/env"
 	"github.com/yottachain/YTS3/backend/s3mem"
-	"github.com/yottachain/YTS3/conf"
 	"github.com/yottachain/YTS3/routers"
 	"github.com/yottachain/YTS3/yts3"
 )
@@ -140,7 +140,7 @@ func s3StopServer() {
 
 func s3StartServer() {
 	flag.Parse()
-	var path string
+	// var path string
 	// if len(os.Args) > 1 {
 	// 	if os.Args[1] != "" {
 	// 		path = os.Args[1]
@@ -151,23 +151,24 @@ func s3StartServer() {
 	// 	path = "conf/yotta_config.ini"
 	// }
 	api.StartApi()
-	path = env.YTFS_HOME + "conf/yotta_config.ini"
-	// path = "../conf/yotta_config.ini"
-	cfg, err := conf.CreateConfig(path)
-	if err != nil {
-		logrus.Info("read config file error")
-		// panic(err)
-	}
+	// path = env.YTFS_HOME + "conf/yotta_config.ini"
+	// // path = "../conf/yotta_config.ini"
+	// cfg, err := conf.CreateConfig(path)
+	// if err != nil {
+	// 	logrus.Info("read config file error")
+	// 	// panic(err)
+	// }
 
 	go func() {
 		router := routers.InitRouter()
-		port := cfg.GetHTTPInfo("port")
-		lsn, err := net.Listen("tcp4", port)
+		// port := cfg.GetHTTPInfo("port")
+		port := env.GetConfig().GetInt("s3port", 8080)
+		lsn, err := net.Listen("tcp4", ":"+strconv.Itoa(port))
 		if err != nil {
 			logrus.Printf("HTTPServer start error %s\n", err)
 			return
 		}
-		logrus.Printf("HTTPServer start Success %s\n", port)
+		logrus.Printf("HTTPServer start Success %d\n", port)
 		err1 := router.RunListener(lsn)
 		if err1 != nil {
 			panic(err1)

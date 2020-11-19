@@ -20,7 +20,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/env"
-	"github.com/yottachain/YTS3/conf"
 )
 
 type Yts3 struct {
@@ -818,13 +817,13 @@ func (g *Yts3) completeMultipartUpload(bucket, object string, uploadID UploadID,
 
 	logrus.Info(len(fileBody))
 
-	iniPath := env.YTFS_HOME + "conf/yotta_config.ini"
-	cfg, err := conf.CreateConfig(iniPath)
-	if err != nil {
-		return err
-	}
-	cache := cfg.GetCacheInfo("directory")
-	directory := cache + "/" + bucket + "/" + object
+	// iniPath := env.YTFS_HOME + "conf/yotta_config.ini"
+	// cfg, err := conf.CreateConfig(iniPath)
+	// if err != nil {
+	// 	return err
+	// }
+	s3cache := env.GetS3Cache()
+	directory := s3cache + "/" + bucket + "/" + object
 	files, _, _ := ListDir(directory)
 	size, _ := DirSize(directory)
 	result, err := g.storage.MultipartUpload(content, bucket, object, files, size)
@@ -835,16 +834,16 @@ func (g *Yts3) completeMultipartUpload(bucket, object string, uploadID UploadID,
 	if result.VersionID != "" {
 		w.Header().Set("x-amz-version-id", string(result.VersionID))
 	}
-	for _, s := range files {
-		del := os.Remove(s)
-		if del != nil {
-			fmt.Println(del)
-		}
-	}
-	del := os.Remove(directory)
-	if del != nil {
-		fmt.Println(del)
-	}
+	// for _, s := range files {
+	// 	del := os.Remove(s)
+	// 	if del != nil {
+	// 		fmt.Println(del)
+	// 	}
+	// }
+	// del := os.Remove(directory)
+	// if del != nil {
+	// 	fmt.Println(del)
+	// }
 	return g.xmlEncoder(w).Encode(&CompleteMultipartUploadResult{
 		ETag:   etag,
 		Bucket: bucket,
@@ -889,14 +888,15 @@ func (g *Yts3) listMultipartUploads(bucket string, w http.ResponseWriter, r *htt
 
 func (g *Yts3) initiateMultipartUpload(bucket, object string, w http.ResponseWriter, r *http.Request) error {
 	logrus.Infof("initiate multipart upload\n")
-	iniPath := env.YTFS_HOME + "conf/yotta_config.ini"
-	cfg, err := conf.CreateConfig(iniPath)
-	if err != nil {
-		logrus.Errorf("Error Msg:%s\n", err)
-		return err
-	}
-	cache := cfg.GetCacheInfo("directory")
-	directory := cache + "/" + bucket
+	// iniPath := env.YTFS_HOME + "conf/yotta_config.ini"
+	// cfg, err := conf.CreateConfig(iniPath)
+	// if err != nil {
+	// 	logrus.Errorf("Error Msg:%s\n", err)
+	// 	return err
+	// }
+	// cache := cfg.GetCacheInfo("directory")
+	s3cache := env.GetS3Cache()
+	directory := s3cache + "/" + bucket
 
 	s, err := os.Stat(directory)
 	if err != nil {

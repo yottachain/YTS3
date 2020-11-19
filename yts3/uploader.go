@@ -16,7 +16,6 @@ import (
 	"github.com/ryszard/goskiplist/skiplist"
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/env"
-	"github.com/yottachain/YTS3/conf"
 	"github.com/yottachain/YTS3/internal/goskipiter"
 )
 
@@ -337,13 +336,14 @@ func (mpu *multipartUpload) AddPart(bucketName, objectName string, partNumber in
 	mpu.mu.Lock()
 	defer mpu.mu.Unlock()
 
-	iniPath := env.YTFS_HOME + "conf/yotta_config.ini"
-	cfg, err := conf.CreateConfig(iniPath)
-	if err != nil {
-		panic(err)
-	}
-	cache := cfg.GetCacheInfo("directory")
-	directory := cache + "/" + bucketName + "/" + objectName
+	// iniPath := env.YTFS_HOME + "conf/yotta_config.ini"
+	// cfg, err := conf.CreateConfig(iniPath)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// s3cache := cfg.GetCacheInfo("directory")
+	s3cache := env.GetS3Cache()
+	directory := s3cache + "/" + bucketName + "/" + objectName
 
 	partName := fmt.Sprintf("%d", partNumber)
 	etag, err3 := writeCacheFilePart(directory, objectName, partName, rdr)
