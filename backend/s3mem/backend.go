@@ -18,7 +18,6 @@ import (
 	"github.com/yottachain/YTCoreService/api"
 	"github.com/yottachain/YTCoreService/env"
 	"github.com/yottachain/YTCoreService/pkt"
-	"github.com/yottachain/YTS3/conf"
 
 	"github.com/yottachain/YTS3/yts3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -215,14 +214,12 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 		return result, yts3.BucketNotFound(bucketName)
 	}
 	c := api.GetClient(publicKey)
-	upload := c.NewUploadObject()
-	iniPath := env.YTFS_HOME + "conf/yotta_config.ini"
-	cfg, err := conf.CreateConfig(iniPath)
-	cache := cfg.GetCacheInfo("directory")
-	directory := cache + "/" + bucketName
-	if err != nil {
-		panic(err)
-	}
+	// upload := c.NewUploadObject()
+	// iniPath := env.YTFS_HOME + "conf/yotta_config.ini"
+	// cfg, err := conf.CreateConfig(iniPath)
+	// cache := cfg.GetCacheInfo("directory")
+	s3cache := env.GetS3Cache()
+	directory := s3cache + "/" + bucketName
 
 	var hash []byte
 	var bts []byte
@@ -235,12 +232,13 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 			return
 		}
 		filePath := directory + "/" + objectName
-		erre := upload.UploadFile(filePath)
+		md5bytes, erre := c.UploadFile(filePath, bucketName, objectName)
+		// erre := upload.UploadFile(filePath)
 		if erre != nil {
 			logrus.Errorf("Err: %s\n", erre)
 			return
 		}
-		// hash = upload.GetMD5()
+		hash = md5bytes
 	} else {
 		bts, err = yts3.ReadAll(input, size)
 		if err != nil {
@@ -260,12 +258,13 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 
 	if size < 10485760 {
 		if size > 0 {
-			err1 := upload.UploadBytes(item.body)
+			// err1 := upload.UploadBytes(item.body)
+			md5Hash, err1 := c.UploadBytes(item.body, bucketName, objectName)
 			if err1 != nil {
 				logrus.Printf("ERR:%s\n", err1)
 				return
 			}
-			// hash = upload.GetMD5()
+			hash = md5Hash
 			// logrus.Infof("upload hash result:%s\n", hex.EncodeToString(hash))
 		}
 
@@ -276,7 +275,7 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 		logrus.Infof("zero file Etag:%s \n", hex.EncodeToString(hashz[:]))
 		header["ETag"] = hex.EncodeToString(hashz[:])
 	} else {
-		hash = upload.GetMD5()
+		// hash = upload.GetMD5()
 		header["ETag"] = hex.EncodeToString(hash[:])
 		logrus.Infof("[ "+objectName+" ]"+"is ETag:%s\n", hex.EncodeToString(hash[:]))
 	}
@@ -296,17 +295,17 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 			return
 		}
 	} else {
-		err3 := c.NewObjectAccessor().CreateObject(bucketName, objectName, upload.VNU, metadata2)
-		if err3 != nil {
-			logrus.Errorf("[Save meta data ]:%s\n", err3)
-			return
-		}
+		// err3 := c.NewObjectAccessor().CreateObject(bucketName, objectName, upload.VNU, metadata2)
+		// if err3 != nil {
+		// 	logrus.Errorf("[Save meta data ]:%s\n", err3)
+		// 	return
+		// }
 	}
 
-	if size >= 10485760 {
-		filePath := directory + "/" + objectName
-		deleteCacheFile(filePath)
-	}
+	// if size >= 10485760 {
+	// 	filePath := directory + "/" + objectName
+	// 	deleteCacheFile(filePath)
+	// }
 	logrus.Infof("File upload success,file md5 value : %s\n", hex.EncodeToString(hash[:]))
 
 	return result, nil
@@ -330,29 +329,24 @@ func (db *Backend) MultipartUpload(publicKey, bucketName, objectName string, par
 		return result, yts3.BucketNotFound(bucketName)
 	}
 	c := api.GetClient(publicKey)
-	upload := c.NewUploadObject()
-
-	if err != nil {
-		panic(err)
-	}
 
 	var meta map[string]string
 
 	var hash []byte
 	var bts []byte
-	var header map[string]string
-	header = make(map[string]string)
+	// var header map[string]string
+	// header = make(map[string]string)
 
-	errB := upload.UploadMultiFile(partsPath)
+	// errB := upload.UploadMultiFile(partsPath)
+	md5Bytes, errB := c.UploadMultiPartFile(partsPath, bucketName, objectName)
 	if errB != nil {
 		logrus.Errorf("errB:%s\n", errB)
 		return
 	}
-	sha256Hash := upload.GetSHA256()
-	hash = upload.GetMD5()
-	logrus.Infof("hash sha256:%s\n", hex.EncodeToString(sha256Hash))
+	// hash = upload.GetMD5()
 	// hash = md5.Sum(hash1)
 
+	hash = md5Bytes
 	item := &bucketData{
 		name:         objectName,
 		body:         bts,
@@ -365,19 +359,19 @@ func (db *Backend) MultipartUpload(publicKey, bucketName, objectName string, par
 
 	//update meta data
 
-	header["ETag"] = hex.EncodeToString(hash[:])
-	header["contentLength"] = strconv.FormatInt(size, 10)
-	metadata2, err2 := api.FileMetaMapTobytes(header)
+	// header["ETag"] = hex.EncodeToString(hash[:])
+	// header["contentLength"] = strconv.FormatInt(size, 10)
+	// metadata2, err2 := api.FileMetaMapTobytes(header)
 
-	if err2 != nil {
-		logrus.Errorf("[FileMetaMapTobytes ]:%s\n", err2)
-		return
-	}
+	// if err2 != nil {
+	// 	logrus.Errorf("[FileMetaMapTobytes ]:%s\n", err2)
+	// 	return
+	// }
 
-	err3 := c.NewObjectAccessor().CreateObject(bucketName, objectName, upload.VNU, metadata2)
-	if err3 != nil {
-		logrus.Errorf("[Save meta data ]:%s\n", err3)
-	}
+	// err3 := c.NewObjectAccessor().CreateObject(bucketName, objectName, upload.VNU, metadata2)
+	// if err3 != nil {
+	// 	logrus.Errorf("[Save meta data ]:%s\n", err3)
+	// }
 
 	logrus.Infof("File upload success,file md5 value : %s\n", hex.EncodeToString(hash[:]))
 
