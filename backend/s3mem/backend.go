@@ -323,7 +323,6 @@ func (db *Backend) MultipartUpload(publicKey, bucketName, objectName string, par
 			db = RegDb
 		}
 	}
-	logrus.Infof("all buckets size: %d", len(db.buckets))
 	bucket := db.buckets[bucketName]
 	if bucket == nil {
 		return result, yts3.BucketNotFound(bucketName)
