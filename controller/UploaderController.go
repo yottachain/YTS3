@@ -61,12 +61,24 @@ func UploadFile(g *gin.Context) {
 }
 
 //GetProgress 查询上传进度
+// func GetProgress(g *gin.Context) {
+// 	publicKey := g.Query("publicKey")
+// 	bucketName := g.Query("bucketName")
+// 	fileName := g.Query("fileName")
+
+// 	ii := getUploadProgress(bucketName, fileName, publicKey)
+
+// 	g.String(http.StatusOK, strconv.FormatInt(int64(ii), 10))
+// }
 func GetProgress(g *gin.Context) {
 	publicKey := g.Query("publicKey")
 	bucketName := g.Query("bucketName")
 	fileName := g.Query("fileName")
+	content := publicKey[3:]
+	c := api.GetClient(content)
 
-	ii := getUploadProgress(bucketName, fileName, publicKey)
+	ii := c.GetProgress(bucketName, fileName)
+	// ii := getUploadProgress(bucketName, fileName, publicKey)
 
 	g.String(http.StatusOK, strconv.FormatInt(int64(ii), 10))
 }

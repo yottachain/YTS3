@@ -229,6 +229,7 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 
 		errw := writeCacheFile(directory, objectName, input)
 		if errw != nil {
+			logrus.Errorf("write cache error:%s\n", errw)
 			return
 		}
 		filePath := directory + "/" + objectName
@@ -323,7 +324,6 @@ func (db *Backend) MultipartUpload(publicKey, bucketName, objectName string, par
 			db = RegDb
 		}
 	}
-	logrus.Infof("all buckets size: %d", len(db.buckets))
 	bucket := db.buckets[bucketName]
 	if bucket == nil {
 		return result, yts3.BucketNotFound(bucketName)
@@ -596,6 +596,7 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 	result.Hash = hash
 	return result, nil
 }
+
 func (db *Backend) DeleteObject(publicKey, bucketName, objectName string) (result yts3.ObjectDeleteResult, rerr error) {
 	db.Lock.Lock()
 	defer db.Lock.Unlock()

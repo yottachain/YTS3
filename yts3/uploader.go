@@ -348,6 +348,8 @@ func (mpu *multipartUpload) AddPart(bucketName, objectName string, partNumber in
 	partName := fmt.Sprintf("%d", partNumber)
 	etag, err3 := writeCacheFilePart(directory, objectName, partName, rdr)
 	if err3 != nil {
+		logrus.Errorf("write big file cache error:%s\n", err3)
+		return
 	}
 	part := multipartUploadPart{
 		PartNumber: partNumber,
