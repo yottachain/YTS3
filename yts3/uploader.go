@@ -11,6 +11,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/ryszard/goskiplist/skiplist"
@@ -364,6 +365,8 @@ func (mpu *multipartUpload) AddPart(bucketName, objectName string, partNumber in
 	return etag, nil
 }
 
+var OpenFileNum *int32 = new(int32)
+
 func writeCacheFilePart(directory, fileName, partName string, input io.Reader) (etag string, err error) {
 	var partEtag string
 
@@ -388,9 +391,14 @@ func writeCacheFilePart(directory, fileName, partName string, input io.Reader) (
 	filePath := directory + partName
 	f, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 	if err != nil {
+		logrus.Errorf("write cache err:%s，open files:%d\n", err, atomic.LoadInt32(OpenFileNum))
 		return partEtag, err
 	}
-	defer f.Close()
+	atomic.AddInt32(OpenFileNum, 1)
+	defer func() {
+		f.Close()
+		atomic.AddInt32(OpenFileNum, -1)
+	}()
 	hash := md5.New()
 	// hash.Write([]byte(body))
 
