@@ -1,14 +1,13 @@
 package s3mem
 
 import (
-	"bytes"
 	"io"
+	"strconv"
 	"time"
 
 	"github.com/ryszard/goskiplist/skiplist"
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
-	"github.com/yottachain/YTS3/internal/s3io"
 	"github.com/yottachain/YTS3/yts3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -140,8 +139,13 @@ type bucketData struct {
 }
 
 func (bi *bucketData) toObject(rangeRequest *yts3.ObjectRangeRequest, withBody bool) (obj *yts3.Object, err error) {
-	sz := int64(len(bi.body))
-	data := bi.body
+	// sz := int64(len(bi.body))
+	szStr := bi.metadata["contentLength"]
+	sz, err := strconv.ParseInt(szStr, 10, 64)
+	if err != nil {
+		logrus.Errorf("err:%s\n", err)
+	}
+	// data := bi.body
 
 	var contents io.ReadCloser
 	var rnge *yts3.ObjectRange
@@ -153,15 +157,13 @@ func (bi *bucketData) toObject(rangeRequest *yts3.ObjectRangeRequest, withBody b
 		}
 
 		if rnge != nil {
-			// data =
+			// data = data[rnge.Start : rnge.Start+rnge.Length]
 		}
 
-		// The data slice should be completely replaced if the bucket item is edited, so
-		// it should be safe to return the data slice directly.
-		contents = s3io.ReaderWithDummyCloser{bytes.NewReader(data)}
+		// contents = s3io.ReaderWithDummyCloser{bytes.NewReader(data)}
 
 	} else {
-		contents = s3io.NoOpReadCloser{}
+		// contents = s3io.NoOpReadCloser{}
 	}
 
 	return &yts3.Object{

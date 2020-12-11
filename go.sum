@@ -486,8 +486,8 @@ github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:
 github.com/yottachain/P2PHost v1.0.1-0.20200330065720-69572fdc7d92/go.mod h1:V7g0oufx1cRzGw+1aUsMPkmD/+Uvdiax7dZiiC+afoM=
 github.com/yottachain/P2PHost v1.0.2-0.20200921072702-609d35770f59 h1:FZHYTMNf39jebg8BP4Zr7C6aSu2lLz5GKk5rldGJZh0=
 github.com/yottachain/P2PHost v1.0.2-0.20200921072702-609d35770f59/go.mod h1:4ZBTjWbVgjQbVAjLDWsj0VSB723F02mau38rGp1W5yU=
-github.com/yottachain/YTCoreService v0.0.0-20201201013358-eca487a71e75 h1:89R+qefkVX4juvv36vCm7wZln4yhBS2XbmJ0Ihuq500=
-github.com/yottachain/YTCoreService v0.0.0-20201201013358-eca487a71e75/go.mod h1:b1SMjqmJTKBN4zjY14NjkHr3N7r3tJh9dyTh3cD8pG0=
+github.com/yottachain/YTCoreService v0.0.0-20201208075810-06aefaef564f h1:+EiWnk54qRB03keSpafGJSukizzt8LzwwZYRfqT0oTg=
+github.com/yottachain/YTCoreService v0.0.0-20201208075810-06aefaef564f/go.mod h1:aI+d/RMq6wEBG+YFwlsSo5EqCObE5eVB4sClaUylr8g=
 github.com/yottachain/YTCrypto v0.0.0-20200122165219-0ea35dc29812 h1:XG9TtLosanLdwqSoporMr8OASUOjxuaj6cJDlut1c9s=
 github.com/yottachain/YTCrypto v0.0.0-20200122165219-0ea35dc29812/go.mod h1:jDJUVGeQ1clW7k9OTRBAFtCMwGs9B9fGQ9QY64SKqlk=
 github.com/yottachain/YTDNMgmt v0.0.0-20201020034239-37c5dac308b7 h1:zzexnY/npnWowlXOuTHkSRSat007/3owGdxyxdJrGr4=
@@ -498,7 +498,7 @@ github.com/yottachain/YTHost v1.0.2-0.20200918110720-68f155ccc541 h1:jZK4hDasAo+
 github.com/yottachain/YTHost v1.0.2-0.20200918110720-68f155ccc541/go.mod h1:PMIX6FcFzZ5xaexcI1ivumzoo9nblL2wZc5it/R3SeU=
 github.com/yottachain/yotta-analysis v0.0.0-20200427065413-d4b83ac9a92f/go.mod h1:WBAiITvR+7h/fwyUYkybMjaBb812On6Td7sMc/nAqKE=
 github.com/yottachain/yotta-analysis v0.0.0-20200827070430-a2cc45d44692/go.mod h1:jkzWxLT0S/YYMbXukSBAehYg63AW3kj2hzhcubrgqhc=
-github.com/yottachain/yotta-rebuilder v0.0.0-20201118133407-1f6241a7fae0/go.mod h1:bB1NSBvVo4SxMlLf1HraSxM4NukpSz3SpppSZnSrIHo=
+github.com/yottachain/yotta-rebuilder v0.0.0-20201208032400-af42fe398b9e/go.mod h1:bB1NSBvVo4SxMlLf1HraSxM4NukpSz3SpppSZnSrIHo=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=

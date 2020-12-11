@@ -78,24 +78,24 @@ func parseRangeHeader(s string) (*ObjectRangeRequest, error) {
 		return nil, ErrInvalidRange
 	}
 
-	ranges := strings.Split(s[len(b):], ",")
-	if len(ranges) > 1 {
-		return nil, ErrorMessage(ErrNotImplemented, "multiple ranges not supported")
-	}
+	ranges := strings.Split(s[len(b):], "-")
+	// if len(ranges) > 1 {
+	// 	return nil, ErrorMessage(ErrNotImplemented, "multiple ranges not supported")
+	// }
 
 	rnge := strings.TrimSpace(ranges[0])
 	if len(rnge) == 0 {
 		return nil, ErrInvalidRange
 	}
 
-	i := strings.Index(rnge, "-")
+	i := strings.Index(s, "-")
 	if i < 0 {
 		return nil, ErrInvalidRange
 	}
 
 	var o ObjectRangeRequest
 
-	start, end := strings.TrimSpace(rnge[:i]), strings.TrimSpace(rnge[i+1:])
+	start, end := strings.TrimSpace(ranges[0]), strings.TrimSpace(ranges[1])
 	if start == "" {
 		o.FromEnd = true
 

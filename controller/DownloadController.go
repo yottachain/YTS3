@@ -257,7 +257,7 @@ func getDownloadProgress(bucketName, fileName, publicKey string) int32 {
 	logrus.Infof("md5str get : %s", md5str)
 	v, found := download_progress_CACHE.Get(md5str)
 
-	logrus.Infof("key is value : %s", found)
+	logrus.Infof("key is value : \n", found)
 	if found {
 		ii := v.(*api.DownloadObject).GetProgress()
 		num = ii
