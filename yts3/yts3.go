@@ -246,7 +246,7 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 	}
 
 	if _, ok := meta["X-Amz-Copy-Source"]; ok {
-		// return g.copyObject(bucket, object, meta, w, r)
+		return g.copyObject(bucket, object, meta, w, r)
 	}
 
 	contentLength := r.Header.Get("Content-Length")
@@ -961,4 +961,61 @@ func (g *Yts3) ensureBucketExists(bucket string) error {
 		return ResourceError(ErrNoSuchBucket, bucket)
 	}
 	return nil
+}
+
+func (g *Yts3) copyObject(bucket, object string, meta map[string]string, w http.ResponseWriter, r *http.Request) (err error) {
+	source := meta["X-Amz-Copy-Source"]
+	logrus.Infof("└── COPY: %s\n", source)
+	Authorization := r.Header.Get("Authorization")
+	publicKey := GetBetweenStr(Authorization, "YTA", "/")
+	content := publicKey[3:]
+	if len(content) > 50 {
+		publicKeyLength := strings.Index(content, ":")
+		contentNew := content[:publicKeyLength]
+		content = contentNew
+	}
+
+	if len(object) > KeySizeLimit {
+		return ResourceError(ErrKeyTooLong, object)
+	}
+
+	// XXX No support for versionId subresource
+	parts := strings.SplitN(strings.TrimPrefix(source, "/"), "/", 2)
+	srcBucket := parts[0]
+	srcKey := strings.SplitN(parts[1], "?", 2)[0]
+
+	srcObj, err := g.storage.GetObject(content, srcBucket, srcKey, nil)
+	if err != nil {
+		return err
+	}
+
+	if srcObj == nil {
+		g.log.Print(LogErr, "unexpected nil object for key", bucket, object)
+		return ErrInternal
+	}
+	defer srcObj.Contents.Close()
+
+	for k, v := range srcObj.Metadata {
+		if _, found := meta[k]; !found && k != "X-Amz-Acl" {
+			meta[k] = v
+		}
+	}
+
+	result, err := g.storage.PutObject(content, bucket, object, meta, srcObj.Contents, srcObj.Size)
+	if err != nil {
+		return err
+	}
+
+	if srcObj.VersionID != "" {
+		w.Header().Set("x-amz-copy-source-version-id", string(srcObj.VersionID))
+	}
+	if result.VersionID != "" {
+		g.log.Print(LogInfo, "CREATED VERSION:", bucket, object, result.VersionID)
+		w.Header().Set("x-amz-version-id", string(result.VersionID))
+	}
+
+	return g.xmlEncoder(w).Encode(CopyObjectResult{
+		ETag:         `"` + hex.EncodeToString(srcObj.Hash) + `"`,
+		LastModified: NewContentTime(g.timeSource.Now()),
+	})
 }

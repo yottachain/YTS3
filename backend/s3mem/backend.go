@@ -222,7 +222,7 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 	// cfg, err := conf.CreateConfig(iniPath)
 	// cache := cfg.GetCacheInfo("directory")
 	s3cache := env.GetS3Cache()
-	directory := s3cache + "/" + bucketName
+	directory := s3cache + "/" + bucketName + "/" + objectName
 
 	var hash []byte
 	var bts []byte
