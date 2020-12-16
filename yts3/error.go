@@ -12,6 +12,8 @@ const (
 
 	ErrBadDigest ErrorCode = "BadDigest"
 
+	ErrInvalidAccessKeyID ErrorCode = "InvalidAccessKeyID"
+
 	ErrBucketAlreadyExists ErrorCode = "BucketAlreadyExists"
 
 	ErrBucketNotEmpty ErrorCode = "BucketNotEmpty"

@@ -80,6 +80,9 @@ func (db *Backend) ListBuckets(publicKey string) ([]yts3.BucketInfo, error) {
 	db.Lock.RLock()
 	defer db.Lock.RUnlock()
 	c := api.GetClient(publicKey)
+	if c == nil {
+		return nil, yts3.ResourceError(yts3.ErrInvalidAccessKeyID, "YTA"+publicKey)
+	}
 	bucketAccessor := c.NewBucketAccessor()
 	names, err1 := bucketAccessor.ListBucket()
 	if err1 != nil {
@@ -219,7 +222,7 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 	// cfg, err := conf.CreateConfig(iniPath)
 	// cache := cfg.GetCacheInfo("directory")
 	s3cache := env.GetS3Cache()
-	directory := s3cache + "/" + bucketName
+	directory := s3cache + "/" + bucketName + "/" + objectName
 
 	var hash []byte
 	var bts []byte
@@ -546,6 +549,11 @@ func (cr *ContentReader) Read(buf []byte) (int, error) {
 func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequest *yts3.ObjectRangeRequest) (*yts3.Object, error) {
 	db.Lock.RLock()
 	defer db.Lock.RUnlock()
+	c := api.GetClient(publicKey)
+	download, errMsg := c.NewDownloadFile(bucketName, objectName, primitive.NilObjectID)
+	if errMsg != nil {
+		logrus.Errorf("Err:%s\n", errMsg)
+	}
 	if len(db.buckets) == 0 {
 		v, _ := UserAllBucketsCACHE.Get(publicKey)
 		RegDb = v.(*Backend)
@@ -572,12 +580,7 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 		result.VersionID = ""
 	}
 	if result.Size > 0 {
-		c := api.GetClient(publicKey)
-		download, errMsg := c.NewDownloadFile(bucketName, objectName, primitive.NilObjectID)
-		if errMsg != nil {
-			logrus.Errorf("Err:%s\n", errMsg)
-			return nil, err
-		}
+
 		if rangeRequest != nil {
 			result.Contents = &ContentReader{download.LoadRange(rangeRequest.Start, rangeRequest.End).(io.ReadCloser)}
 			result.Range = &yts3.ObjectRange{

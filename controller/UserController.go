@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -20,6 +21,7 @@ type User struct {
 func Register(g *gin.Context) {
 	defer env.TracePanic("Register")
 	var json User
+	ii := 1
 
 	if err := g.Bind(&json); err != nil {
 		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -28,21 +30,36 @@ func Register(g *gin.Context) {
 
 	privateKey := json.PrivateKey
 
-	client, err2 := api.NewClient(userName, privateKey)
+	var client *api.Client
+	var err2 error
+	for {
+		client, err2 = api.NewClient(userName, privateKey)
+		if err2 != nil {
+			ii++
+			if ii <= 3 {
+				time.Sleep(time.Second * 5)
+			} else {
+				logrus.Infof("err:%s\n", err2)
+				break
+			}
+		} else {
+			break
+		}
+	}
 	if err2 != nil {
-		logrus.Infof("err:%s\n", err2)
-		return
-	}
-	db := s3mem.New()
+		logrus.Errorf("User Register Failed, %s\n", err2)
+		g.JSON(http.StatusUnauthorized, gin.H{"status": http.StatusUnauthorized, "Msg": "Register Failed!Please checked userName and privateKey "})
+	} else {
+		db := s3mem.New()
 
-	_, initerr := db.ListBuckets(client.AccessorKey)
-	if initerr != nil {
-		return
+		_, initerr := db.ListBuckets(client.AccessorKey)
+		if initerr != nil {
+			return
+		}
+		s3mem.RegDb = db
+		s3mem.UserAllBucketsCACHE.SetDefault(client.AccessorKey, s3mem.RegDb)
+		logrus.Infof("User Register Success,UserName: %s\n", userName)
+		g.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "Msg": "Register success " + userName})
 	}
 
-	s3mem.RegDb = db
-	s3mem.UserAllBucketsCACHE.SetDefault(client.AccessorKey, s3mem.RegDb)
-	logrus.Infof("User Register Success,UserName: %s\n", userName)
-	// }
-	g.JSON(http.StatusOK, gin.H{"status": "Register success " + userName})
 }
