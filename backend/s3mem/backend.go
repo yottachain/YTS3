@@ -14,6 +14,7 @@ import (
 
 	"github.com/patrickmn/go-cache"
 	"github.com/ryszard/goskiplist/skiplist"
+	uuid "github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
 	"github.com/yottachain/YTCoreService/env"
@@ -222,7 +223,12 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 	// cfg, err := conf.CreateConfig(iniPath)
 	// cache := cfg.GetCacheInfo("directory")
 	s3cache := env.GetS3Cache()
-	directory := s3cache + "/" + bucketName + "/" + objectName
+	u1, err := uuid.FromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	if err != nil {
+		fmt.Printf("Something went wrong: %s", err)
+	}
+	fmt.Printf("Successfully parsed: %s", u1)
+	directory := s3cache + bucketName + "/" + u1.String()
 
 	var hash []byte
 	var bts []byte
