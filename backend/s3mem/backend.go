@@ -238,7 +238,7 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 
 		errw := writeCacheFile(directory, objectName, input)
 		if errw != nil {
-			logrus.Errorf("write cache error:%s\n", errw)
+			logrus.Errorf("【PutObject】 write cache error:%s\n", errw)
 			return
 		}
 		filePath := directory + "/" + objectName
@@ -417,6 +417,7 @@ func writeCacheFile(directory, fileName string, input io.Reader) error {
 		directory = directory + "/"
 	}
 	filePath := directory + fileName
+	logrus.Infof("file directory:%s\n", directory)
 	f, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 	if err != nil {
 		return err
