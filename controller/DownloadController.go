@@ -212,8 +212,8 @@ func DownloadFile(g *gin.Context) {
 		logrus.Errorf("[DownloadFile ]AuthSuper ERR:%s\n", err)
 	}
 
-	// errn := download.SaveToPath(savePath + "/" + fileName)
-	errn := download.SaveToFile(savePath + "/" + fileName)
+	errn := download.SaveToPath(savePath + "/" + fileName)
+	// errn := download.SaveToFile(savePath + "/" + fileName)
 	if errn != nil {
 		logrus.Errorf("[DownloadFile ]AuthSuper ERR:%s\n", errn)
 	} else {
