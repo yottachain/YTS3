@@ -2,6 +2,7 @@ package yts3
 
 import (
 	"bufio"
+	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/xml"
@@ -20,7 +21,9 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/yottachain/YTCoreService/api"
 	"github.com/yottachain/YTCoreService/env"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Yts3 struct {
@@ -233,8 +236,7 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 	Authorization := r.Header.Get("Authorization")
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
-	uri := r.URL.Path
-	logrus.Infof("uri:%s\n", uri)
+
 	if len(content) > 50 {
 		publicKeyLength := strings.Index(content, ":")
 		contentNew := content[:publicKeyLength]
@@ -279,15 +281,37 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 	if err != nil {
 		return err
 	}
+	uri := r.URL.Path
+	logrus.Infof("uri:%s\n", uri)
+	if strings.HasSuffix(uri, "/") {
+		var bts []byte
+		var metazero map[string]string
+		metazero = make(map[string]string)
+		hashz := md5.Sum(bts)
+		metazero["ETag"] = hex.EncodeToString(hashz[:])
+		metazero["contentLength"] = "0"
+		metadata2, err2 := api.FileMetaMapTobytes(metazero)
+		if err2 != nil {
+			logrus.Errorf("[FileMetaMapTobytes ]:%s\n", err2)
+			return
+		}
+		c := api.GetClient(content)
+		uri := object + "/"
+		errzero := c.NewObjectAccessor().CreateObject(bucket, uri, primitive.NewObjectID(), metadata2)
+		if errzero != nil {
+			logrus.Errorf("[Save meta data ]:%s\n", errzero)
+			return
+		}
+	} else {
+		result, err := g.storage.PutObject(content, bucket, object, meta, rdr, size)
+		if err != nil {
+			return err
+		}
+		if result.VersionID != "" {
+			logrus.Infof("CREATED VERSION:%s%s%d\n", bucket, object, result.VersionID)
+			w.Header().Set("x-amz-version-id", string(result.VersionID))
+		}
 
-	result, err := g.storage.PutObject(content, bucket, object, meta, rdr, size)
-	if err != nil {
-		return err
-	}
-
-	if result.VersionID != "" {
-		logrus.Infof("CREATED VERSION:%s%s%d\n", bucket, object, result.VersionID)
-		w.Header().Set("x-amz-version-id", string(result.VersionID))
 	}
 	w.Header().Set("ETag", `"`+hex.EncodeToString(rdr.Sum(nil))+`"`)
 
@@ -474,9 +498,9 @@ func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.Resp
 
 	obj.Range.writeHeader(obj.Size, w)
 
-	//if _, err := io.Copy(w, obj.Contents); err != nil {
-	//	return err
-	//}
+	// if _, err := io.Copy(w, obj.Contents); err != nil {
+	// 	return err
+	// }
 
 	readbuf := make([]byte, 1024*1024)
 	rd := bufio.NewReaderSize(obj.Contents, 1024*1024)
@@ -552,8 +576,8 @@ func (g *Yts3) writeGetOrHeadObjectResponse(obj *Object, w http.ResponseWriter, 
 	w.Header().Set("Accept-Ranges", "bytes")
 	// w.Header().Set("ETag", `"`+hex.EncodeToString(obj.Hash)+`"`)
 	etag := obj.Metadata["ETag"]
-	newETag := etag[1 : len(etag)-1]
-	w.Header().Set("ETag", newETag)
+	// newETag := etag[1 : len(etag)-1]
+	w.Header().Set("ETag", etag)
 	if obj.VersionID != "" {
 		w.Header().Set("x-amz-version-id", string(obj.VersionID))
 	}

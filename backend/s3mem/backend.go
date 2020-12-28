@@ -598,11 +598,15 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 			result.Contents = &ContentReader{download.Load().(io.ReadCloser)}
 		}
 	}
+	eg := content.ETag
+	logrus.Infof("Etag:%s\n", eg)
 
-	hash, err := hex.DecodeString(content.ETag)
+	hash, err := hex.DecodeString(eg)
 	if err != nil {
 		fmt.Println(err)
 	}
+	aa := hex.EncodeToString(hash[:])
+	logrus.Infof("aa:%s\n", aa)
 	result.Hash = hash
 	return result, nil
 }
