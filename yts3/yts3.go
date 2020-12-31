@@ -472,7 +472,6 @@ func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.Resp
 	if err != nil {
 		return err
 	}
-
 	var obj *Object
 
 	{
@@ -578,6 +577,7 @@ func (g *Yts3) writeGetOrHeadObjectResponse(obj *Object, w http.ResponseWriter, 
 	etag := obj.Metadata["ETag"]
 	// newETag := etag[1 : len(etag)-1]
 	w.Header().Set("ETag", etag)
+	w.Header().Set("Content-Length", string(obj.Size))
 	if obj.VersionID != "" {
 		w.Header().Set("x-amz-version-id", string(obj.VersionID))
 	}
