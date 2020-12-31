@@ -1,7 +1,6 @@
 package yts3
 
 import (
-	"bufio"
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
@@ -497,25 +496,25 @@ func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.Resp
 
 	obj.Range.writeHeader(obj.Size, w)
 
-	// if _, err := io.Copy(w, obj.Contents); err != nil {
-	// 	return err
-	// }
-
-	readbuf := make([]byte, 1024*1024)
-	rd := bufio.NewReaderSize(obj.Contents, 1024*1024)
-	for {
-		num, err := rd.Read(readbuf)
-		if err != nil && err != io.EOF {
-			return err
-		}
-		if num > 0 {
-			bs := readbuf[0:num]
-			w.Write(bs)
-		}
-		if err != nil && err == io.EOF {
-			break
-		}
+	if _, err := io.Copy(w, obj.Contents); err != nil {
+		return err
 	}
+
+	// readbuf := make([]byte, 1024*1024)
+	// rd := bufio.NewReaderSize(obj.Contents, 1024*1024)
+	// for {
+	// 	num, err := rd.Read(readbuf)
+	// 	if err != nil && err != io.EOF {
+	// 		return err
+	// 	}
+	// 	if num > 0 {
+	// 		bs := readbuf[0:num]
+	// 		w.Write(bs)
+	// 	}
+	// 	if err != nil && err == io.EOF {
+	// 		break
+	// 	}
+	// }
 
 	logrus.Infof("【" + object + "】 download successful.\n")
 	return nil
