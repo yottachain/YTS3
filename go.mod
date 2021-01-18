@@ -16,7 +16,7 @@ require (
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/afero v1.2.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/yottachain/YTCoreService v0.0.0-20210115064300-49e23f051f5b
+	github.com/yottachain/YTCoreService v0.0.0-20210118034854-91748df62b02
 	go.mongodb.org/mongo-driver v1.3.3
 	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc // indirect
 	golang.org/x/sys v0.0.0-20200819171115-d785dc25833f // indirect

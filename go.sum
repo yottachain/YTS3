@@ -488,8 +488,8 @@ github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:
 github.com/yottachain/P2PHost v1.0.1-0.20200330065720-69572fdc7d92/go.mod h1:V7g0oufx1cRzGw+1aUsMPkmD/+Uvdiax7dZiiC+afoM=
 github.com/yottachain/P2PHost v1.0.2-0.20200921072702-609d35770f59 h1:FZHYTMNf39jebg8BP4Zr7C6aSu2lLz5GKk5rldGJZh0=
 github.com/yottachain/P2PHost v1.0.2-0.20200921072702-609d35770f59/go.mod h1:4ZBTjWbVgjQbVAjLDWsj0VSB723F02mau38rGp1W5yU=
-github.com/yottachain/YTCoreService v0.0.0-20210115064300-49e23f051f5b h1:7925cx4cuIm2Qaay7pkFtdw6Xpm3iZkJJHsLD4E/tMw=
-github.com/yottachain/YTCoreService v0.0.0-20210115064300-49e23f051f5b/go.mod h1:3hZLU4ct4jFnIBd0n9rAD2eZf8I6SZba/uN2BrCITuI=
+github.com/yottachain/YTCoreService v0.0.0-20210118034854-91748df62b02 h1:FgpcLnQFwJj69WocoL8Ivum33Sb8Z1ItEOROLHZQ1v4=
+github.com/yottachain/YTCoreService v0.0.0-20210118034854-91748df62b02/go.mod h1:3hZLU4ct4jFnIBd0n9rAD2eZf8I6SZba/uN2BrCITuI=
 github.com/yottachain/YTCrypto v0.0.0-20200122165219-0ea35dc29812 h1:XG9TtLosanLdwqSoporMr8OASUOjxuaj6cJDlut1c9s=
 github.com/yottachain/YTCrypto v0.0.0-20200122165219-0ea35dc29812/go.mod h1:jDJUVGeQ1clW7k9OTRBAFtCMwGs9B9fGQ9QY64SKqlk=
 github.com/yottachain/YTDNMgmt v0.0.0-20210112071847-26141336ae63 h1:B9XzLbSwFB8c2Cd5pLT8e8D7vHlZEFPWc8yprzJp4zI=
