@@ -163,6 +163,7 @@ func s3StartServer() {
 		router := routers.InitRouter()
 		// port := cfg.GetHTTPInfo("port")
 		port := env.GetConfig().GetInt("s3port", 8080)
+		logrus.Infof("api port:%d\n", port)
 		lsn, err := net.Listen("tcp4", ":"+strconv.Itoa(port))
 		if err != nil {
 			logrus.Printf("HTTPServer start error %s\n", err)

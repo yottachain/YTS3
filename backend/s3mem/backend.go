@@ -591,6 +591,7 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 		if rangeRequest != nil {
 			if rangeRequest.End == -1 {
 				rangeRequest.End = content.Size
+				rangeRequest.FromEnd = true
 			}
 			result.Contents = &ContentReader{download.LoadRange(rangeRequest.Start, rangeRequest.End).(io.ReadCloser)}
 			result.Range = &yts3.ObjectRange{
