@@ -3,6 +3,7 @@ package routers
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"github.com/unrolled/secure"
 	"github.com/yottachain/YTS3/controller"
 )
@@ -12,8 +13,11 @@ func InitRouter() (router *gin.Engine) {
 	router = gin.Default()
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
+	logrus.Infof("InitRouter():%s\n", "Use(cros.New)")
 	router.Use(cors.New(config))
+	logrus.Infof("InitRouter():%s\n", "Use(TlsHandler) 1.")
 	router.Use(TlsHandler())
+	logrus.Infof("InitRouter():%s\n", "Use(TlsHandler) 2.")
 
 	v1 := router.Group("/api/v1")
 	{
