@@ -164,16 +164,18 @@ func s3StartServer() {
 		// port := cfg.GetHTTPInfo("port")
 		port := env.GetConfig().GetInt("s3port", 8080)
 		logrus.Infof("api port:%d\n", port)
-		lsn, err := net.Listen("tcp4", ":"+strconv.Itoa(port))
-		if err != nil {
-			logrus.Printf("HTTPServer start error %s\n", err)
-			return
-		}
+		// lsn, err := net.Listen("tcp4", ":"+strconv.Itoa(port))
+		// if err != nil {
+		// 	logrus.Printf("HTTPServer start error %s\n", err)
+		// 	return
+		// }
 		logrus.Printf("HTTPServer start Success %d\n", port)
-		err1 := router.RunListener(lsn)
-		if err1 != nil {
-			panic(err1)
-		}
+		router.RunTLS(":"+strconv.Itoa(port), "crt/server.crt", "crt/server.key")
+		// router.RunTLS(":8085", "crt/server.crt", "crt/server.key")
+		// err1 := router.RunListener(lsn)
+		// if err1 != nil {
+		// 	panic(err1)
+		// }
 	}()
 	// env.Console = true
 
@@ -314,7 +316,7 @@ func listenAndServe(addr string, handler http.Handler) error {
 	log.Println("using port:", listener.Addr().(*net.TCPAddr).Port)
 	server := &http.Server{Addr: addr, Handler: handler}
 	env.SetVersionID("2.0.1.0")
-	return server.Serve(listener)
+	return server.ServeTLS(listener, "crt/server.crt", "crt/server.key")
 }
 
 func profile(values yts3Flags) (func(), error) {
