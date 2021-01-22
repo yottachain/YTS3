@@ -3,6 +3,7 @@ package routers
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/unrolled/secure"
 	"github.com/yottachain/YTS3/controller"
 )
 
@@ -12,6 +13,7 @@ func InitRouter() (router *gin.Engine) {
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
 	router.Use(cors.New(config))
+	router.Use(TlsHandler())
 
 	v1 := router.Group("/api/v1")
 	{
@@ -29,4 +31,21 @@ func InitRouter() (router *gin.Engine) {
 	}
 
 	return
+}
+
+func TlsHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		secureMiddleware := secure.New(secure.Options{
+			SSLRedirect: true,
+			SSLHost:     "localhost:8080",
+		})
+		err := secureMiddleware.Process(c.Writer, c.Request)
+
+		// If there was an error, do not continue.
+		if err != nil {
+			return
+		}
+
+		c.Next()
+	}
 }
