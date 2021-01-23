@@ -13,12 +13,8 @@ func InitRouter() (router *gin.Engine) {
 	router = gin.Default()
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
-	logrus.Infof("InitRouter():%s\n", "Use(cros.New)")
-	router.Use(cors.New(config))
-	logrus.Infof("InitRouter():%s\n", "Use(TlsHandler) 1.")
+	// router.Use(cors.New(config))
 	router.Use(TlsHandler())
-	logrus.Infof("InitRouter():%s\n", "Use(TlsHandler) 2.")
-
 	v1 := router.Group("/api/v1")
 	{
 		v1.POST("/insertuser", controller.Register)
@@ -41,12 +37,13 @@ func TlsHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		secureMiddleware := secure.New(secure.Options{
 			SSLRedirect: true,
-			SSLHost:     "localhost:8080",
+			SSLHost:     "192.168.1.5:8080",
 		})
 		err := secureMiddleware.Process(c.Writer, c.Request)
 
 		// If there was an error, do not continue.
 		if err != nil {
+			logrus.Errorf("Https err:%s\n", err)
 			return
 		}
 
