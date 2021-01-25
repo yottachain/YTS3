@@ -140,46 +140,22 @@ func s3StopServer() {
 
 func s3StartServer() {
 	flag.Parse()
-	// var path string
-	// if len(os.Args) > 1 {
-	// 	if os.Args[1] != "" {
-	// 		path = os.Args[1]
-	// 	} else {
-	// 		path = "conf/yotta_config.ini"
-	// 	}
-	// } else {
-	// 	path = "conf/yotta_config.ini"
-	// }
 	api.StartApi()
-	// path = env.YTFS_HOME + "conf/yotta_config.ini"
-	// // path = "../conf/yotta_config.ini"
-	// cfg, err := conf.CreateConfig(path)
-	// if err != nil {
-	// 	logrus.Info("read config file error")
-	// 	// panic(err)
-	// }
 
 	go func() {
+
 		router := routers.InitRouter()
-		// port := cfg.GetHTTPInfo("port")
 		port := env.GetConfig().GetInt("s3port", 8080)
-		logrus.Infof("api port:%d\n", port)
-		// lsn, err := net.Listen("tcp4", ":"+strconv.Itoa(port))
-		// if err != nil {
-		// 	logrus.Printf("HTTPServer start error %s\n", err)
-		// 	return
-		// }
-		logrus.Printf("HTTPServer start Success %d\n", port)
-		router.RunTLS(":"+strconv.Itoa(port), "crt/server.crt", "crt/server.key")
-		// router.RunTLS(":8085", "crt/server.crt", "crt/server.key")
-		// err1 := router.RunListener(lsn)
-		// if err1 != nil {
-		// 	panic(err1)
-		// }
+
+		err1 := router.RunTLS(":"+strconv.Itoa(port), env.YTFS_HOME+"crt/server.crt", env.YTFS_HOME+"crt/server.key")
+
+		if err1 != nil {
+			logrus.Errorf("err:s%\n", err1)
+		}
 	}()
-	// env.Console = true
 
 	if err := run(); err != nil {
+		logrus.Infof("err:%s\n", err)
 		log.Fatal(err)
 	}
 
@@ -313,10 +289,11 @@ func listenAndServe(addr string, handler http.Handler) error {
 		return err
 	}
 
-	log.Println("using port:", listener.Addr().(*net.TCPAddr).Port)
+	defer listener.Close()
 	server := &http.Server{Addr: addr, Handler: handler}
-	env.SetVersionID("2.0.1.0")
-	return server.ServeTLS(listener, "crt/server.crt", "crt/server.key")
+	env.SetVersionID("2.0.1.2")
+	logrus.Infof("Start S3 server port :%d\n", listener.Addr().(*net.TCPAddr).Port)
+	return server.ServeTLS(listener, env.YTFS_HOME+"crt/server.crt", env.YTFS_HOME+"crt/server.key")
 }
 
 func profile(values yts3Flags) (func(), error) {
