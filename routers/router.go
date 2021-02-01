@@ -28,6 +28,8 @@ func InitRouter() (router *gin.Engine) {
 		v1.GET("/getYts3Version", controller.GetProgramVersion)
 		v1.GET("/getFileInfo", controller.GetFileBlockDetails)
 		v1.GET("/getFileAllInfo", controller.GetFileAllInfo)
+		v1.GET("/importAuthFile", controller.ImporterAuth)
+		v1.GET("/exporterAuthData", controller.ExporterAuthData)
 	}
 
 	return
