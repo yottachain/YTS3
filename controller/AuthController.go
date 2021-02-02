@@ -69,8 +69,8 @@ func ExporterAuthData(g *gin.Context) {
 	if yerr != nil {
 		logrus.Panicf("初始化授权导出失败:%s\n", yerr.Msg)
 	}
-
-	authdata, yerr := exporter.Export(otherPublicKey)
+	newOtherPublicKey := otherPublicKey[3:]
+	authdata, yerr := exporter.Export(newOtherPublicKey)
 	if yerr != nil {
 		logrus.Panicf("导出授权文件失败:%s\n", yerr.Msg)
 	}
