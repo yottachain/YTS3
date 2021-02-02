@@ -81,7 +81,7 @@ type Auth struct {
 	bucketName  string `form:"userName" json:"userName" binding:"required"`
 	fileName    string `form:"fileName" json:"fileName" xml:"fileName" binding:"required"`
 	ownerPublic string `form:"ownerPublic" json:"ownerPublic" xml:"ownerPublic" binding:"required"`
-	authdata    []byte `form:"authdata" json:"authdata" xml:"authdata" binding:"required"`
+	authdata    string `form:"authdata" json:"authdata" xml:"authdata" binding:"required"`
 }
 
 //ImporterAuth 导入授权文件
@@ -100,11 +100,11 @@ func ImporterAuth(g *gin.Context) {
 	// fileName := g.Query("fileName")
 	// ownerPublic := g.Query("ownerPublic")
 	// otherPublicKey := g.Query("otherPublicKey")
-	// authdata := []byte(g.Query("authdata"))
+	newauthdata := []byte(authdata)
 	content := ownerPublic[3:]
 	c := api.GetClient(content)
 	importer := c.ImporterAuth(bucketName, fileName)
-	yerr := importer.Import(authdata)
+	yerr := importer.Import(newauthdata)
 	if yerr != nil {
 		logrus.Panicf("导入授权文件失败:%s\n", yerr.Msg)
 		g.JSON(http.StatusUnauthorized, gin.H{"status": "导入授权文件失败"})
