@@ -74,17 +74,33 @@ func ExporterAuthData(g *gin.Context) {
 	if yerr != nil {
 		logrus.Panicf("导出授权文件失败:%s\n", yerr.Msg)
 	}
-	g.JSON(http.StatusOK, gin.H{"authdata": string(authdata[:])})
+	g.JSON(http.StatusOK, gin.H{"authdata": authdata})
+}
+
+type Auth struct {
+	bucketName  string `form:"userName" json:"userName" binding:"required"`
+	fileName    string `form:"fileName" json:"fileName" xml:"fileName" binding:"required"`
+	ownerPublic string `form:"ownerPublic" json:"ownerPublic" xml:"ownerPublic" binding:"required"`
+	authdata    []byte `form:"authdata" json:"authdata" xml:"authdata" binding:"required"`
 }
 
 //ImporterAuth 导入授权文件
 func ImporterAuth(g *gin.Context) {
 
-	bucketName := g.Query("bucketName")
-	fileName := g.Query("fileName")
-	ownerPublic := g.Query("ownerPublic")
+	var json Auth
+
+	if err := g.Bind(&json); err != nil {
+		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+	bucketName := json.bucketName
+	fileName := json.fileName
+	ownerPublic := json.ownerPublic
+	authdata := json.authdata
+	// bucketName := g.Query("bucketName")
+	// fileName := g.Query("fileName")
+	// ownerPublic := g.Query("ownerPublic")
 	// otherPublicKey := g.Query("otherPublicKey")
-	authdata := []byte(g.Query("authdate"))
+	// authdata := []byte(g.Query("authdata"))
 	content := ownerPublic[3:]
 	c := api.GetClient(content)
 	importer := c.ImporterAuth(bucketName, fileName)
