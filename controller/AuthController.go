@@ -124,7 +124,6 @@ type Auth struct {
 	BucketName  string `form:"bucketName" json:"bucketName" binding:"required"`
 	FileName    string `form:"fileName" json:"fileName" xml:"fileName" binding:"required"`
 	OwnerPublic string `form:"ownerPublic" json:"ownerPublic" xml:"ownerPublic" binding:"required"`
-	Authdata    string `form:"authdata" json:"authdata" xml:"authdata" binding:"required"`
 	AuthPath    string `form:"path" json:"path" binding:"required"`
 }
 
