@@ -1,7 +1,13 @@
 package controller
 
 import (
+	"crypto/rand"
+	"errors"
+	"fmt"
+	"io/ioutil"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -78,6 +84,7 @@ func UploadForAuth(g *gin.Context) {
 // }
 func ExporterAuthData(g *gin.Context) {
 	defer env.TracePanic("ExporterAuthData")
+
 	bucketName := g.Query("bucketName")
 	fileName := g.Query("fileName")
 	ownerPublic := g.Query("ownerPublic")
@@ -94,17 +101,30 @@ func ExporterAuthData(g *gin.Context) {
 	if yerr != nil {
 		logrus.Panicf("导出授权文件失败:%s\n", yerr.Msg)
 	}
-
-	logrus.Infof("authdata1:\n", authdata)
 	logrus.Infof("-------------------------------------------------\n")
-	g.JSON(http.StatusOK, gin.H{"authdata": string(authdata)})
+
+	g.Header("Content-Type", "application/octet-stream")
+	// // g.Header("Content-Disposition", fileContentDisposition)
+	u1 := GetRandomString2(32)
+	directory := env.GetS3Cache() + "authdata"
+	writeCacheAuth(directory)
+	filePath := env.GetS3Cache() + "authdata/" + u1 + ".dat"
+	// WriteFile(filePath,authdata,perm os.FileMode)
+
+	err := ioutil.WriteFile(filePath, authdata, 0777)
+	if err != nil {
+		// handle error
+	}
+
+	// g.Data(http.StatusOK, "Content-Type", authdata)
+	g.JSON(http.StatusOK, gin.H{"authPath": filePath})
 }
 
 type Auth struct {
-	BucketName  string `form:"userName" json:"userName" binding:"required"`
+	BucketName  string `form:"bucketName" json:"bucketName" binding:"required"`
 	FileName    string `form:"fileName" json:"fileName" xml:"fileName" binding:"required"`
 	OwnerPublic string `form:"ownerPublic" json:"ownerPublic" xml:"ownerPublic" binding:"required"`
-	Authdata    string `form:"authdata" json:"authdata" xml:"authdata" binding:"required"`
+	AuthPath    string `form:"path" json:"path" binding:"required"`
 }
 
 //ImporterAuth 导入授权文件
@@ -118,13 +138,18 @@ func ImporterAuth(g *gin.Context) {
 	bucketName := json.BucketName
 	fileName := json.FileName
 	ownerPublic := json.OwnerPublic
-	authdata := json.Authdata
+	// authdata := json.Authdata
+	authPath := json.AuthPath
+	newauthdata, err := ioutil.ReadFile(authPath) // just pass the file name
+	if err != nil {
+		fmt.Print(err)
+	}
 	// bucketName := g.Query("bucketName")
 	// fileName := g.Query("fileName")
 	// ownerPublic := g.Query("ownerPublic")
 	// otherPublicKey := g.Query("otherPublicKey")
-	newauthdata := []byte(authdata)
-	logrus.Infof("authdata2:\n", newauthdata)
+	// newauthdata := []byte(authdata)
+	// logrus.Infof("authdata2:\n", newauthdata)
 	content := ownerPublic[3:]
 	c := api.GetClient(content)
 	importer := c.ImporterAuth(bucketName, fileName)
@@ -133,7 +158,42 @@ func ImporterAuth(g *gin.Context) {
 		logrus.Panicf("导入授权文件失败:%s\n", yerr.Msg)
 		g.JSON(http.StatusUnauthorized, gin.H{"status": "导入授权文件失败"})
 	} else {
+		del := os.Remove(authPath)
+		if del != nil {
+			fmt.Println(del)
+		}
+		logrus.Info("..........授权文件已经被清理..........%s\n")
 		g.JSON(http.StatusOK, gin.H{"status": "导入授权文件完成"})
 	}
 
+}
+
+func writeCacheAuth(directory string) error {
+
+	s, err := os.Stat(directory)
+	if err != nil {
+		if !os.IsExist(err) {
+			err = os.MkdirAll(directory, os.ModePerm)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	} else {
+		if !s.IsDir() {
+			return errors.New("The specified path is not a directory.")
+		}
+	}
+	if !strings.HasSuffix(directory, "/") {
+		directory = directory + "/"
+	}
+
+	return nil
+}
+
+func GetRandomString2(n int) string {
+	randBytes := make([]byte, n/2)
+	rand.Read(randBytes)
+	return fmt.Sprintf("%x", randBytes)
 }
