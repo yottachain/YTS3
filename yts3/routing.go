@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/yottachain/YTCoreService/env"
 )
 
 func (g *Yts3) routeBase(w http.ResponseWriter, r *http.Request) {
+	defer env.TracePanic("routeBase")
 	var (
 		path   = strings.Trim(r.URL.Path, "/")
 		parts  = strings.SplitN(path, "/", 2)
