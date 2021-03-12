@@ -18,9 +18,11 @@ func InitRouter() (router *gin.Engine) {
 	v1 := router.Group("/api/v1")
 	{
 		v1.POST("/insertuser", controller.Register)
+		v1.GET("/addPubkey", controller.AddPubkey)
 		v1.GET("/createBucket", controller.CreateBucket)
 		v1.POST("/upload", controller.UploadFile)
 		v1.GET("/getObject", controller.DownloadFile)
+		v1.GET("/getBlockForSGX", controller.DownloadFileForSGX)
 		v1.GET("/getObjectProgress", controller.GetDownloadProgress)
 		v1.GET("/listBucket", controller.GetObjects)
 		v1.GET("/listAllBucket", controller.ListBucket)
@@ -30,6 +32,7 @@ func InitRouter() (router *gin.Engine) {
 		v1.GET("/getFileAllInfo", controller.GetFileAllInfo)
 		v1.POST("/importAuthFile", controller.ImporterAuth)
 		v1.GET("/exporterAuthData", controller.ExporterAuthData)
+		v1.GET("/licensedTo", controller.LicensedTo)
 	}
 
 	return

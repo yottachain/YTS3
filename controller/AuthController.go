@@ -4,16 +4,17 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"github.com/sirupsen/logrus"
+	"github.com/yottachain/YTCoreService/api"
+	"github.com/yottachain/YTCoreService/env"
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
-	"github.com/yottachain/YTCoreService/api"
-	"github.com/yottachain/YTCoreService/env"
 )
+
+const AUTH_FAILURE = 0x55
 
 //Exportclient 1.注册导出授权的用户实例
 func exportclient(userName, privateKey string) (*api.Client, error) {
@@ -50,7 +51,7 @@ func UploadForAuth(g *gin.Context) {
 	content := publicKey[3:]
 	c := api.GetClient(content)
 
-	privateKey := c.AccessorKey
+	privateKey := c.SignKey.PublicKey
 	exportclient, err := exportclient(userName, privateKey)
 	if err != nil {
 
@@ -83,41 +84,41 @@ func UploadForAuth(g *gin.Context) {
 // 	g.JSON(http.StatusOK, gin.H{"authdata": authdata})
 // }
 func ExporterAuthData(g *gin.Context) {
-	defer env.TracePanic("ExporterAuthData")
+	// defer env.TracePanic("ExporterAuthData")
 
-	bucketName := g.Query("bucketName")
-	fileName := g.Query("fileName")
-	ownerPublic := g.Query("ownerPublic")
-	otherPublicKey := g.Query("otherPublicKey")
-	content := ownerPublic[3:]
-	c := api.GetClient(content)
-	logrus.Infof("bucketName:%s\n", bucketName)
-	exporter, yerr := c.ExporterAuth(bucketName, fileName)
-	if yerr != nil {
-		logrus.Panicf("初始化授权导出失败:%s\n", yerr.Msg)
-	}
-	newOtherPublicKey := otherPublicKey[3:]
-	authdata, yerr := exporter.Export(newOtherPublicKey)
-	if yerr != nil {
-		logrus.Panicf("导出授权文件失败:%s\n", yerr.Msg)
-	}
-	logrus.Infof("-------------------------------------------------\n")
+	// bucketName := g.Query("bucketName")
+	// fileName := g.Query("fileName")
+	// ownerPublic := g.Query("ownerPublic")
+	// otherPublicKey := g.Query("otherPublicKey")
+	// content := ownerPublic[3:]
+	// c := api.GetClient(content)
+	// logrus.Infof("bucketName:%s\n", bucketName)
+	// exporter, yerr := c.ExporterAuth(bucketName, fileName)
+	// if yerr != nil {
+	// 	logrus.Panicf("初始化授权导出失败:%s\n", yerr.Msg)
+	// }
+	// newOtherPublicKey := otherPublicKey[3:]
+	// authdata, yerr := exporter.Export(newOtherPublicKey)
+	// if yerr != nil {
+	// 	logrus.Panicf("导出授权文件失败:%s\n", yerr.Msg)
+	// }
+	// logrus.Infof("-------------------------------------------------\n")
 
-	g.Header("Content-Type", "application/octet-stream")
-	// // g.Header("Content-Disposition", fileContentDisposition)
-	u1 := GetRandomString2(32)
-	directory := env.GetS3Cache() + "authdata"
-	writeCacheAuth(directory)
-	filePath := env.GetS3Cache() + "authdata/" + u1 + ".dat"
-	// WriteFile(filePath,authdata,perm os.FileMode)
+	// g.Header("Content-Type", "application/octet-stream")
+	// // // g.Header("Content-Disposition", fileContentDisposition)
+	// u1 := GetRandomString2(32)
+	// directory := env.GetS3Cache() + "authdata"
+	// writeCacheAuth(directory)
+	// filePath := env.GetS3Cache() + "authdata/" + u1 + ".dat"
+	// // WriteFile(filePath,authdata,perm os.FileMode)
 
-	err := ioutil.WriteFile(filePath, authdata, 0777)
-	if err != nil {
-		// handle error
-	}
+	// err := ioutil.WriteFile(filePath, authdata, 0777)
+	// if err != nil {
+	// 	// handle error
+	// }
 
 	// g.Data(http.StatusOK, "Content-Type", authdata)
-	g.JSON(http.StatusOK, gin.H{"authPath": filePath})
+	// g.JSON(http.StatusOK, gin.H{"authPath": filePath})
 }
 
 type Auth struct {
@@ -130,41 +131,41 @@ type Auth struct {
 //ImporterAuth 导入授权文件
 func ImporterAuth(g *gin.Context) {
 
-	var json Auth
+	// var json Auth
 
-	if err := g.Bind(&json); err != nil {
-		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	}
-	bucketName := json.BucketName
-	fileName := json.FileName
-	ownerPublic := json.OwnerPublic
-	// authdata := json.Authdata
-	authPath := json.AuthPath
-	newauthdata, err := ioutil.ReadFile(authPath) // just pass the file name
-	if err != nil {
-		fmt.Print(err)
-	}
-	// bucketName := g.Query("bucketName")
-	// fileName := g.Query("fileName")
-	// ownerPublic := g.Query("ownerPublic")
-	// otherPublicKey := g.Query("otherPublicKey")
-	// newauthdata := []byte(authdata)
-	// logrus.Infof("authdata2:\n", newauthdata)
-	content := ownerPublic[3:]
-	c := api.GetClient(content)
-	importer := c.ImporterAuth(bucketName, fileName)
-	yerr := importer.Import(newauthdata)
-	if yerr != nil {
-		logrus.Panicf("导入授权文件失败:%s\n", yerr.Msg)
-		g.JSON(http.StatusUnauthorized, gin.H{"status": "导入授权文件失败"})
-	} else {
-		del := os.Remove(authPath)
-		if del != nil {
-			fmt.Println(del)
-		}
-		logrus.Info("..........授权文件已经被清理..........%s\n")
-		g.JSON(http.StatusOK, gin.H{"status": "导入授权文件完成"})
-	}
+	// if err := g.Bind(&json); err != nil {
+	// 	g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// }
+	// bucketName := json.BucketName
+	// fileName := json.FileName
+	// ownerPublic := json.OwnerPublic
+	// // authdata := json.Authdata
+	// authPath := json.AuthPath
+	// newauthdata, err := ioutil.ReadFile(authPath) // just pass the file name
+	// if err != nil {
+	// 	fmt.Print(err)
+	// }
+	// // bucketName := g.Query("bucketName")
+	// // fileName := g.Query("fileName")
+	// // ownerPublic := g.Query("ownerPublic")
+	// // otherPublicKey := g.Query("otherPublicKey")
+	// // newauthdata := []byte(authdata)
+	// // logrus.Infof("authdata2:\n", newauthdata)
+	// content := ownerPublic[3:]
+	// c := api.GetClient(content)
+	// importer := c.ImporterAuth(bucketName, fileName)
+	// yerr := importer.Import(newauthdata)
+	// if yerr != nil {
+	// 	logrus.Panicf("导入授权文件失败:%s\n", yerr.Msg)
+	// 	g.JSON(http.StatusUnauthorized, gin.H{"status": "导入授权文件失败"})
+	// } else {
+	// 	del := os.Remove(authPath)
+	// 	if del != nil {
+	// 		fmt.Println(del)
+	// 	}
+	// 	logrus.Info("..........授权文件已经被清理..........%s\n")
+	// 	g.JSON(http.StatusOK, gin.H{"status": "导入授权文件完成"})
+	// }
 
 }
 
@@ -196,4 +197,28 @@ func GetRandomString2(n int) string {
 	randBytes := make([]byte, n/2)
 	rand.Read(randBytes)
 	return fmt.Sprintf("%x", randBytes)
+}
+
+func LicensedTo(g *gin.Context) {
+	publicKeyA := g.Query("ownerPublickey")
+	userNameB := g.Query("otherUserName")
+	publicKeyB := g.Query("otherPublickey")
+	bucketName := g.Query("bucketName")
+	objectKey := g.Query("objectKey")
+
+	content := publicKeyA[3:]
+	clientA := api.GetClient(content)
+
+	auth, yeer := clientA.Auth(bucketName, objectKey)
+	if yeer != nil {
+		g.JSON(http.StatusSeeOther, gin.H{"code": yeer.Code, "Msg": yeer.Msg})
+	} else {
+		beer := auth.LicensedTo(userNameB, publicKeyB)
+		if beer != nil {
+			g.JSON(http.StatusSeeOther, gin.H{"code": beer.Code, "Msg": beer.Msg})
+		} else {
+			g.JSON(http.StatusOK, gin.H{"msg": "[ " + objectKey + " ] 授权给用户" + userNameB + " 完成."})
+		}
+	}
+
 }
