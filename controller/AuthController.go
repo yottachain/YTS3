@@ -209,11 +209,13 @@ func LicensedTo(g *gin.Context) {
 	content := publicKeyA[3:]
 	clientA := api.GetClient(content)
 
+	newPublicKeyB := publicKeyB[3:]
+
 	auth, yeer := clientA.Auth(bucketName, objectKey)
 	if yeer != nil {
 		g.JSON(http.StatusSeeOther, gin.H{"code": yeer.Code, "Msg": yeer.Msg})
 	} else {
-		beer := auth.LicensedTo(userNameB, publicKeyB)
+		beer := auth.LicensedTo(userNameB, newPublicKeyB)
 		if beer != nil {
 			g.JSON(http.StatusSeeOther, gin.H{"code": beer.Code, "Msg": beer.Msg})
 		} else {
