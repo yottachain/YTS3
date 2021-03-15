@@ -3,7 +3,8 @@ package controller
 import (
 	"crypto/md5"
 	"fmt"
-	"io"
+	"github.com/sirupsen/logrus"
+	"github.com/yottachain/YTCoreService/env"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -13,7 +14,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/patrickmn/go-cache"
-	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -95,40 +95,40 @@ func GetFileAllInfo(g *gin.Context) {
 
 }
 
-// func GetBlockInfo(g *gin.Context) {
-// 	block := Block{}
-// 	fileName := g.Query("fileName")
-
-// 	fileDirectory := g.Query("directory")
-
-// 	blockNum := g.Query("blockNum")
-// 	block.BlockNum = blockNum
-
-// 	blockDirectory := fileDirectory + "/" + fileName + "/" + blockNum
-// 	// list, err := getDirList(blockDirectory)
-// 	// if err != nil {
-// 	// 	fmt.Println(err)
-// 	// 	return
-// 	// }
-
-// 	blockSrc := blockDirectory + "/block.src"
-// 	blockZip := blockDirectory + "/block.zip"
-// 	blockEnc := blockDirectory + "/block.enc"
-// 	bsSrc, err := ioutil.ReadFile(blockSrc)
-// 	bsEnc, err := ioutil.ReadFile(blockEnc)
-// 	bsZip, err := ioutil.ReadFile(blockZip)
-// 	//ioutil.ReadAll()
-
-// 	if err != nil {
-
-// 	}
-// 	block.BlockSrc = hex.EncodeToString(bsSrc)
-// 	// fmt.Println("block.BlockSrc:::::", block.BlockSrc)
-
-// 	block.BlockEnc = hex.EncodeToString(bsEnc)
-// 	block.BlockZip = hex.EncodeToString(bsZip)
-// 	g.JSON(http.StatusOK, block)
-// }
+//func GetBlockInfo(g *gin.Context) {
+//	block := Block{}
+//	fileName := g.Query("fileName")
+//
+//	fileDirectory := g.Query("directory")
+//
+//	blockNum := g.Query("blockNum")
+//	block.BlockNum = blockNum
+//
+//	blockDirectory := fileDirectory + "/" + fileName + "/" + blockNum
+//	// list, err := getDirList(blockDirectory)
+//	// if err != nil {
+//	// 	fmt.Println(err)
+//	// 	return
+//	// }
+//
+//	blockSrc := blockDirectory + "/block.src"
+//	blockZip := blockDirectory + "/block.zip"
+//	blockEnc := blockDirectory + "/block.enc"
+//	bsSrc, err := ioutil.ReadFile(blockSrc)
+//	bsEnc, err := ioutil.ReadFile(blockEnc)
+//	bsZip, err := ioutil.ReadFile(blockZip)
+//	//ioutil.ReadAll()
+//
+//	if err != nil {
+//
+//	}
+//	block.BlockSrc = hex.EncodeToString(bsSrc)
+//	// fmt.Println("block.BlockSrc:::::", block.BlockSrc)
+//
+//	block.BlockEnc = hex.EncodeToString(bsEnc)
+//	block.BlockZip = hex.EncodeToString(bsZip)
+//	g.JSON(http.StatusOK, block)
+//}
 
 func getDirList(dirpath string) ([]string, error) {
 	var dir_list []string
@@ -147,48 +147,44 @@ func getDirList(dirpath string) ([]string, error) {
 	return dir_list, dir_err
 }
 
-//DownloadFileOld 指定下载路径下载文件
-func DownloadFileOld(g *gin.Context) {
-	// defer env.TracePanic()
-	bucketName := g.Query("bucketName")
-
-	objectKey := g.Query("key")
+func DownloadFileForSGX(g *gin.Context) {
 
 	publicKey := g.Query("publicKey")
+	bucketName := g.Query("bucketName")
+	fileName := g.Query("fileName")
+	blockNum := g.Query("blockNum")
 
-	// filePath := g.Query("path")
+	num, errN := strconv.ParseInt(blockNum, 10, 32)
+	if errN != nil {
+	}
+
 	content := publicKey[3:]
 	c := api.GetClient(content)
-	g.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", objectKey))
-	g.Writer.Header().Add("Content-Type", "application/octet-stream")
-	download, erra := c.NewDownloadFile(bucketName, objectKey, primitive.NilObjectID)
+	// c.DownloadToSGX()
+	// sgx,err :=c.DownloadToSGX(bucketName, fileName)
+	sgx, err := c.DownloadToSGX(bucketName, fileName)
 
-	if erra != nil {
-		logrus.Errorf("[DownloadFile ]AuthSuper ERR:%s\n", erra)
-	}
-	reader := download.Load()
-	readbuf := make([]byte, 8192)
-	for {
-		num, err := reader.Read(readbuf)
-		if err != nil && err != io.EOF {
-			// return err
-		}
-		if num > 0 {
-			bs := readbuf[0:num]
-			g.Writer.Write(bs)
-		}
-		if err != nil && err == io.EOF {
-			break
-		}
-	}
+	if err != nil {
 
-	fmt.Println("Download File Success")
+	} else {
+		data, err := sgx.LoadBlock(int32(num))
+		if err != nil {
+			logrus.Errorf("Download block Faild ,Err:%s\n", err)
+		}
+		// g.ProtoBuf(http.StatusOK, data)
+		if data == nil {
+			g.JSON(http.StatusOK, nil)
+		} else {
+			g.JSON(http.StatusOK, data)
+		}
+
+	}
 
 }
 
 //DownloadFile 下载
 func DownloadFile(g *gin.Context) {
-	// defer env.TracePanic()
+	defer env.TracePanic("DownloadFile")
 	bucketName := g.Query("bucketName")
 
 	fileName := g.Query("fileName")
@@ -197,7 +193,6 @@ func DownloadFile(g *gin.Context) {
 
 	savePath := g.Query("path")
 
-	// filePath := g.Query("path")
 	content := publicKey[3:]
 	c := api.GetClient(content)
 
