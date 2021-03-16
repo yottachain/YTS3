@@ -213,11 +213,12 @@ func LicensedTo(g *gin.Context) {
 
 	auth, yeer := clientA.Auth(bucketName, objectKey)
 	if yeer != nil {
-		g.JSON(http.StatusSeeOther, gin.H{"code": yeer.Code, "Msg": yeer.Msg})
+		g.JSON(http.StatusSeeOther, gin.H{"yeer code": yeer.Code, "Msg": yeer.Msg})
 	} else {
 		beer := auth.LicensedTo(userNameB, newPublicKeyB)
 		if beer != nil {
-			g.JSON(http.StatusSeeOther, gin.H{"code": beer.Code, "Msg": beer.Msg})
+			logrus.Infof("UserNameB:%s\n", userNameB)
+			g.JSON(http.StatusSeeOther, gin.H{"beer code": beer.Code, "Msg": beer.Msg})
 		} else {
 			g.JSON(http.StatusOK, gin.H{"msg": "[ " + objectKey + " ] 授权给用户" + userNameB + " 完成."})
 		}
