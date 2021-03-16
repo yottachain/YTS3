@@ -3,6 +3,7 @@ package yts3
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
 
@@ -19,7 +20,8 @@ func (g *Yts3) routeBase(w http.ResponseWriter, r *http.Request) {
 		object = ""
 		err    error
 	)
-
+	url := r.URL.Path
+	logrus.Infof("Url:%s\n", url)
 	hdr := w.Header()
 
 	id := fmt.Sprintf("%016X", g.nextRequestID())
@@ -28,7 +30,8 @@ func (g *Yts3) routeBase(w http.ResponseWriter, r *http.Request) {
 	hdr.Set("Server", "AmazonS3")
 
 	if len(parts) == 2 {
-		object = parts[1]
+		object = url[len(bucket)+2:]
+		//object = parts[1]
 	}
 
 	if uploadID := UploadID(query.Get("uploadId")); uploadID != "" {

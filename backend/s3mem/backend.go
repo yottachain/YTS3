@@ -200,6 +200,17 @@ func (db *Backend) BucketExists(name string) (exists bool, err error) {
 	return db.buckets[name] != nil, nil
 }
 
+func objectExists(publicKey, bucket, objectKey string) (exists bool) {
+
+	c := api.GetClient(publicKey)
+
+	isExist, err := c.NewObjectAccessor().ObjectExist(bucket, objectKey)
+	if err != nil {
+		logrus.Errorf("err:%s\n", err)
+	}
+	return isExist
+}
+
 //PutObject upload file
 func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[string]string, input io.Reader, size int64) (result yts3.PutObjectResult, err error) {
 
@@ -556,63 +567,69 @@ func (cr *ContentReader) Read(buf []byte) (int, error) {
 func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequest *yts3.ObjectRangeRequest) (*yts3.Object, error) {
 	db.Lock.RLock()
 	defer db.Lock.RUnlock()
-	c := api.GetClient(publicKey)
-	download, errMsg := c.NewDownloadFile(bucketName, objectName, primitive.NilObjectID)
-	if errMsg != nil {
-		logrus.Errorf("Err:%s\n", errMsg)
-	}
-	if len(db.buckets) == 0 {
-		v, _ := UserAllBucketsCACHE.Get(publicKey)
-		RegDb = v.(*Backend)
 
-		if RegDb != nil {
-			db = RegDb
+	isExistObject := objectExists(publicKey, bucketName, objectName)
+	if isExistObject {
+		c := api.GetClient(publicKey)
+		download, errMsg := c.NewDownloadLastVersion(bucketName, objectName)
+		if errMsg != nil {
+			logrus.Errorf("Err:%s\n", errMsg)
 		}
-	}
-	bucket := db.buckets[bucketName]
-	if bucket == nil {
-		return nil, yts3.BucketNotFound(bucketName)
-	}
-	obj := bucket.object(objectName)
-	if obj == nil || obj.data.deleteMarker {
-		return nil, yts3.KeyNotFound(objectName)
-	}
-	result, err := obj.data.toObject(rangeRequest, true)
-	if err != nil {
-		return nil, err
-	}
-	content := getContentByMeta(result.Metadata)
-	result.Size = content.Size
-	if bucket.versioning != yts3.VersioningEnabled {
-		result.VersionID = ""
-	}
-	if result.Size > 0 {
+		if len(db.buckets) == 0 {
+			v, _ := UserAllBucketsCACHE.Get(publicKey)
+			RegDb = v.(*Backend)
 
-		if rangeRequest != nil {
-			if rangeRequest.End == -1 {
-				rangeRequest.End = content.Size
-				rangeRequest.FromEnd = true
+			if RegDb != nil {
+				db = RegDb
 			}
-			result.Contents = &ContentReader{download.LoadRange(rangeRequest.Start, rangeRequest.End).(io.ReadCloser)}
-			result.Range = &yts3.ObjectRange{
-				Start:  rangeRequest.Start,
-				Length: rangeRequest.End - rangeRequest.Start,
-			}
-		} else {
-			result.Contents = &ContentReader{download.Load().(io.ReadCloser)}
 		}
-	}
-	eg := content.ETag
-	logrus.Infof("Etag:%s\n", eg)
+		bucket := db.buckets[bucketName]
+		if bucket == nil {
+			return nil, yts3.BucketNotFound(bucketName)
+		}
+		obj := bucket.object(objectName)
+		if obj == nil || obj.data.deleteMarker {
+			return nil, yts3.KeyNotFound(objectName)
+		}
+		result, err := obj.data.toObject(rangeRequest, true)
+		if err != nil {
+			return nil, err
+		}
+		content := getContentByMeta(result.Metadata)
+		result.Size = content.Size
+		if bucket.versioning != yts3.VersioningEnabled {
+			result.VersionID = ""
+		}
+		if result.Size > 0 {
 
-	hash, err := hex.DecodeString(eg)
-	if err != nil {
-		fmt.Println(err)
+			if rangeRequest != nil {
+				if rangeRequest.End == -1 {
+					rangeRequest.End = content.Size
+					rangeRequest.FromEnd = true
+				}
+				result.Contents = &ContentReader{download.LoadRange(rangeRequest.Start, rangeRequest.End).(io.ReadCloser)}
+				result.Range = &yts3.ObjectRange{
+					Start:  rangeRequest.Start,
+					Length: rangeRequest.End - rangeRequest.Start,
+				}
+			} else {
+				result.Contents = &ContentReader{download.Load().(io.ReadCloser)}
+			}
+		}
+		eg := content.ETag
+		logrus.Infof("Etag:%s\n", eg)
+
+		hash, err := hex.DecodeString(eg)
+		if err != nil {
+			fmt.Println(err)
+		}
+		aa := hex.EncodeToString(hash[:])
+		logrus.Infof("aa:%s\n", aa)
+		result.Hash = hash
+		return result, nil
+	} else {
+		return nil, nil
 	}
-	aa := hex.EncodeToString(hash[:])
-	logrus.Infof("aa:%s\n", aa)
-	result.Hash = hash
-	return result, nil
 }
 
 func (db *Backend) DeleteObject(publicKey, bucketName, objectName string) (result yts3.ObjectDeleteResult, rerr error) {

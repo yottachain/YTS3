@@ -22,7 +22,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
 	"github.com/yottachain/YTCoreService/env"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Yts3 struct {
@@ -295,8 +294,8 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 			return
 		}
 		c := api.GetClient(content)
-		uri := object + "/"
-		errzero := c.NewObjectAccessor().CreateObject(bucket, uri, primitive.NewObjectID(), metadata2)
+		//uri := object + "/"
+		errzero := c.NewObjectAccessor().CreateObject(bucket, object, env.ZeroLenFileID(), metadata2)
 		if errzero != nil {
 			logrus.Errorf("[Save meta data ]:%s\n", errzero)
 			return
@@ -462,6 +461,7 @@ func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.Resp
 
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
 	content := publicKey[3:]
+
 	if len(content) > 50 {
 		publicKeyLength := strings.Index(content, ":")
 		contentNew := content[:publicKeyLength]
@@ -500,21 +500,21 @@ func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.Resp
 		return err
 	}
 
-	// readbuf := make([]byte, 1024*1024)
-	// rd := bufio.NewReaderSize(obj.Contents, 1024*1024)
-	// for {
-	// 	num, err := rd.Read(readbuf)
-	// 	if err != nil && err != io.EOF {
-	// 		return err
-	// 	}
-	// 	if num > 0 {
-	// 		bs := readbuf[0:num]
-	// 		w.Write(bs)
-	// 	}
-	// 	if err != nil && err == io.EOF {
-	// 		break
-	// 	}
-	// }
+	//readbuf := make([]byte, 1024*1024)
+	//rd := bufio.NewReaderSize(obj.Contents, 1024*1024)
+	//for {
+	//	num, err := rd.Read(readbuf)
+	//	if err != nil && err != io.EOF {
+	//		return err
+	//	}
+	//	if num > 0 {
+	//		bs := readbuf[0:num]
+	//		w.Write(bs)
+	//	}
+	//	if err != nil && err == io.EOF {
+	//		break
+	//	}
+	//}
 
 	logrus.Infof("【" + object + "】 download successful.\n")
 	return nil
