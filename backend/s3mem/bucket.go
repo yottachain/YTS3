@@ -1,6 +1,7 @@
 package s3mem
 
 import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"io"
 	"strconv"
 	"time"
@@ -9,7 +10,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
 	"github.com/yottachain/YTS3/yts3"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type versionGenFunc func() yts3.VersionID
@@ -219,28 +219,35 @@ func (b *bucket) put(publicKey, name string, item *bucketData) {
 }
 
 func (b *bucket) rm(publicKey, bucketName, objectName string, at time.Time) (result yts3.ObjectDeleteResult, rerr error) {
-	object := b.object(objectName)
-	if object == nil {
-		// S3 does not report an error when attemping to delete a key that does not exist
-		return result, nil
-	}
-
-	if b.versioning == yts3.VersioningEnabled {
-		item := &bucketData{lastModified: at, name: objectName, deleteMarker: true}
-		b.put(publicKey, objectName, item)
-		result.IsDeleteMarker = true
-		result.VersionID = item.versionID
-
-	} else {
-		c := api.GetClient(publicKey)
-		objectAccessor := c.NewObjectAccessor()
-		err := objectAccessor.DeleteObject(bucketName, objectName, primitive.ObjectID{})
-		if err != nil {
-			logrus.Errorf("Err:%s\n", err)
-			return
-		}
-		b.objects.Delete(objectName)
-
+	//object := b.object(objectName)
+	//if object == nil {
+	//	// S3 does not report an error when attemping to delete a key that does not exist
+	//	return result, nil
+	//}
+	//
+	//if b.versioning == yts3.VersioningEnabled {
+	//	item := &bucketData{lastModified: at, name: objectName, deleteMarker: true}
+	//	b.put(publicKey, objectName, item)
+	//	result.IsDeleteMarker = true
+	//	result.VersionID = item.versionID
+	//
+	//} else {
+	//	c := api.GetClient(publicKey)
+	//	objectAccessor := c.NewObjectAccessor()
+	//	err := objectAccessor.DeleteObject(bucketName, objectName, primitive.ObjectID{})
+	//	if err != nil {
+	//		logrus.Errorf("Err:%s\n", err)
+	//		return
+	//	}
+	//	b.objects.Delete(objectName)
+	//
+	//}
+	c := api.GetClient(publicKey)
+	objectAccessor := c.NewObjectAccessor()
+	err := objectAccessor.DeleteObject(bucketName, objectName, primitive.ObjectID{})
+	if err != nil {
+		logrus.Errorf("Err:%s\n", err)
+		return
 	}
 
 	return result, nil

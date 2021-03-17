@@ -71,15 +71,17 @@ func AddPubkey(g *gin.Context) {
 
 	userName := g.Query("userName")
 	publicKey := g.Query("publicKey")
-
+	logrus.Infof("userName:%s\n", userName)
+	logrus.Infof("publicKey:%s\n", publicKey)
 	content := publicKey[3:]
 
 	num, err := api.AddPublicKey(userName, content)
 
 	if err != nil {
+		logrus.Infof("err:%s\n", err)
 		g.JSON(http.StatusAccepted, err)
 	} else {
-
+		logrus.Infof("NUM:%d\n", num)
 		g.JSON(http.StatusOK, num)
 	}
 

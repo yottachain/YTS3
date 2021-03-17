@@ -252,6 +252,15 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 	contentLength := r.Header.Get("Content-Length")
 	if contentLength == "" {
 		return ErrMissingContentLength
+	} else if contentLength == "154" {
+		var rdr io.Reader = r.Body
+		lnn := 10485760
+		body, err := ReadAll(rdr, int64(lnn))
+		if err != nil {
+			contentLength = fmt.Sprintf("%d", len(body))
+		}
+
+		//contentLength = r.ContentLength
 	}
 
 	size, err := strconv.ParseInt(contentLength, 10, 64)
@@ -275,7 +284,7 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 
 	// hashingReader is still needed to get the ETag even if integrityCheck
 	rdr, err := newHashingReader(r.Body, md5Base64)
-	defer r.Body.Close()
+	//defer r.Body.Close()
 	if err != nil {
 		return err
 	}
@@ -312,7 +321,7 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 
 	}
 	w.Header().Set("ETag", `"`+hex.EncodeToString(rdr.Sum(nil))+`"`)
-
+	//defer r.Body.Close()
 	return nil
 }
 
@@ -939,7 +948,9 @@ func (g *Yts3) initiateMultipartUpload(bucket, object string, w http.ResponseWri
 	// cache := cfg.GetCacheInfo("directory")
 	s3cache := env.GetS3Cache()
 	directory := s3cache + "/" + bucket
-
+	if !strings.HasSuffix(directory, "/") {
+		directory = directory + "/"
+	}
 	s, err := os.Stat(directory)
 	if err != nil {
 		if !os.IsExist(err) {
@@ -955,9 +966,7 @@ func (g *Yts3) initiateMultipartUpload(bucket, object string, w http.ResponseWri
 			return errors.New("The specified path is not a directory.")
 		}
 	}
-	if !strings.HasSuffix(directory, "/") {
-		directory = directory + "/"
-	}
+
 	meta, err := metadataHeaders(r.Header, g.timeSource.Now(), g.metadataSizeLimit)
 	if err != nil {
 		logrus.Errorf("err::::: %s\n", err)

@@ -238,7 +238,7 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 	if err != nil {
 		fmt.Printf("Something went wrong: %s", err)
 	}
-	fmt.Printf("Successfully parsed: %s", u1)
+	fmt.Printf("Successfully parsed: %s\n", u1)
 	directory := s3cache + bucketName + "/" + u1.String()
 
 	var hash []byte
@@ -637,9 +637,9 @@ func (db *Backend) DeleteObject(publicKey, bucketName, objectName string) (resul
 	defer db.Lock.Unlock()
 
 	bucket := db.buckets[bucketName]
-	if bucket == nil {
-		return result, yts3.BucketNotFound(bucketName)
-	}
+	//if bucket == nil {
+	//	return result, yts3.BucketNotFound(bucketName)
+	//}
 
 	return bucket.rm(publicKey, bucketName, objectName, db.timeSource.Now())
 }
