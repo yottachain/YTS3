@@ -31,9 +31,13 @@ func (g *Yts3) routeBase(w http.ResponseWriter, r *http.Request) {
 
 	if len(parts) == 2 {
 		object = url[len(bucket)+2:]
+		//hdr.Set("Content-Length",r.Header.Get("Content-Length"))
+		//logrus.Infof("Content-Length:::::::::::::::::%s\n",r.Header.Get("Content-Length"))
+		//logrus.Infof("ContentLength:::::::::::::::::%s\n",r.Header.Get("ContentLength"))
 		//object = parts[1]
 	}
 
+	hdr.Set("Content-Length", r.Header.Get("Content-Length"))
 	if uploadID := UploadID(query.Get("uploadId")); uploadID != "" {
 		err = g.routeMultipartUpload(bucket, object, uploadID, w, r)
 
