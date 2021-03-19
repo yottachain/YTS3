@@ -149,7 +149,7 @@ func getDirList(dirpath string) ([]string, error) {
 
 func DownloadFileForSGX(g *gin.Context) {
 
-	publicKey := g.Query("publicKey")
+	userName := g.Query("userName")
 	bucketName := g.Query("bucketName")
 	fileName := g.Query("fileName")
 	blockNum := g.Query("blockNum")
@@ -158,8 +158,9 @@ func DownloadFileForSGX(g *gin.Context) {
 	if errN != nil {
 	}
 
-	content := publicKey[3:]
-	c := api.GetClient(content)
+	//content := publicKey[3:]
+	c := api.GetClientByName(userName)
+	//c := api.GetClient(content)
 	// c.DownloadToSGX()
 	// sgx,err :=c.DownloadToSGX(bucketName, fileName)
 	sgx, err := c.DownloadToSGX(bucketName, fileName)
