@@ -165,11 +165,13 @@ func DownloadFileForSGX(g *gin.Context) {
 	sgx, err := c.DownloadToSGX(bucketName, fileName)
 
 	if err != nil {
-
+		logrus.Errorf("Download block Faild ,Err:%s\n", err)
+		g.JSON(http.StatusSeeOther, gin.H{"msg": err.Msg, "code": err.Code})
 	} else {
 		data, err := sgx.LoadBlock(int32(num))
 		if err != nil {
 			logrus.Errorf("Download block Faild ,Err:%s\n", err)
+			g.JSON(http.StatusSeeOther, gin.H{"msg": err.Msg, "code": err.Code})
 		}
 		// g.ProtoBuf(http.StatusOK, data)
 		if data == nil {
