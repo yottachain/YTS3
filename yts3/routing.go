@@ -37,7 +37,7 @@ func (g *Yts3) routeBase(w http.ResponseWriter, r *http.Request) {
 		//object = parts[1]
 	}
 
-	hdr.Set("Content-Length", r.Header.Get("Content-Length"))
+	//hdr.Set("Content-Length", r.Header.Get("Content-Length"))
 	if uploadID := UploadID(query.Get("uploadId")); uploadID != "" {
 		err = g.routeMultipartUpload(bucket, object, uploadID, w, r)
 
