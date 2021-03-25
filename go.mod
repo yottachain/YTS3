@@ -17,7 +17,7 @@ require (
 	github.com/spf13/afero v1.2.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/unrolled/secure v1.0.8
-	github.com/yottachain/YTCoreService v0.0.0-20210318023602-52ccafe79eb4
+	github.com/yottachain/YTCoreService v0.0.0-20210325092224-c88609ee4f5e
 	go.mongodb.org/mongo-driver v1.3.3
 	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc // indirect
 	golang.org/x/text v0.3.3 // indirect
