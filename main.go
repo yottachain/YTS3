@@ -291,7 +291,7 @@ func listenAndServe(addr string, handler http.Handler) error {
 
 	defer listener.Close()
 	server := &http.Server{Addr: addr, Handler: handler}
-	env.SetVersionID("2.0.0.21")
+	env.SetVersionID("2.0.1.4")
 	logrus.Infof("Start S3 server port :%d\n", listener.Addr().(*net.TCPAddr).Port)
 	return server.ServeTLS(listener, env.YTFS_HOME+"crt/server.crt", env.YTFS_HOME+"crt/server.key")
 }

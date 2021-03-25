@@ -784,7 +784,33 @@ func (g *Yts3) listMultipartUploadParts(bucket, object string, uploadID UploadID
 	return g.xmlEncoder(w).Encode(out)
 }
 
+func objectExists(publicKey, bucket, objectKey string) (exists bool) {
+
+	c := api.GetClient(publicKey)
+
+	isExist, err := c.NewObjectAccessor().ObjectExist(bucket, objectKey)
+	if err != nil {
+		logrus.Errorf("err:%s\n", err)
+	}
+	return isExist
+}
+
 func (g *Yts3) putMultipartUploadPart(bucket, object string, uploadID UploadID, w http.ResponseWriter, r *http.Request) error {
+
+	Authorization := r.Header.Get("Authorization")
+	publicKey := GetBetweenStr(Authorization, "YTA", "/")
+	content := publicKey[3:]
+	if len(content) > 50 {
+		publicKeyLength := strings.Index(content, ":")
+		contentNew := content[:publicKeyLength]
+		content = contentNew
+	}
+
+	isExist := objectExists(content, bucket, object)
+
+	if isExist == true {
+		return ErrNotImplemented
+	}
 
 	partNumber, err := strconv.ParseInt(r.URL.Query().Get("partNumber"), 10, 0)
 	if err != nil || partNumber <= 0 || partNumber > MaxUploadPartNumber {
