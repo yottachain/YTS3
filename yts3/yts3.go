@@ -240,6 +240,13 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 		contentNew := content[:publicKeyLength]
 		content = contentNew
 	}
+
+	isExist := objectExists(content, bucket, object)
+
+	if isExist == true {
+		return ErrNotImplemented
+	}
+
 	meta, err := metadataHeaders(r.Header, g.timeSource.Now(), g.metadataSizeLimit)
 	if err != nil {
 		return err
