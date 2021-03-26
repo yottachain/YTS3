@@ -483,6 +483,14 @@ func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.Resp
 		contentNew := content[:publicKeyLength]
 		content = contentNew
 	}
+
+	q := r.URL.Query()
+	prefix := prefixFromQuery(q)
+	page, err := listBucketPageFromQuery(q)
+	if err != nil {
+		return err
+	}
+
 	rnge, err := parseRangeHeader(r.Header.Get("Range"))
 	if err != nil {
 		return err
@@ -491,7 +499,7 @@ func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.Resp
 
 	{
 		if versionID == "" {
-			obj, err = g.storage.GetObject(content, bucket, object, rnge)
+			obj, err = g.storage.GetObjectV2(content, bucket, object, rnge, &prefix, page)
 			if err != nil {
 				return err
 			}
@@ -551,6 +559,13 @@ func (g *Yts3) headObject(bucket, object string, versionID VersionID, w http.Res
 
 		content = contentNew
 	}
+
+	q := r.URL.Query()
+	prefix := prefixFromQuery(q)
+	page, err := listBucketPageFromQuery(q)
+	if err != nil {
+		return err
+	}
 	// obj, err := g.storage.HeadObject(content, bucket, object)
 	rnge, err := parseRangeHeader(r.Header.Get("Range"))
 	if err != nil {
@@ -558,7 +573,7 @@ func (g *Yts3) headObject(bucket, object string, versionID VersionID, w http.Res
 	}
 
 	var obj *Object
-	obj, err = g.storage.GetObject(content, bucket, object, rnge)
+	obj, err = g.storage.GetObjectV2(content, bucket, object, rnge, &prefix, page)
 	if err != nil {
 		return err
 	}

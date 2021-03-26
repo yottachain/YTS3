@@ -564,6 +564,77 @@ func (cr *ContentReader) Read(buf []byte) (int, error) {
 	return nc, err2
 }
 
+func (db *Backend) GetObjectV2(publicKey, bucketName, objectName string, rangeRequest *yts3.ObjectRangeRequest, prefix *yts3.Prefix, page yts3.ListBucketPage) (*yts3.Object, error) {
+	db.Lock.RLock()
+	defer db.Lock.RUnlock()
+
+	isExistObject := objectExists(publicKey, bucketName, objectName)
+	if isExistObject {
+		c := api.GetClient(publicKey)
+		download, errMsg := c.NewDownloadLastVersion(bucketName, objectName)
+		if errMsg != nil {
+			logrus.Errorf("Err:%s\n", errMsg)
+		}
+		if len(db.buckets) == 0 {
+			v, _ := UserAllBucketsCACHE.Get(publicKey)
+			RegDb = v.(*Backend)
+
+			if RegDb != nil {
+				db = RegDb
+			}
+		}
+		bucket := db.buckets[bucketName]
+		if bucket == nil {
+			return nil, yts3.BucketNotFound(bucketName)
+		}
+
+		db.ListBucket(publicKey, bucketName, prefix, page)
+
+		obj := bucket.object(objectName)
+		if obj == nil || obj.data.deleteMarker {
+			return nil, yts3.KeyNotFound(objectName)
+		}
+		result, err := obj.data.toObject(rangeRequest, true)
+		if err != nil {
+			return nil, err
+		}
+		content := getContentByMeta(result.Metadata)
+		result.Size = content.Size
+		if bucket.versioning != yts3.VersioningEnabled {
+			result.VersionID = ""
+		}
+		if result.Size > 0 {
+
+			if rangeRequest != nil {
+				if rangeRequest.End == -1 {
+					rangeRequest.End = content.Size
+					rangeRequest.FromEnd = true
+				}
+				result.Contents = &ContentReader{download.LoadRange(rangeRequest.Start, rangeRequest.End).(io.ReadCloser)}
+				result.Range = &yts3.ObjectRange{
+					Start:  rangeRequest.Start,
+					Length: rangeRequest.End - rangeRequest.Start,
+				}
+			} else {
+				result.Contents = &ContentReader{download.Load().(io.ReadCloser)}
+			}
+		}
+		eg := content.ETag
+		logrus.Infof("Etag:%s\n", eg)
+
+		hash, err := hex.DecodeString(eg)
+		if err != nil {
+			fmt.Println(err)
+		}
+		aa := hex.EncodeToString(hash[:])
+		logrus.Infof("aa:%s\n", aa)
+		result.Hash = hash
+		return result, nil
+	} else {
+		return nil, nil
+	}
+}
+
 func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequest *yts3.ObjectRangeRequest) (*yts3.Object, error) {
 	db.Lock.RLock()
 	defer db.Lock.RUnlock()

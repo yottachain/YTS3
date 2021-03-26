@@ -48,6 +48,7 @@ type Backend interface {
 	DeleteMulti(publicKey, bucketName string, objects ...string) (MultiDeleteResult, error)
 	PutObject(publicKey, bucketName, key string, meta map[string]string, input io.Reader, size int64) (PutObjectResult, error)
 	MultipartUpload(publicKey, bucketName, objectName string, partsPath []string, size int64) (PutObjectResult, error)
+	GetObjectV2(publicKey, bucketName, objectName string, rangeRequest *ObjectRangeRequest, prefix *Prefix, page ListBucketPage) (*Object, error)
 	GetObject(publicKey, bucketName, objectName string, rangeRequest *ObjectRangeRequest) (*Object, error)
 	DeleteBucket(publicKey, name string) error
 	HeadObject(publicKey, bucketName, objectName string) (*Object, error)
