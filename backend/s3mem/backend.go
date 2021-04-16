@@ -579,7 +579,8 @@ func (db *Backend) GetObjectV2(publicKey, bucketName, objectName string, rangeRe
 		c := api.GetClient(publicKey)
 		download, errMsg := c.NewDownloadLastVersion(bucketName, objectName)
 		if errMsg != nil {
-			logrus.Errorf("Err:%s\n", errMsg)
+			//logrus.Errorf("Err:%s\n", errMsg)
+			return nil, yts3.ErrNoSuchKey
 		}
 		if len(db.buckets) == 0 {
 			v, _ := UserAllBucketsCACHE.Get(publicKey)
