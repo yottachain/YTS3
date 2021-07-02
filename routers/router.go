@@ -14,7 +14,7 @@ func InitRouter() (router *gin.Engine) {
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
 	// router.Use(cors.New(config))
-	router.Use(TlsHandler())
+	//router.Use(TlsHandler())
 	v1 := router.Group("/api/v1")
 	{
 		v1.POST("/insertuser", controller.Register)
@@ -30,9 +30,10 @@ func InitRouter() (router *gin.Engine) {
 		v1.GET("/getYts3Version", controller.GetProgramVersion)
 		v1.GET("/getFileInfo", controller.GetFileBlockDetails)
 		v1.GET("/getFileAllInfo", controller.GetFileAllInfo)
-		//v1.POST("/importAuthFile", controller.ImporterAuth)
-		//v1.GET("/exporterAuthData", controller.ExporterAuthData)
+		v1.POST("/importAuthFile", controller.ImporterAuth)
+		v1.GET("/exporterAuthData", controller.ExporterAuthData)
 		v1.GET("/licensedTo", controller.LicensedTo)
+		v1.POST("/saveFileToLocal", controller.SaveFileToLocal)
 	}
 
 	return
@@ -42,7 +43,7 @@ func TlsHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		secureMiddleware := secure.New(secure.Options{
 			SSLRedirect: true,
-			SSLHost:     "192.168.1.5:8080",
+			SSLHost:     "127.0.0.1:8080",
 		})
 		err := secureMiddleware.Process(c.Writer, c.Request)
 

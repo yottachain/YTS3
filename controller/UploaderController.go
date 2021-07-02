@@ -121,3 +121,30 @@ func getFileSize(filename string) int64 {
 	})
 	return result
 }
+
+func SaveFileToLocal(g *gin.Context) {
+	file, err := g.FormFile("uploadfile")
+	if err != nil {
+		return
+	}
+	fileName := file.Filename
+	fmt.Println("文件名：", fileName)
+	if err := g.SaveUploadedFile(file, fileName); err != nil {
+		g.String(http.StatusBadRequest, "保存失败 Error:%s", err.Error())
+		return
+	}
+	up, err1 := api.NewUploadEncObject(fileName)
+	if err1 != nil {
+		return
+	}
+	err1 = up.Upload()
+	if err1 != nil {
+		return
+	} else {
+		del := os.Remove(fileName)
+		if del != nil {
+			fmt.Println(del)
+		}
+	}
+
+}

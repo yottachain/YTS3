@@ -19,7 +19,9 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.7.0 // indirect
 	github.com/unrolled/secure v1.0.8
-	github.com/yottachain/YTCoreService v0.0.0-20210325050456-3d1b10945684
+	//github.com/yottachain/YTCoreService v0.0.0-20210325050456-3d1b10945684
+	// github.com/yottachain/YTCoreService v0.0.0-20210331064731-4130836b6c21
+	github.com/yottachain/YTCoreService v0.0.0-20210701080308-36191a8bc1d8
 	go.mongodb.org/mongo-driver v1.3.3
 	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc // indirect
 	golang.org/x/sys v0.0.0-20210315160823-c6e025ad8005 // indirect

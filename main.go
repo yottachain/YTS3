@@ -9,7 +9,6 @@ import (
 	httppprof "net/http/pprof"
 	"os"
 	"runtime/pprof"
-	"strconv"
 	"time"
 
 	"log"
@@ -145,13 +144,14 @@ func s3StartServer() {
 	go func() {
 
 		router := routers.InitRouter()
-		port := env.GetConfig().GetInt("s3port", 8080)
+		//port := env.GetConfig().GetInt("s3port", 8080)
 
-		err1 := router.RunTLS(":"+strconv.Itoa(port), env.YTFS_HOME+"crt/server.crt", env.YTFS_HOME+"crt/server.key")
+		//err1 := router.RunTLS(":"+strconv.Itoa(port), env.YTFS_HOME+"crt/server.crt", env.YTFS_HOME+"crt/server.key")
+		router.Run(":8080")
 
-		if err1 != nil {
-			logrus.Errorf("err:s%\n", err1)
-		}
+		//if err1 != nil {
+		//	logrus.Errorf("err:s%\n", err1)
+		//}
 	}()
 
 	if err := run(); err != nil {
