@@ -10,6 +10,6 @@ import (
 func GetProgramVersion(g *gin.Context) {
 	defer env.TracePanic("GetProgramVersion")
 	var versionID string
-	versionID = "2.0.1.5"
+	versionID = "2.0.1.6"
 	g.JSON(http.StatusOK, gin.H{"versionID": versionID})
 }
