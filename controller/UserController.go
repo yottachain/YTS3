@@ -84,7 +84,7 @@ func AddPubkey(g *gin.Context) {
 		logrus.Infof("NUM:%d\n", num)
 		g.JSON(http.StatusOK, num)
 	}
-
-	// api.AddP
-
+	//
+	//	// api.AddP
+	//
 }
