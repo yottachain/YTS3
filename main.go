@@ -9,6 +9,7 @@ import (
 	httppprof "net/http/pprof"
 	"os"
 	"runtime/pprof"
+	"strconv"
 	"time"
 
 	"log"
@@ -144,14 +145,14 @@ func s3StartServer() {
 	go func() {
 
 		router := routers.InitRouter()
-		//port := env.GetConfig().GetInt("s3port", 8080)
+		port := env.GetConfig().GetInt("s3port", 8080)
 
-		//err1 := router.RunTLS(":"+strconv.Itoa(port), env.YTFS_HOME+"crt/server.crt", env.YTFS_HOME+"crt/server.key")
-		router.Run(":8080")
+		err1 := router.RunTLS(":"+strconv.Itoa(port), env.YTFS_HOME+"crt/server.crt", env.YTFS_HOME+"crt/server.key")
+		//router.Run(":8080")
 
-		//if err1 != nil {
-		//	logrus.Errorf("err:s%\n", err1)
-		//}
+		if err1 != nil {
+			logrus.Errorf("err:s%\n", err1)
+		}
 	}()
 
 	if err := run(); err != nil {
@@ -291,7 +292,7 @@ func listenAndServe(addr string, handler http.Handler) error {
 
 	defer listener.Close()
 	server := &http.Server{Addr: addr, Handler: handler}
-	env.SetVersionID("2.0.1.5")
+	env.SetVersionID("2.0.1.6")
 	logrus.Infof("Start S3 server port :%d\n", listener.Addr().(*net.TCPAddr).Port)
 	return server.ServeTLS(listener, env.YTFS_HOME+"crt/server.crt", env.YTFS_HOME+"crt/server.key")
 }
