@@ -214,11 +214,11 @@ func objectExists(publicKey, bucket, objectKey string) (exists bool) {
 //PutObject upload file
 func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[string]string, input io.Reader, size int64) (result yts3.PutObjectResult, err error) {
 
-	isExist := objectExists(publicKey, bucketName, objectName)
+	//isExist := objectExists(publicKey, bucketName, objectName)
 
-	if isExist == true {
-		return result, yts3.ErrNotImplemented
-	}
+	//if isExist == true {
+	//	return result, yts3.ErrNotImplemented
+	//}
 
 	db.Lock.Lock()
 	defer db.Lock.Unlock()
