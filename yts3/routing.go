@@ -11,7 +11,14 @@ import (
 )
 
 func (g *Yts3) routeBase(w http.ResponseWriter, r *http.Request) {
-	defer env.TracePanic("routeBase")
+	//defer env.TracePanic("routeBase")
+	defer func() {
+		if rec := recover(); rec != nil {
+			env.TraceError("routeBase")
+			g.httpError(w, r, errors.New("Service ERR."))
+		}
+	}()
+
 	var (
 		path   = strings.Trim(r.URL.Path, "/")
 		parts  = strings.SplitN(path, "/", 2)
