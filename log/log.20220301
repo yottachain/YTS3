@@ -1,0 +1,13 @@
+[09:48:48.089][Infos][Init]Starting pprof server on address 0.0.0.0:59537
+[11:27:09.249][Infos][Booter]P2P initializing...NodeID:16Uiu2HAmPdXj5MU4kDquUag2gJxSTvy2z61PXbekbH2rZFB72iBW
+[11:27:09.363][Infos][Booter]Node Addrs 0:/ip6/fe80::65a5:a288:e385:c234/tcp/64768
+[11:27:09.363][Infos][Booter]Node Addrs 1:/ip4/169.254.194.52/tcp/64768
+[11:27:09.363][Infos][Booter]Node Addrs 2:/ip6/fe80::60b5:23dc:9b3d:6a3c/tcp/64768
+[11:27:09.363][Infos][Booter]Node Addrs 3:/ip4/192.168.18.8/tcp/64768
+[11:27:09.363][Infos][Booter]Node Addrs 4:/ip6/fe80::100:7f:fffe/tcp/64768
+[11:27:09.363][Infos][Booter]Node Addrs 5:/ip6/fe80::5efe:c0a8:1208/tcp/64768
+[11:27:09.454][Infos][NodeMgr]Snlist init ok,Size:1
+[11:27:09.831][Infos][Cache]LocalDB init...Path:D:/go/YTS3/src/cache/dbcache/cache.db
+[11:27:09.832][Infos][Cache]Sum cache size 0
+[11:27:09.832][Infos][Cache]Clearing expired files...
+[11:27:09.835][Infos]Start S3 server port :8083
