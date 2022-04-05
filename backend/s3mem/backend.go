@@ -214,7 +214,9 @@ func objectExists(publicKey, bucket, objectKey string) (exists bool) {
 
 	c := api.GetClient(publicKey)
 	if c == nil {
-		return nil, yts3.ResourceError(yts3.ErrInvalidAccessKeyID, "YTA"+publicKey)
+		logrus.Errorf("publicKey err\n")
+		return
+		//return nil, yts3.ResourceError(yts3.ErrInvalidAccessKeyID, "YTA"+publicKey)
 	}
 
 	isExist, err := c.NewObjectAccessor().ObjectExist(bucket, objectKey)
@@ -256,7 +258,7 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 	}
 	c := api.GetClient(publicKey)
 	if c == nil {
-		return nil, yts3.ResourceError(yts3.ErrInvalidAccessKeyID, "YTA"+publicKey)
+		return result, yts3.ResourceError(yts3.ErrInvalidAccessKeyID, "YTA"+publicKey)
 	}
 	// upload := c.NewUploadObject()
 	// iniPath := env.YTFS_HOME + "conf/yotta_config.ini"
@@ -386,7 +388,7 @@ func (db *Backend) MultipartUpload(publicKey, bucketName, objectName string, par
 	}
 	c := api.GetClient(publicKey)
 	if c == nil {
-		return nil, yts3.ResourceError(yts3.ErrInvalidAccessKeyID, "YTA"+publicKey)
+		return result, yts3.ResourceError(yts3.ErrInvalidAccessKeyID, "YTA"+publicKey)
 	}
 	var meta map[string]string
 
@@ -805,7 +807,7 @@ func (db *Backend) DeleteBucket(publicKey, bucketName string) error {
 
 	c := api.GetClient(publicKey)
 	if c == nil {
-		return nil, yts3.ResourceError(yts3.ErrInvalidAccessKeyID, "YTA"+publicKey)
+		return yts3.ResourceError(yts3.ErrInvalidAccessKeyID, "YTA"+publicKey)
 	}
 	bucketAccessor := c.NewBucketAccessor()
 
