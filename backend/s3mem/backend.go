@@ -136,14 +136,21 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 	db.Lock.RLock()
 	defer db.Lock.RUnlock()
 	if len(db.buckets) == 0 {
-		v, _ := UserAllBucketsCACHE.Get(publicKey)
-		// logrus.Infof("found::::", found)
-		// logrus.Infof("value::", v)
-		RegDb = v.(*Backend)
-
-		if RegDb != nil {
-			db = RegDb
+		if v, has := UserAllBucketsCACHE.Get(publicKey); has {
+			if RegDb, ok := v.(*Backend); ok {
+				db = RegDb
+			}
 		}
+		/*
+			v, _ := UserAllBucketsCACHE.Get(publicKey)
+			// logrus.Infof("found::::", found)
+			// logrus.Infof("value::", v)
+			RegDb = v.(*Backend)
+
+			if RegDb != nil {
+				db = RegDb
+			}
+		*/
 	}
 	var response = yts3.NewObjectList()
 	c := api.GetClient(publicKey)
@@ -223,12 +230,19 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 	db.Lock.Lock()
 	defer db.Lock.Unlock()
 	if len(db.buckets) == 0 {
-		v, _ := UserAllBucketsCACHE.Get(publicKey)
-		RegDb = v.(*Backend)
-
-		if RegDb != nil {
-			db = RegDb
+		if v, has := UserAllBucketsCACHE.Get(publicKey); has {
+			if RegDb, ok := v.(*Backend); ok {
+				db = RegDb
+			}
 		}
+		/*
+			v, _ := UserAllBucketsCACHE.Get(publicKey)
+			RegDb = v.(*Backend)
+
+			if RegDb != nil {
+				db = RegDb
+			}
+		*/
 	}
 	bucket := db.buckets[bucketName]
 	if bucket == nil {
@@ -343,12 +357,19 @@ func (db *Backend) MultipartUpload(publicKey, bucketName, objectName string, par
 	db.Lock.Lock()
 	defer db.Lock.Unlock()
 	if len(db.buckets) == 0 {
-		v, _ := UserAllBucketsCACHE.Get(publicKey)
-		RegDb = v.(*Backend)
-
-		if RegDb != nil {
-			db = RegDb
+		if v, has := UserAllBucketsCACHE.Get(publicKey); has {
+			if RegDb, ok := v.(*Backend); ok {
+				db = RegDb
+			}
 		}
+		/*
+			v, _ := UserAllBucketsCACHE.Get(publicKey)
+			RegDb = v.(*Backend)
+
+			if RegDb != nil {
+				db = RegDb
+			}
+		*/
 	}
 	bucket := db.buckets[bucketName]
 	if bucket == nil {
@@ -463,12 +484,19 @@ func (db *Backend) CreateBucket(publicKey, name string) error {
 	db.Lock.Lock()
 	defer db.Lock.Unlock()
 	if len(db.buckets) == 0 {
-		v, _ := UserAllBucketsCACHE.Get(publicKey)
-		RegDb = v.(*Backend)
-
-		if RegDb != nil {
-			db = RegDb
+		if v, has := UserAllBucketsCACHE.Get(publicKey); has {
+			if RegDb, ok := v.(*Backend); ok {
+				db = RegDb
+			}
 		}
+		/*
+			v, _ := UserAllBucketsCACHE.Get(publicKey)
+			RegDb = v.(*Backend)
+
+			if RegDb != nil {
+				db = RegDb
+			}
+		*/
 	}
 	if db.buckets[name] != nil {
 		return yts3.ResourceError(yts3.ErrBucketAlreadyExists, name)
@@ -488,12 +516,19 @@ func (db *Backend) DeleteMulti(publicKey, bucketName string, objects ...string) 
 	db.Lock.Lock()
 	defer db.Lock.Unlock()
 	if len(db.buckets) == 0 {
-		v, _ := UserAllBucketsCACHE.Get(publicKey)
-		RegDb = v.(*Backend)
-
-		if RegDb != nil {
-			db = RegDb
+		if v, has := UserAllBucketsCACHE.Get(publicKey); has {
+			if RegDb, ok := v.(*Backend); ok {
+				db = RegDb
+			}
 		}
+		/*
+			v, _ := UserAllBucketsCACHE.Get(publicKey)
+			RegDb = v.(*Backend)
+
+			if RegDb != nil {
+				db = RegDb
+			}
+		*/
 	}
 	bucket := db.buckets[bucketName]
 	if bucket == nil {
@@ -528,12 +563,19 @@ func (db *Backend) HeadObject(publicKey, bucketName, objectName string) (*yts3.O
 	db.Lock.RLock()
 	defer db.Lock.RUnlock()
 	if len(db.buckets) == 0 {
-		v, _ := UserAllBucketsCACHE.Get(publicKey)
-		RegDb = v.(*Backend)
-
-		if RegDb != nil {
-			db = RegDb
+		if v, has := UserAllBucketsCACHE.Get(publicKey); has {
+			if RegDb, ok := v.(*Backend); ok {
+				db = RegDb
+			}
 		}
+		/*
+			v, _ := UserAllBucketsCACHE.Get(publicKey)
+			RegDb = v.(*Backend)
+
+			if RegDb != nil {
+				db = RegDb
+			}
+		*/
 	}
 	bucket := db.buckets[bucketName]
 	if bucket == nil {
@@ -583,12 +625,19 @@ func (db *Backend) GetObjectV2(publicKey, bucketName, objectName string, rangeRe
 			return nil, yts3.ErrNoSuchKey
 		}
 		if len(db.buckets) == 0 {
-			v, _ := UserAllBucketsCACHE.Get(publicKey)
-			RegDb = v.(*Backend)
-
-			if RegDb != nil {
-				db = RegDb
+			if v, has := UserAllBucketsCACHE.Get(publicKey); has {
+				if RegDb, ok := v.(*Backend); ok {
+					db = RegDb
+				}
 			}
+			/*
+				v, _ := UserAllBucketsCACHE.Get(publicKey)
+				RegDb = v.(*Backend)
+
+				if RegDb != nil {
+					db = RegDb
+				}
+			*/
 		}
 		bucket := db.buckets[bucketName]
 		if bucket == nil {
@@ -654,12 +703,19 @@ func (db *Backend) GetObject(publicKey, bucketName, objectName string, rangeRequ
 			logrus.Errorf("Err:%s\n", errMsg)
 		}
 		if len(db.buckets) == 0 {
-			v, _ := UserAllBucketsCACHE.Get(publicKey)
-			RegDb = v.(*Backend)
-
-			if RegDb != nil {
-				db = RegDb
+			if v, has := UserAllBucketsCACHE.Get(publicKey); has {
+				if RegDb, ok := v.(*Backend); ok {
+					db = RegDb
+				}
 			}
+			/*
+				v, _ := UserAllBucketsCACHE.Get(publicKey)
+				RegDb = v.(*Backend)
+
+				if RegDb != nil {
+					db = RegDb
+				}
+			*/
 		}
 		bucket := db.buckets[bucketName]
 		if bucket == nil {
