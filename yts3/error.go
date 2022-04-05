@@ -61,7 +61,8 @@ const (
 	ErrTooManyBuckets       ErrorCode = "TooManyBuckets"
 	ErrNotImplemented       ErrorCode = "NotImplemented"
 
-	ErrInternal ErrorCode = "InternalError"
+	ErrInternal      ErrorCode = "InternalError"
+	ErrAuthorization ErrorCode = "NotAuthorization"
 )
 
 const (
