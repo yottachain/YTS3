@@ -2,12 +2,12 @@ package yts3
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"github.com/yottachain/YTCoreService/env"
 	"net/http"
 	"strings"
-
-	"github.com/yottachain/YTCoreService/env"
 )
 
 func (g *Yts3) routeBase(w http.ResponseWriter, r *http.Request) {
