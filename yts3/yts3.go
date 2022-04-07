@@ -237,6 +237,14 @@ func listBucketPageFromQuery(query url.Values) (page ListBucketPage, rerr error)
 }
 
 func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *http.Request) (err error) {
+	var counter *int32 = new(int32)
+	count := atomic.AddInt32(counter, 1)
+	defer atomic.AddInt32(counter, -1)
+	logrus.Infof("CreateObject request number: %d\n", count)
+	if count > 50 {
+		return errors.New("CreateObject request too frequently.\n")
+	}
+
 	logrus.Infof("CREATE OBJECT:%s %s\n", bucket, object)
 	Authorization := r.Header.Get("Authorization")
 	if Authorization == "" {
@@ -477,6 +485,13 @@ func (g *Yts3) hostBucketMiddleware(handler http.Handler) http.Handler {
 }
 
 func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.ResponseWriter, r *http.Request) error {
+	var counter *int32 = new(int32)
+	count := atomic.AddInt32(counter, 1)
+	defer atomic.AddInt32(counter, -1)
+	logrus.Infof("getObject request number: %d\n", count)
+	if count > 50 {
+		return errors.New("getObject request too frequently.\n")
+	}
 	env.TracePanic("getObject")
 	logrus.Infof("GET OBJECT\n")
 	logrus.Infof("Bucket:%s\n", bucket)
@@ -561,7 +576,13 @@ func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.Resp
 }
 
 func (g *Yts3) headObject(bucket, object string, versionID VersionID, w http.ResponseWriter, r *http.Request) error {
-
+	var counter *int32 = new(int32)
+	count := atomic.AddInt32(counter, 1)
+	defer atomic.AddInt32(counter, -1)
+	logrus.Infof("headObject request number: %d\n", count)
+	if count > 50 {
+		return errors.New("headObject request too frequently.\n")
+	}
 	logrus.Infof("HEAD OBJECT\n")
 	logrus.Infof("Bucket:%s\n", bucket)
 	logrus.Infof("└── Object:%s\n", object)
@@ -762,6 +783,13 @@ func ErrorResultFromError(err error) ErrorResult {
 }
 
 func (g *Yts3) deleteObject(bucket, object string, w http.ResponseWriter, r *http.Request) error {
+	var counter *int32 = new(int32)
+	count := atomic.AddInt32(counter, 1)
+	defer atomic.AddInt32(counter, -1)
+	logrus.Infof("deleteObject request number: %d\n", count)
+	if count > 50 {
+		return errors.New("deleteObject request too frequently.\n")
+	}
 	logrus.Infof("DELETE:%s%s\n", bucket, object)
 	Authorization := r.Header.Get("Authorization")
 	if Authorization == "" {

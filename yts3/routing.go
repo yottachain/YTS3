@@ -4,10 +4,12 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/yottachain/YTCoreService/env"
 	"net/http"
 	"strings"
+	"sync/atomic"
+
+	"github.com/sirupsen/logrus"
+	"github.com/yottachain/YTCoreService/env"
 )
 
 func (g *Yts3) routeBase(w http.ResponseWriter, r *http.Request) {
@@ -42,6 +44,15 @@ func (g *Yts3) routeBase(w http.ResponseWriter, r *http.Request) {
 		//logrus.Infof("Content-Length:::::::::::::::::%s\n",r.Header.Get("Content-Length"))
 		//logrus.Infof("ContentLength:::::::::::::::::%s\n",r.Header.Get("ContentLength"))
 		//object = parts[1]
+	}
+
+	var counter *int32 = new(int32)
+
+	count := atomic.AddInt32(counter, 1)
+	defer atomic.AddInt32(counter, -1)
+	logrus.Infof("total request: %d\n", count)
+	if count > 100 {
+		return
 	}
 
 	//hdr.Set("Content-Length", r.Header.Get("Content-Length"))

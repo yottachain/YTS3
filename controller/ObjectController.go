@@ -66,6 +66,9 @@ func listObjects(publicKey, buck, fileName, prefix string, wversion bool, nVerid
 
 	item := ObjectItem{}
 	c := api.GetClient(publicKey)
+	if c == nil {
+		logrus.Error("pubilic is null.\n")
+	}
 
 	objectAccessor := c.NewObjectAccessor()
 
@@ -103,6 +106,10 @@ func GetFileBlockDetails(g *gin.Context) {
 	publicKey := g.Query("publicKey")
 	content := publicKey[3:]
 	c := api.GetClient(content)
+	if c == nil {
+		logrus.Error("public is null.\n")
+		return
+	}
 	info, err := c.NewObjectMeta(bucketName, fileName, primitive.NilObjectID)
 
 	if err != nil {

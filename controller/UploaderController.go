@@ -29,6 +29,10 @@ func UploadFile(g *gin.Context) {
 	filename = filepath.Base(files)
 	content := publicKey[3:]
 	c := api.GetClient(content)
+	if c == nil {
+		logrus.Error("pubilic is null.\n")
+		return
+	}
 
 	//根据路径上传文件
 	upload := c.NewUploadObject()
@@ -76,6 +80,10 @@ func GetProgress(g *gin.Context) {
 	fileName := g.Query("fileName")
 	content := publicKey[3:]
 	c := api.GetClient(content)
+	if c == nil {
+		logrus.Error("pubilic is null.\n")
+		return
+	}
 
 	ii := c.GetProgress(bucketName, fileName)
 	// ii := getUploadProgress(bucketName, fileName, publicKey)

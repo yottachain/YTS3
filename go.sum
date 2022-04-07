@@ -561,6 +561,8 @@ github.com/yottachain/YTCoreService v0.0.0-20211227024951-d68e183fd64d h1:Xkupfk
 github.com/yottachain/YTCoreService v0.0.0-20211227024951-d68e183fd64d/go.mod h1:8R90U1A/mJdzLgUuFvUoW5h7W2C0Q6zazsYP8lKBjiA=
 github.com/yottachain/YTCoreService v0.0.0-20220403095519-b8a36776c68a h1:IFkxmV5o5GNfvZUx0drgyD8JQxoWeUMKhoCEmj4D2PQ=
 github.com/yottachain/YTCoreService v0.0.0-20220403095519-b8a36776c68a/go.mod h1:jccqTtlMMrp94Z6Ia6dsN1in3aeYxN0VWdjyBrNMXgU=
+github.com/yottachain/YTCoreService v0.0.0-20220405012904-32a84dbba9c0 h1:DSyBD5x9fD5GVbssG50Cm5BUy0lvcy3lsQAJu7arR0A=
+github.com/yottachain/YTCoreService v0.0.0-20220405012904-32a84dbba9c0/go.mod h1:jccqTtlMMrp94Z6Ia6dsN1in3aeYxN0VWdjyBrNMXgU=
 github.com/yottachain/YTCrypto v0.0.0-20200122165219-0ea35dc29812 h1:XG9TtLosanLdwqSoporMr8OASUOjxuaj6cJDlut1c9s=
 github.com/yottachain/YTCrypto v0.0.0-20200122165219-0ea35dc29812/go.mod h1:jDJUVGeQ1clW7k9OTRBAFtCMwGs9B9fGQ9QY64SKqlk=
 github.com/yottachain/YTDNMgmt v0.0.0-20211226032700-2fce14c869af h1:UukR11PVc8JGxTzrOsKZdQ3CW+cxUGbxzXI42pvbSow=
