@@ -12,6 +12,8 @@ import (
 	"github.com/yottachain/YTCoreService/env"
 )
 
+var RequestNum *int32 = new(int32)
+
 func (g *Yts3) routeBase(w http.ResponseWriter, r *http.Request) {
 	//defer env.TracePanic("routeBase")
 	defer func() {
@@ -46,11 +48,9 @@ func (g *Yts3) routeBase(w http.ResponseWriter, r *http.Request) {
 		//object = parts[1]
 	}
 
-	var counter *int32 = new(int32)
-
-	count := atomic.AddInt32(counter, 1)
-	defer atomic.AddInt32(counter, -1)
-	logrus.Infof("total request: %d\n", count)
+	count := atomic.AddInt32(RequestNum, 1)
+	defer atomic.AddInt32(RequestNum, -1)
+	logrus.Infof("All Request Number: %d\n", count)
 	if count > 100 {
 		return
 	}

@@ -121,10 +121,11 @@ func (g *Yts3) getBucketLocation(bucketName string, w http.ResponseWriter, r *ht
 	return g.xmlEncoder(w).Encode(result)
 }
 
+var ListBucketNum *int32 = new(int32)
+
 func (g *Yts3) listBucket(bucketName string, w http.ResponseWriter, r *http.Request) error {
-	var counter *int32 = new(int32)
-	count := atomic.AddInt32(counter, 1)
-	defer atomic.AddInt32(counter, -1)
+	count := atomic.AddInt32(ListBucketNum, 1)
+	defer atomic.AddInt32(ListBucketNum, -1)
 	logrus.Infof("listBucket request number: %d\n", count)
 	if count > 2 {
 		return errors.New("listBucket request too frequently.\n")
@@ -243,10 +244,11 @@ func listBucketPageFromQuery(query url.Values) (page ListBucketPage, rerr error)
 	return page, nil
 }
 
+var CreateObjectNum *int32 = new(int32)
+
 func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *http.Request) (err error) {
-	var counter *int32 = new(int32)
-	count := atomic.AddInt32(counter, 1)
-	defer atomic.AddInt32(counter, -1)
+	count := atomic.AddInt32(CreateObjectNum, 1)
+	defer atomic.AddInt32(CreateObjectNum, -1)
 	logrus.Infof("CreateObject request number: %d\n", count)
 	if count > 50 {
 		return errors.New("CreateObject request too frequently.\n")
@@ -491,10 +493,11 @@ func (g *Yts3) hostBucketMiddleware(handler http.Handler) http.Handler {
 	})
 }
 
+var GetObjectNum *int32 = new(int32)
+
 func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.ResponseWriter, r *http.Request) error {
-	var counter *int32 = new(int32)
-	count := atomic.AddInt32(counter, 1)
-	defer atomic.AddInt32(counter, -1)
+	count := atomic.AddInt32(GetObjectNum, 1)
+	defer atomic.AddInt32(GetObjectNum, -1)
 	logrus.Infof("getObject request number: %d\n", count)
 	if count > 50 {
 		return errors.New("getObject request too frequently.\n")
@@ -582,10 +585,11 @@ func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.Resp
 	return nil
 }
 
+var HeadObjectNum *int32 = new(int32)
+
 func (g *Yts3) headObject(bucket, object string, versionID VersionID, w http.ResponseWriter, r *http.Request) error {
-	var counter *int32 = new(int32)
-	count := atomic.AddInt32(counter, 1)
-	defer atomic.AddInt32(counter, -1)
+	count := atomic.AddInt32(HeadObjectNum, 1)
+	defer atomic.AddInt32(HeadObjectNum, -1)
 	logrus.Infof("headObject request number: %d\n", count)
 	if count > 50 {
 		return errors.New("headObject request too frequently.\n")
@@ -789,10 +793,11 @@ func ErrorResultFromError(err error) ErrorResult {
 	}
 }
 
+var DeleteObjectNum *int32 = new(int32)
+
 func (g *Yts3) deleteObject(bucket, object string, w http.ResponseWriter, r *http.Request) error {
-	var counter *int32 = new(int32)
-	count := atomic.AddInt32(counter, 1)
-	defer atomic.AddInt32(counter, -1)
+	count := atomic.AddInt32(DeleteObjectNum, 1)
+	defer atomic.AddInt32(DeleteObjectNum, -1)
 	logrus.Infof("deleteObject request number: %d\n", count)
 	if count > 50 {
 		return errors.New("deleteObject request too frequently.\n")
