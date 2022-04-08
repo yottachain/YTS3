@@ -141,6 +141,7 @@ func s3StopServer() {
 func s3StartServer() {
 	flag.Parse()
 	api.StartApi()
+	env.SetLimit()
 
 	go func() {
 

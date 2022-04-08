@@ -24,6 +24,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+var SyncFileMin int = 2 * 1024 * 1024
 var (
 	emptyPrefix = &yts3.Prefix{}
 	//RegDb init
@@ -227,7 +228,7 @@ func objectExists(publicKey, bucket, objectKey string) (exists bool) {
 }
 
 //PutObject upload file
-func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[string]string, input io.Reader, size int64) (result yts3.PutObjectResult, err error) {
+func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[string]string, input io.Reader, size int64, putObjectNum int32) (result yts3.PutObjectResult, err error) {
 
 	//isExist := objectExists(publicKey, bucketName, objectName)
 
@@ -276,7 +277,9 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 	var bts []byte
 	var header map[string]string
 	header = make(map[string]string)
-	if size >= 10485760 {
+	SyncFileMin = env.GetConfig().GetRangeInt("SyncFileMin", 2, 10, 5)
+	SyncFileMin = SyncFileMin * 1024 * 1024
+	if size >= int64(SyncFileMin) {
 
 		errw := writeCacheFile(directory, objectName, input)
 		if errw != nil {
@@ -308,7 +311,7 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 	}
 	item.metadata["ETag"] = item.etag
 
-	if size < 10485760 {
+	if size < int64(SyncFileMin) {
 		if size > 0 {
 			// err1 := upload.UploadBytes(item.body)
 			md5Hash, err1 := c.UploadBytes(item.body, bucketName, objectName)

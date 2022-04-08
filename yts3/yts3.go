@@ -345,7 +345,7 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 			return
 		}
 	} else {
-		result, err := g.storage.PutObject(content, bucket, object, meta, rdr, size)
+		result, err := g.storage.PutObject(content, bucket, object, meta, rdr, size, count)
 		if err != nil {
 			return err
 		}
@@ -705,7 +705,15 @@ func (g *Yts3) deleteMulti(bucket string, w http.ResponseWriter, r *http.Request
 	return g.xmlEncoder(w).Encode(out)
 }
 
+var CreateObjectBrowserNum *int32 = new(int32)
+
 func (g *Yts3) createObjectBrowserUpload(bucket string, w http.ResponseWriter, r *http.Request) error {
+	count := atomic.AddInt32(CreateObjectBrowserNum, 1)
+	defer atomic.AddInt32(CreateObjectBrowserNum, -1)
+	logrus.Infof("createObjectBrowserUpload request number: %d\n", count)
+	if count > 50 {
+		return errors.New("createObjectBrowserUpload request too frequently.\n")
+	}
 	logrus.Infof("CREATE OBJECT THROUGH BROWSER UPLOAD\n")
 	Authorization := r.Header.Get("Authorization")
 	if Authorization == "" {
@@ -759,7 +767,7 @@ func (g *Yts3) createObjectBrowserUpload(bucket string, w http.ResponseWriter, r
 		return err
 	}
 
-	result, err := g.storage.PutObject(content, bucket, key, meta, rdr, fileHeader.Size)
+	result, err := g.storage.PutObject(content, bucket, key, meta, rdr, fileHeader.Size, count)
 	if err != nil {
 		return err
 	}
@@ -1127,7 +1135,16 @@ func (g *Yts3) ensureBucketExists(bucket string) error {
 	return nil
 }
 
+var CopyObjectNum *int32 = new(int32)
+
 func (g *Yts3) copyObject(bucket, object string, meta map[string]string, w http.ResponseWriter, r *http.Request) (err error) {
+	count := atomic.AddInt32(CopyObjectNum, 1)
+	defer atomic.AddInt32(CopyObjectNum, -1)
+	logrus.Infof("CopyObject request number: %d\n", count)
+	if count > 50 {
+		return errors.New("CopyObject request too frequently.\n")
+	}
+
 	source := meta["X-Amz-Copy-Source"]
 	logrus.Infof("└── COPY: %s\n", source)
 	Authorization := r.Header.Get("Authorization")
@@ -1169,7 +1186,7 @@ func (g *Yts3) copyObject(bucket, object string, meta map[string]string, w http.
 		}
 	}
 
-	result, err := g.storage.PutObject(content, bucket, object, meta, srcObj.Contents, srcObj.Size)
+	result, err := g.storage.PutObject(content, bucket, object, meta, srcObj.Contents, srcObj.Size, count)
 	if err != nil {
 		return err
 	}
