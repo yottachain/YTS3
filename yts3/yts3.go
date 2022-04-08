@@ -895,12 +895,13 @@ func (g *Yts3) putMultipartUploadPart(bucket, object string, uploadID UploadID, 
 		contentNew := content[:publicKeyLength]
 		content = contentNew
 	}
+	/*
+		isExist := objectExists(content, bucket, object)
 
-	isExist := objectExists(content, bucket, object)
-
-	if isExist == true {
-		return ErrNotImplemented
-	}
+		if isExist == true {
+			return ErrNotImplemented
+		}
+	*/
 
 	partNumber, err := strconv.ParseInt(r.URL.Query().Get("partNumber"), 10, 0)
 	if err != nil || partNumber <= 0 || partNumber > MaxUploadPartNumber {
