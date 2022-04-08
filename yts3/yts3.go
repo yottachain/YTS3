@@ -111,7 +111,7 @@ func (g *Yts3) listBuckets(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (g *Yts3) getBucketLocation(bucketName string, w http.ResponseWriter, r *http.Request) error {
-	logrus.Infof("GET BUCKET LOCATION")
+	logrus.Infof("GET BUCKET LOCATION\n")
 
 	result := GetBucketLocation{
 		Xmlns:              "http://s3.amazonaws.com/doc/2006-03-01/",
@@ -122,6 +122,13 @@ func (g *Yts3) getBucketLocation(bucketName string, w http.ResponseWriter, r *ht
 }
 
 func (g *Yts3) listBucket(bucketName string, w http.ResponseWriter, r *http.Request) error {
+	var counter *int32 = new(int32)
+	count := atomic.AddInt32(counter, 1)
+	defer atomic.AddInt32(counter, -1)
+	logrus.Infof("listBucket request number: %d\n", count)
+	if count > 2 {
+		return errors.New("listBucket request too frequently.\n")
+	}
 	logrus.Infof("LIST BUCKET\n")
 	Authorization := r.Header.Get("Authorization")
 	if Authorization == "" {
