@@ -51,7 +51,7 @@ func (g *Yts3) routeBase(w http.ResponseWriter, r *http.Request) {
 	count := atomic.AddInt32(RequestNum, 1)
 	defer atomic.AddInt32(RequestNum, -1)
 	logrus.Infof("All Request Number: %d\n", count)
-	if count > 100 {
+	if count > int32(env.GetConfig().GetInt("RequestMaxNum", 1000)) {
 		return
 	}
 
