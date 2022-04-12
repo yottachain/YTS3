@@ -632,9 +632,11 @@ func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.Resp
 		return err
 	}
 
+	logrus.Infof("[GetObjectV2]content length:%d\n", obj.Size)
 	obj.Range.writeHeader(obj.Size, w)
 
 	if _, err := io.Copy(w, obj.Contents); err != nil {
+		logrus.Errorf("[GetObjectV2]Write err:%s\n", err)
 		return err
 	}
 
