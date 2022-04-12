@@ -142,16 +142,62 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 				db = RegDb
 			}
 		}
-		/*
-			v, _ := UserAllBucketsCACHE.Get(publicKey)
-			// logrus.Infof("found::::", found)
-			// logrus.Infof("value::", v)
-			RegDb = v.(*Backend)
+	}
+	var response = yts3.NewObjectList()
+	c := api.GetClient(publicKey)
+	if c == nil {
+		return nil, yts3.ResourceError(yts3.ErrInvalidAccessKeyID, "YTA"+publicKey)
+	}
+	objectAccessor := c.NewObjectAccessor()
+	startFile := ""
+	if page.HasMarker {
+		startFile = page.Marker
+	}
+	pfix := ""
+	if prefix.HasPrefix {
+		pfix = prefix.Prefix
+	}
+	items, err := objectAccessor.ListObject(name, startFile, pfix, false, primitive.NilObjectID, uint32(page.MaxKeys))
+	if err != nil {
+		return response, fmt.Errorf(err.String())
+	}
+	logrus.Infof("[ListBucket]Response %d items\n", len(items))
+	lastFile := ""
+	num := 0
+	for _, v := range items {
+		num++
+		meta, err := api.BytesToFileMetaMap(v.Meta, primitive.ObjectID{})
+		if err != nil {
+			logrus.Warnf("[ListBucket]ERR meta,filename:%s\n", v.FileName)
+			continue
+		}
+		t := time.Unix(v.FileId.Timestamp().Unix(), 0)
+		meta["x-amz-meta-s3b-last-modified"] = t.Format("20060102T150405Z")
+		content := getContentByMeta(meta)
+		content.Key = v.FileName
+		content.Owner = &yts3.UserInfo{
+			ID:          c.Username,
+			DisplayName: c.Username,
+		}
+		response.Contents = append(response.Contents, content)
+		lastFile = v.FileName
+	}
+	if int64(num) >= page.MaxKeys {
+		response.NextMarker = lastFile
+		response.IsTruncated = true
+	}
+	return response, nil
+}
 
-			if RegDb != nil {
+func (db *Backend) ListBucketOld(publicKey, name string, prefix *yts3.Prefix, page yts3.ListBucketPage) (*yts3.ObjectList, error) {
+	db.Lock.RLock()
+	defer db.Lock.RUnlock()
+	if len(db.buckets) == 0 {
+		if v, has := UserAllBucketsCACHE.Get(publicKey); has {
+			if RegDb, ok := v.(*Backend); ok {
 				db = RegDb
 			}
-		*/
+		}
 	}
 	var response = yts3.NewObjectList()
 	c := api.GetClient(publicKey)

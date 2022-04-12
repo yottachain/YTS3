@@ -81,7 +81,7 @@ func GetBetweenStr(str, start, end string) string {
 func (g *Yts3) listBuckets(w http.ResponseWriter, r *http.Request) error {
 	Authorization := r.Header.Get("Authorization")
 	if Authorization == "" {
-		logrus.Error("ErrAuthorization: %s\n", ErrAuthorization)
+		logrus.Error("[listBuckets]ErrAuthorization\n")
 		return ErrAuthorization
 	}
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
@@ -126,6 +126,79 @@ var ListBucketNum *int32 = new(int32)
 func (g *Yts3) listBucket(bucketName string, w http.ResponseWriter, r *http.Request) error {
 	count := atomic.AddInt32(ListBucketNum, 1)
 	defer atomic.AddInt32(ListBucketNum, -1)
+	if count > 2 {
+		return errors.New("listBucket request too frequently")
+	}
+	Authorization := r.Header.Get("Authorization")
+	if Authorization == "" {
+		logrus.Error("[ListBucket]ErrAuthorization\n")
+		return ErrAuthorization
+	}
+	publicKey := GetBetweenStr(Authorization, "YTA", "/")
+	content := publicKey[3:]
+	if len(content) > 50 {
+		publicKeyLength := strings.Index(content, ":")
+		contentNew := content[:publicKeyLength]
+		content = contentNew
+	}
+	q := r.URL.Query()
+	prefix := prefixFromQuery(q)
+	page, err := listBucketPageFromQuery(q)
+	if err != nil {
+		return err
+	}
+	if page.MaxKeys > 10000 {
+		page.MaxKeys = 10000
+		//return ErrInternalPageNotImplemented
+	}
+	isVersion2 := q.Get("list-type") == "2"
+	logrus.Infof("[ListBucket]Request bucketname:%s,prefix:%s,Marker:%s,HasMarker:%v,MaxKeys:%d\n", bucketName, prefix, page.Marker, page.HasMarker, page.MaxKeys)
+	objects, err := g.storage.ListBucket(content, bucketName, &prefix, page)
+	if err != nil {
+		return err
+	}
+	base := ListBucketResultBase{
+		Xmlns:          "http://s3.amazonaws.com/doc/2006-03-01/",
+		Name:           bucketName,
+		CommonPrefixes: objects.CommonPrefixes,
+		Contents:       objects.Contents,
+		IsTruncated:    objects.IsTruncated,
+		Delimiter:      prefix.Delimiter,
+		Prefix:         prefix.Prefix,
+		MaxKeys:        page.MaxKeys,
+	}
+	if !isVersion2 {
+		var result = &ListBucketResult{
+			ListBucketResultBase: base,
+			Marker:               page.Marker,
+		}
+		if objects.NextMarker != "" {
+			result.NextMarker = objects.NextMarker
+		}
+		return g.xmlEncoder(w).Encode(result)
+
+	} else {
+		var result = &ListBucketResultV2{
+			ListBucketResultBase: base,
+			KeyCount:             int64(len(objects.CommonPrefixes) + len(objects.Contents)),
+			StartAfter:           q.Get("start-after"),
+			ContinuationToken:    q.Get("continuation-token"),
+		}
+		if objects.NextMarker != "" {
+			result.NextContinuationToken = base64.URLEncoding.EncodeToString([]byte(objects.NextMarker))
+		}
+		if _, ok := q["fetch-owner"]; !ok {
+			for _, v := range result.Contents {
+				v.Owner = nil
+			}
+		}
+		return g.xmlEncoder(w).Encode(result)
+	}
+}
+
+func (g *Yts3) listBucketOld(bucketName string, w http.ResponseWriter, r *http.Request) error {
+	count := atomic.AddInt32(ListBucketNum, 1)
+	defer atomic.AddInt32(ListBucketNum, -1)
 	logrus.Infof("listBucket request number: %d\n", count)
 	if count > 2 {
 		return errors.New("listBucket request too frequently.\n")
@@ -133,7 +206,7 @@ func (g *Yts3) listBucket(bucketName string, w http.ResponseWriter, r *http.Requ
 	logrus.Infof("LIST BUCKET\n")
 	Authorization := r.Header.Get("Authorization")
 	if Authorization == "" {
-		logrus.Error("ErrAuthorization: %s\n", ErrAuthorization)
+		logrus.Error("[listBucektOld]ErrAuthorization\n")
 		return ErrAuthorization
 	}
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
@@ -257,7 +330,7 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 	logrus.Infof("CREATE OBJECT:%s %s\n", bucket, object)
 	Authorization := r.Header.Get("Authorization")
 	if Authorization == "" {
-		logrus.Error("ErrAuthorization: %s\n", ErrAuthorization)
+		logrus.Error("[createObject]ErrAuthorization\n")
 		return ErrAuthorization
 	}
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
@@ -364,7 +437,7 @@ func (g *Yts3) createBucket(bucket string, w http.ResponseWriter, r *http.Reques
 	logrus.Infof("CREATE BUCKET:%s\n", bucket)
 	Authorization := r.Header.Get("Authorization")
 	if Authorization == "" {
-		logrus.Error("ErrAuthorization: %s\n", ErrAuthorization)
+		logrus.Error("[createBucket]ErrAuthorization\n")
 		return ErrAuthorization
 	}
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
@@ -511,7 +584,7 @@ func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.Resp
 	// debug 调试用
 	if Authorization == "" {
 		logrus.Infof("publicKey is null.\n")
-		logrus.Error("ErrAuthorization: %s\n", ErrAuthorization)
+		logrus.Error("[getObject]ErrAuthorization\n")
 		return ErrAuthorization
 		// return
 	}
@@ -599,7 +672,7 @@ func (g *Yts3) headObject(bucket, object string, versionID VersionID, w http.Res
 	logrus.Infof("└── Object:%s\n", object)
 	Authorization := r.Header.Get("Authorization")
 	if Authorization == "" {
-		logrus.Error("ErrAuthorization: %s\n", ErrAuthorization)
+		logrus.Error("[headObject]ErrAuthorization\n")
 		return ErrAuthorization
 	}
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
@@ -670,7 +743,7 @@ func (g *Yts3) deleteMulti(bucket string, w http.ResponseWriter, r *http.Request
 	logrus.Infof("delete multi : %s\n", bucket)
 	Authorization := r.Header.Get("Authorization")
 	if Authorization == "" {
-		logrus.Error("ErrAuthorization: %s\n", ErrAuthorization)
+		logrus.Error("[delteMulti]ErrAuthorization\n")
 		return ErrAuthorization
 	}
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
@@ -717,7 +790,7 @@ func (g *Yts3) createObjectBrowserUpload(bucket string, w http.ResponseWriter, r
 	logrus.Infof("CREATE OBJECT THROUGH BROWSER UPLOAD\n")
 	Authorization := r.Header.Get("Authorization")
 	if Authorization == "" {
-		logrus.Error("ErrAuthorization: %s\n", ErrAuthorization)
+		logrus.Error("[createObjectBrowserUpload]ErrAuthorization\n")
 		return ErrAuthorization
 	}
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
@@ -813,7 +886,7 @@ func (g *Yts3) deleteObject(bucket, object string, w http.ResponseWriter, r *htt
 	logrus.Infof("DELETE:%s%s\n", bucket, object)
 	Authorization := r.Header.Get("Authorization")
 	if Authorization == "" {
-		logrus.Error("ErrAuthorization: %s\n", ErrAuthorization)
+		logrus.Error("[deleteObject]ErrAuthorization\n")
 		return ErrAuthorization
 	}
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
@@ -847,7 +920,7 @@ func (g *Yts3) deleteBucket(bucket string, w http.ResponseWriter, r *http.Reques
 	logrus.Infof("DELETE BUCKET:%s\n", bucket)
 	Authorization := r.Header.Get("Authorization")
 	if Authorization == "" {
-		logrus.Error("ErrAuthorization: %s\n", ErrAuthorization)
+		logrus.Error("[deleteBucket]ErrAuthorization\n")
 		return ErrAuthorization
 	}
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
@@ -905,7 +978,7 @@ func (g *Yts3) putMultipartUploadPart(bucket, object string, uploadID UploadID, 
 
 	Authorization := r.Header.Get("Authorization")
 	if Authorization == "" {
-		logrus.Error("ErrAuthorization: %s\n", ErrAuthorization)
+		logrus.Error("[putMultipartUploadPart]ErrAuthorization\n")
 		return ErrAuthorization
 	}
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
@@ -978,7 +1051,7 @@ func (g *Yts3) completeMultipartUpload(bucket, object string, uploadID UploadID,
 	logrus.Infof("complete multipart upload %s %s %s\n", bucket, object, uploadID)
 	Authorization := r.Header.Get("Authorization")
 	if Authorization == "" {
-		logrus.Error("ErrAuthorization: %s\n", ErrAuthorization)
+		logrus.Error("[completeMultipartUpload]ErrAuthorization\n")
 		return ErrAuthorization
 	}
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
@@ -1149,7 +1222,7 @@ func (g *Yts3) copyObject(bucket, object string, meta map[string]string, w http.
 	logrus.Infof("└── COPY: %s\n", source)
 	Authorization := r.Header.Get("Authorization")
 	if Authorization == "" {
-		logrus.Error("ErrAuthorization: %s\n", ErrAuthorization)
+		logrus.Error("[copyObject]ErrAuthorization\n")
 		return ErrAuthorization
 	}
 	publicKey := GetBetweenStr(Authorization, "YTA", "/")
