@@ -572,7 +572,7 @@ func (g *Yts3) getObject(bucket, object string, versionID VersionID, w http.Resp
 	count := atomic.AddInt32(GetObjectNum, 1)
 	defer atomic.AddInt32(GetObjectNum, -1)
 	logrus.Infof("getObject request number: %d\n", count)
-	if count > 50 {
+	if count > 10 {
 		return errors.New("getObject request too frequently.\n")
 	}
 	env.TracePanic("getObject")
@@ -664,7 +664,7 @@ func (g *Yts3) headObject(bucket, object string, versionID VersionID, w http.Res
 	count := atomic.AddInt32(HeadObjectNum, 1)
 	defer atomic.AddInt32(HeadObjectNum, -1)
 	logrus.Infof("headObject request number: %d\n", count)
-	if count > 50 {
+	if count > 10 {
 		return errors.New("headObject request too frequently.\n")
 	}
 	logrus.Infof("HEAD OBJECT\n")
