@@ -403,7 +403,7 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 		// 	return
 		// }
 	}
-
+	//AddItemMetaTocache(publicKey, bucketName, objectName, item)
 	// if size >= 10485760 {
 	// 	filePath := directory + "/" + objectName
 	// 	deleteCacheFile(filePath)
