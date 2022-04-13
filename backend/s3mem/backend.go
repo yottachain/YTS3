@@ -323,7 +323,7 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 	var bts []byte
 	var header map[string]string
 	header = make(map[string]string)
-	SyncFileMin = env.GetConfig().GetRangeInt("SyncFileMin", 2, 10, 5)
+	SyncFileMin = env.GetConfig().GetRangeInt("SyncFileMin", 1, 10, 2)
 	SyncFileMin = SyncFileMin * 1024 * 1024
 	if size >= int64(SyncFileMin) {
 
@@ -360,7 +360,8 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 	if size < int64(SyncFileMin) {
 		if size > 0 {
 			// err1 := upload.UploadBytes(item.body)
-			md5Hash, err1 := c.UploadBytes(item.body, bucketName, objectName)
+			md5Hash, err1 := c.SyncUploadBytes(item.body, bucketName, objectName)
+			//md5Hash, err1 := c.UploadBytes(item.body, bucketName, objectName)
 			if err1 != nil {
 				logrus.Printf("ERR:%s\n", err1)
 				return
