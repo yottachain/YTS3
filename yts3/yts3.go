@@ -24,8 +24,6 @@ import (
 	"github.com/yottachain/YTCoreService/env"
 )
 
-var MaxCreateObjNum int = 50
-
 type Yts3 struct {
 	storage                 Backend
 	versioned               VersionedBackend
@@ -322,12 +320,10 @@ func listBucketPageFromQuery(query url.Values) (page ListBucketPage, rerr error)
 var CreateObjectNum *int32 = new(int32)
 
 func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *http.Request) (err error) {
-	MaxCreateObjNum = env.GetConfig().GetRangeInt("MaxCreateObjNum", 20, 100, 50)
 	count := atomic.AddInt32(CreateObjectNum, 1)
 	defer atomic.AddInt32(CreateObjectNum, -1)
 	logrus.Infof("CreateObject request number: %d\n", count)
-	if count > int32(MaxCreateObjNum) {
-		logrus.Error("CreateObject request too frequently.\n")
+	if count > 50 {
 		return errors.New("CreateObject request too frequently.\n")
 	}
 

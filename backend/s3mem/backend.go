@@ -79,8 +79,8 @@ func New(opts ...Option) *Backend {
 
 //ListBuckets s3 list all buckets
 func (db *Backend) ListBuckets(publicKey string) ([]yts3.BucketInfo, error) {
-	//db.Lock.RLock()
-	//defer db.Lock.RUnlock()
+	db.Lock.RLock()
+	defer db.Lock.RUnlock()
 	c := api.GetClient(publicKey)
 	if c == nil {
 		return nil, yts3.ResourceError(yts3.ErrInvalidAccessKeyID, "YTA"+publicKey)
@@ -134,8 +134,8 @@ func getContentByMeta(meta map[string]string) *yts3.Content {
 
 //ListBucket s3 listObjects
 func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page yts3.ListBucketPage) (*yts3.ObjectList, error) {
-	//db.Lock.RLock()
-	//defer db.Lock.RUnlock()
+	db.Lock.RLock()
+	defer db.Lock.RUnlock()
 	if len(db.buckets) == 0 {
 		if v, has := UserAllBucketsCACHE.Get(publicKey); has {
 			if RegDb, ok := v.(*Backend); ok {
@@ -190,8 +190,8 @@ func (db *Backend) ListBucket(publicKey, name string, prefix *yts3.Prefix, page 
 }
 
 func (db *Backend) ListBucketOld(publicKey, name string, prefix *yts3.Prefix, page yts3.ListBucketPage) (*yts3.ObjectList, error) {
-	//db.Lock.RLock()
-	//defer db.Lock.RUnlock()
+	db.Lock.RLock()
+	defer db.Lock.RUnlock()
 	if len(db.buckets) == 0 {
 		if v, has := UserAllBucketsCACHE.Get(publicKey); has {
 			if RegDb, ok := v.(*Backend); ok {
@@ -251,8 +251,8 @@ func (db *Backend) ListBucketOld(publicKey, name string, prefix *yts3.Prefix, pa
 
 //BucketExists BucketExists
 func (db *Backend) BucketExists(name string) (exists bool, err error) {
-	//db.Lock.RLock()
-	//defer db.Lock.RUnlock()
+	db.Lock.RLock()
+	defer db.Lock.RUnlock()
 
 	return db.buckets[name] != nil, nil
 }
@@ -274,7 +274,7 @@ func objectExists(publicKey, bucket, objectKey string) (exists bool) {
 }
 
 //PutObject upload file
-func (me *Backend) PutObject(publicKey, bucketName, objectName string, meta map[string]string, input io.Reader, size int64, putObjectNum int32) (result yts3.PutObjectResult, err error) {
+func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[string]string, input io.Reader, size int64, putObjectNum int32) (result yts3.PutObjectResult, err error) {
 
 	//isExist := objectExists(publicKey, bucketName, objectName)
 
@@ -282,15 +282,22 @@ func (me *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 	//	return result, yts3.ErrNotImplemented
 	//}
 
-	//db.Lock.Lock()
-	//defer db.Lock.Unlock()
-	db := me
+	db.Lock.Lock()
+	defer db.Lock.Unlock()
 	if len(db.buckets) == 0 {
 		if v, has := UserAllBucketsCACHE.Get(publicKey); has {
 			if RegDb, ok := v.(*Backend); ok {
 				db = RegDb
 			}
 		}
+		/*
+			v, _ := UserAllBucketsCACHE.Get(publicKey)
+			RegDb = v.(*Backend)
+
+			if RegDb != nil {
+				db = RegDb
+			}
+		*/
 	}
 	bucket := db.buckets[bucketName]
 	if bucket == nil {
@@ -616,8 +623,8 @@ func (db *Backend) DeleteMulti(publicKey, bucketName string, objects ...string) 
 }
 
 func (db *Backend) HeadObjectOld(publicKey, bucketName, objectName string) (*yts3.Object, error) {
-	//db.Lock.RLock()
-	//defer db.Lock.RUnlock()
+	db.Lock.RLock()
+	defer db.Lock.RUnlock()
 	if len(db.buckets) == 0 {
 		if v, has := UserAllBucketsCACHE.Get(publicKey); has {
 			if RegDb, ok := v.(*Backend); ok {
@@ -669,8 +676,8 @@ func (cr *ContentReader) Read(buf []byte) (int, error) {
 }
 
 func (db *Backend) GetObjectV2Old(publicKey, bucketName, objectName string, rangeRequest *yts3.ObjectRangeRequest, prefix *yts3.Prefix, page yts3.ListBucketPage) (*yts3.Object, error) {
-	//db.Lock.RLock()
-	//defer db.Lock.RUnlock()
+	db.Lock.RLock()
+	defer db.Lock.RUnlock()
 
 	isExistObject := objectExists(publicKey, bucketName, objectName)
 	if isExistObject {
@@ -751,8 +758,8 @@ func (db *Backend) GetObjectV2Old(publicKey, bucketName, objectName string, rang
 }
 
 func (db *Backend) GetObjectOld(publicKey, bucketName, objectName string, rangeRequest *yts3.ObjectRangeRequest) (*yts3.Object, error) {
-	//db.Lock.RLock()
-	//defer db.Lock.RUnlock()
+	db.Lock.RLock()
+	defer db.Lock.RUnlock()
 
 	isExistObject := objectExists(publicKey, bucketName, objectName)
 	if isExistObject {
