@@ -44,7 +44,6 @@ type Backend interface {
 	ListBuckets(publicKey string) ([]BucketInfo, error)
 	ListBucket(publicKey, name string, prefix *Prefix, page ListBucketPage) (*ObjectList, error)
 	CreateBucket(publicKey, name string) error
-	BucketExists(name string) (exists bool, err error)
 	DeleteMulti(publicKey, bucketName string, objects ...string) (MultiDeleteResult, error)
 	PutObject(publicKey, bucketName, key string, meta map[string]string, input io.Reader, size int64, requestNum int32) (PutObjectResult, error)
 	MultipartUpload(publicKey, bucketName, objectName string, partsPath []string, size int64) (PutObjectResult, error)

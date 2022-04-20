@@ -2,7 +2,6 @@ package yts3
 
 import (
 	"encoding/binary"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -105,21 +104,17 @@ func Stamp2Time(stamp int64) time.Time {
 
 func ListDir(dirPth string) (files []string, files1 []string, err error) {
 	var fileNames []string
-
 	dir, err := ioutil.ReadDir(dirPth)
 	if err != nil {
 		return nil, nil, err
 	}
 	PthSep := string(os.PathSeparator)
-
 	for _, fi := range dir {
-
 		if fi.IsDir() {
 			files1 = append(files1, dirPth+PthSep+fi.Name())
 			ListDir(dirPth + PthSep + fi.Name())
 		} else {
 			fileNames = append(fileNames, fi.Name())
-
 		}
 	}
 	sort.Slice(
@@ -128,11 +123,9 @@ func ListDir(dirPth string) (files []string, files1 []string, err error) {
 			return sortName(fileNames[i]) < sortName(fileNames[j])
 		},
 	)
-	fmt.Println(fileNames)
 	for _, file := range fileNames {
 		files = append(files, dirPth+PthSep+file)
 	}
-
 	return files, files1, nil
 }
 

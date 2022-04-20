@@ -33,7 +33,6 @@ func Register(g *gin.Context) {
 	var client *api.Client
 	var err2 error
 	for {
-		// client, err2 = api.NewClient(userName, privateKey)
 		client, err2 = api.NewClientV2(&env.UserInfo{
 			UserName: userName,
 			Privkey:  []string{privateKey}}, 3)
@@ -54,17 +53,13 @@ func Register(g *gin.Context) {
 		g.JSON(http.StatusUnauthorized, gin.H{"status": http.StatusUnauthorized, "Msg": "Register Failed!Please checked userName and privateKey "})
 	} else {
 		db := s3mem.New()
-
 		_, initerr := db.ListBuckets(client.SignKey.PublicKey)
 		if initerr != nil {
 			return
 		}
-		s3mem.RegDb = db
-		s3mem.UserAllBucketsCACHE.SetDefault(client.SignKey.PublicKey, s3mem.RegDb)
 		logrus.Infof("User Register Success,UserName: %s\n", userName)
 		g.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "Msg": "Register success " + userName})
 	}
-
 }
 
 func AddPubkey(g *gin.Context) {

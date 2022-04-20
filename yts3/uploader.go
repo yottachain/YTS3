@@ -23,7 +23,6 @@ import (
 var add1 = new(big.Int).SetInt64(1)
 
 type bucketUploads struct {
-	// uploads should be protected by the coarse lock in uploader:
 	uploads map[UploadID]*multipartUpload
 
 	objectIndex *skiplist.SkipList
@@ -38,7 +37,6 @@ func newBucketUploads() *bucketUploads {
 
 func (bu *bucketUploads) add(mpu *multipartUpload) {
 	bu.uploads[mpu.ID] = mpu
-
 	uploads, ok := bu.objectIndex.Get(mpu.Object)
 	if !ok {
 		uploads = []*multipartUpload{mpu}
@@ -51,7 +49,6 @@ func (bu *bucketUploads) add(mpu *multipartUpload) {
 func (bu *bucketUploads) remove(uploadID UploadID) {
 	upload := bu.uploads[uploadID]
 	delete(bu.uploads, uploadID)
-
 	var uploads []*multipartUpload
 	{
 		upv, ok := bu.objectIndex.Get(upload.Object)
@@ -60,7 +57,6 @@ func (bu *bucketUploads) remove(uploadID UploadID) {
 		}
 		uploads = upv.([]*multipartUpload)
 	}
-
 	var found = -1
 	var v *multipartUpload
 	for found, v = range uploads {
@@ -68,11 +64,9 @@ func (bu *bucketUploads) remove(uploadID UploadID) {
 			break
 		}
 	}
-
 	if found >= 0 {
 		uploads = append(uploads[:found], uploads[found+1:]...)
 	}
-
 	if len(uploads) == 0 {
 		bu.objectIndex.Delete(upload.Object)
 	} else {
@@ -97,9 +91,7 @@ func newUploader() *uploader {
 func (u *uploader) Begin(bucket, object string, meta map[string]string, initiated time.Time) *multipartUpload {
 	u.mu.Lock()
 	defer u.mu.Unlock()
-
 	u.uploadID.Add(u.uploadID, add1)
-
 	mpu := &multipartUpload{
 		ID:        UploadID(u.uploadID.String()),
 		Bucket:    bucket,
@@ -107,27 +99,22 @@ func (u *uploader) Begin(bucket, object string, meta map[string]string, initiate
 		Meta:      meta,
 		Initiated: initiated,
 	}
-
 	bucketUploads := u.buckets[bucket]
 	if bucketUploads == nil {
 		u.buckets[bucket] = newBucketUploads()
 		bucketUploads = u.buckets[bucket]
 	}
-
 	bucketUploads.add(mpu)
-
 	return mpu
 }
 
 func (u *uploader) ListParts(bucket, object string, uploadID UploadID, marker int, limit int64) (*ListMultipartUploadPartsResult, error) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
-
 	mpu, err := u.getUnlocked(bucket, object, uploadID)
 	if err != nil {
 		return nil, err
 	}
-
 	var result = ListMultipartUploadPartsResult{
 		Bucket:           bucket,
 		Key:              object,
@@ -136,41 +123,34 @@ func (u *uploader) ListParts(bucket, object string, uploadID UploadID, marker in
 		PartNumberMarker: marker,
 		StorageClass:     "STANDARD",
 	}
-
 	var cnt int64
 	for partNumber, part := range mpu.parts[marker:] {
 		if part == nil {
 			continue
 		}
-
 		if cnt >= limit {
 			result.IsTruncated = true
 			result.NextPartNumberMarker = partNumber
 			break
 		}
-
 		result.Parts = append(result.Parts, ListMultipartUploadPartItem{
 			ETag:         part.ETag,
 			Size:         int64(len(part.Body)),
 			PartNumber:   partNumber,
 			LastModified: part.LastModified,
 		})
-
 		cnt++
 	}
-
 	return &result, nil
 }
 
 func (u *uploader) List(bucket string, marker *UploadListMarker, prefix Prefix, limit int64) (*ListMultipartUploadsResult, error) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
-
 	bucketUploads, ok := u.buckets[bucket]
 	if !ok {
 		return nil, ErrNoSuchUpload
 	}
-
 	var result = ListMultipartUploadsResult{
 		Bucket:     bucket,
 		Delimiter:  prefix.Delimiter,
@@ -187,7 +167,6 @@ func (u *uploader) List(bucket string, marker *UploadListMarker, prefix Prefix, 
 	}
 
 	var truncated bool
-
 	var cnt int64
 	var seenPrefixes = map[string]bool{}
 	var match PrefixMatch
@@ -195,13 +174,11 @@ func (u *uploader) List(bucket string, marker *UploadListMarker, prefix Prefix, 
 	for iter.Next() {
 		object := iter.Key().(string)
 		uploads := iter.Value().([]*multipartUpload)
-
 	retry:
 		matched := prefix.Match(object, &match)
 		if !matched {
 			continue
 		}
-
 		if !firstFound {
 			for idx, mpu := range uploads {
 				if mpu.ID == marker.UploadID {
@@ -217,7 +194,6 @@ func (u *uploader) List(bucket string, marker *UploadListMarker, prefix Prefix, 
 					result.CommonPrefixes = append(result.CommonPrefixes, match.AsCommonPrefix())
 					seenPrefixes[match.MatchedPart] = true
 				}
-
 			} else {
 				for idx, upload := range uploads {
 					result.Uploads = append(result.Uploads, ListMultipartUploadItem{
@@ -226,7 +202,6 @@ func (u *uploader) List(bucket string, marker *UploadListMarker, prefix Prefix, 
 						UploadID:     upload.ID,
 						Initiated:    ContentTime{Time: upload.Initiated},
 					})
-
 					cnt++
 					if cnt >= limit {
 						if idx != len(uploads)-1 {
@@ -240,7 +215,6 @@ func (u *uploader) List(bucket string, marker *UploadListMarker, prefix Prefix, 
 			}
 		}
 	}
-
 done:
 	if !truncated {
 		for iter.Next() {
@@ -253,9 +227,7 @@ done:
 			}
 		}
 	}
-
 	result.IsTruncated = truncated
-
 	return &result, nil
 }
 
@@ -266,9 +238,6 @@ func (u *uploader) Complete(bucket, object string, id UploadID) (*multipartUploa
 	if err != nil {
 		return nil, err
 	}
-
-	// u.buckets[bucket].remove(id)
-
 	return up, nil
 }
 
@@ -330,26 +299,27 @@ type multipartUpload struct {
 }
 
 func (mpu *multipartUpload) AddPart(bucketName, objectName string, partNumber int, at time.Time, rdr io.Reader, size int64) (etag string, err error) {
+	MaxCreateObjNum := env.GetConfig().GetRangeInt("MaxCreateObjNum", 20, 100, 50)
+	count := atomic.AddInt32(CreateObjectNum, 1)
+	defer atomic.AddInt32(CreateObjectNum, -1)
+	logrus.Infof("[MultipartUpload]AddPart request number: %d\n", count)
+	if count > int32(MaxCreateObjNum) {
+		logrus.Error("[MultipartUpload]AddPart request too frequently.\n")
+		return "", errors.New("request too frequently.\n")
+	}
 	if partNumber > MaxUploadPartNumber {
-		logrus.Infof("AddPart  ErrInvalidPart")
+		logrus.Infof("[MultipartUpload]AddPart  ErrInvalidPart")
 		return "", ErrInvalidPart
 	}
 	mpu.mu.Lock()
 	defer mpu.mu.Unlock()
-
-	// iniPath := env.YTFS_HOME + "conf/yotta_config.ini"
-	// cfg, err := conf.CreateConfig(iniPath)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// s3cache := cfg.GetCacheInfo("directory")
 	s3cache := env.GetS3Cache()
 	directory := s3cache + "/" + bucketName + "/" + objectName
 
 	partName := fmt.Sprintf("%d", partNumber)
 	etag, err3 := writeCacheFilePart(directory, objectName, partName, rdr)
 	if err3 != nil {
-		logrus.Errorf("write big file cache error:%s\n", err3)
+		logrus.Errorf("[MultipartUpload]AddPart,write big file cache error:%s\n", err3)
 		return
 	}
 	part := multipartUploadPart{
@@ -365,11 +335,8 @@ func (mpu *multipartUpload) AddPart(bucketName, objectName string, partNumber in
 	return etag, nil
 }
 
-var OpenFileNum *int32 = new(int32)
-
 func writeCacheFilePart(directory, fileName, partName string, input io.Reader) (etag string, err error) {
 	var partEtag string
-
 	s, err := os.Stat(directory)
 	if err != nil {
 		if !os.IsExist(err) {
@@ -391,17 +358,11 @@ func writeCacheFilePart(directory, fileName, partName string, input io.Reader) (
 	filePath := directory + partName
 	f, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 	if err != nil {
-		logrus.Errorf("write cache err:%s，open files:%d\n", err, atomic.LoadInt32(OpenFileNum))
+		logrus.Errorf("[MultipartUpload]write cache err:%s，open files:%d\n", err)
 		return partEtag, err
 	}
-	atomic.AddInt32(OpenFileNum, 1)
-	defer func() {
-		f.Close()
-		atomic.AddInt32(OpenFileNum, -1)
-	}()
+	defer f.Close()
 	hash := md5.New()
-	// hash.Write([]byte(body))
-
 	readbuf := make([]byte, 8192)
 	for {
 		num, err := input.Read(readbuf)
@@ -421,85 +382,31 @@ func writeCacheFilePart(directory, fileName, partName string, input io.Reader) (
 	return partEtag, nil
 }
 
-func writeCacheFile(directory, fileName string, input io.Reader) error {
-
-	s, err := os.Stat(directory)
-	if err != nil {
-		if !os.IsExist(err) {
-			err = os.MkdirAll(directory, os.ModePerm)
-			if err != nil {
-				return err
-			}
-		} else {
-			return err
-		}
-	} else {
-		if !s.IsDir() {
-			return errors.New("The specified path is not a directory.")
-		}
-	}
-	if !strings.HasSuffix(directory, "/") {
-		directory = directory + "/"
-	}
-	filePath := directory + fileName
-	f, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	readbuf := make([]byte, 8192)
-	for {
-		num, err := input.Read(readbuf)
-		if err != nil && err != io.EOF {
-			return err
-		}
-		if num > 0 {
-			bs := readbuf[0:num]
-			f.Write(bs)
-		}
-		if err != nil && err == io.EOF {
-			break
-		}
-	}
-	return nil
-}
-
 func (mpu *multipartUpload) Reassemble(input *CompleteMultipartUploadRequest) (body []byte, etag string, err error) {
 	mpu.mu.Lock()
 	defer mpu.mu.Unlock()
-
 	mpuPartsLen := len(mpu.parts)
-
 	if len(input.Parts) > mpuPartsLen {
 		return nil, "", ErrInvalidPart
 	}
-
 	if !input.partsAreSorted() {
 		return nil, "", ErrInvalidPartOrder
 	}
-
 	var size int64
-
 	for _, inPart := range input.Parts {
 		if inPart.PartNumber >= mpuPartsLen || mpu.parts[inPart.PartNumber] == nil {
 			return nil, "", ErrorMessagef(ErrInvalidPart, "unexpected part number %d in complete request", inPart.PartNumber)
 		}
-
 		upPart := mpu.parts[inPart.PartNumber]
 		// if inPart.ETag != upPart.ETag {
 		// 	return nil, "", ErrorMessagef(ErrInvalidPart, "unexpected part etag for number %d in complete request", inPart.PartNumber)
 		// }
-
 		size += int64(len(upPart.Body))
 	}
-
 	body = make([]byte, 0, size)
 	// for _, part := range input.Parts {
 	// 	body = append(body, mpu.parts[part.PartNumber].Body...)
 	// }
-
 	hash := fmt.Sprintf("%x", md5.Sum(body))
-
 	return nil, hash, nil
 }

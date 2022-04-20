@@ -7,13 +7,13 @@ require (
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-ini/ini v1.57.0
 	github.com/go-playground/validator/v10 v10.3.0 // indirect
+	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/google/go-cmp v0.5.1 // indirect
 	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/kardianos/service v1.1.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46
-	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.2.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
