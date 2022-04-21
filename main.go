@@ -148,8 +148,8 @@ func s3StartServer() {
 		router := routers.InitRouter()
 		port := env.GetConfig().GetInt("s3port", 8080)
 
-		err1 := router.RunTLS(":"+strconv.Itoa(port), env.YTFS_HOME+"crt/server.crt", env.YTFS_HOME+"crt/server.key")
-		//err1 := router.Run(":8080")
+		//err1 := router.RunTLS(":"+strconv.Itoa(port), env.YTFS_HOME+"crt/server.crt", env.YTFS_HOME+"crt/server.key")
+		err1 := router.Run(":" + strconv.Itoa(port))
 
 		if err1 != nil {
 			logrus.Errorf("err:s%\n", err1)
