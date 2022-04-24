@@ -15,14 +15,12 @@ import (
 var RequestNum *int32 = new(int32)
 
 func (g *Yts3) routeBase(w http.ResponseWriter, r *http.Request) {
-	//defer env.TracePanic("routeBase")
 	defer func() {
 		if rec := recover(); rec != nil {
 			env.TraceError("routeBase")
 			g.httpError(w, r, errors.New("Service ERR."))
 		}
 	}()
-
 	var (
 		path   = strings.Trim(r.URL.Path, "/")
 		parts  = strings.SplitN(path, "/", 2)
@@ -32,14 +30,11 @@ func (g *Yts3) routeBase(w http.ResponseWriter, r *http.Request) {
 		err    error
 	)
 	url := r.URL.Path
-	logrus.Infof("Url:%s\n", url)
 	hdr := w.Header()
-
 	id := fmt.Sprintf("%016X", g.nextRequestID())
 	hdr.Set("x-amz-id-2", base64.StdEncoding.EncodeToString([]byte(id+id+id+id))) // x-amz-id-2 is 48 bytes of random stuff
 	hdr.Set("x-amz-request-id", id)
 	hdr.Set("Server", "AmazonS3")
-
 	if len(parts) == 2 {
 		object = url[len(bucket)+2:]
 		//hdr.Set("Content-Length",r.Header.Get("Content-Length"))
@@ -47,14 +42,12 @@ func (g *Yts3) routeBase(w http.ResponseWriter, r *http.Request) {
 		//logrus.Infof("ContentLength:::::::::::::::::%s\n",r.Header.Get("ContentLength"))
 		//object = parts[1]
 	}
-
 	count := atomic.AddInt32(RequestNum, 1)
 	defer atomic.AddInt32(RequestNum, -1)
-	logrus.Infof("All Request Number: %d\n", count)
+	logrus.Infof("[RX]%s,All Request Number: %d\n", url, count)
 	if count > int32(env.GetConfig().GetInt("RequestMaxNum", 1000)) {
 		return
 	}
-
 	//hdr.Set("Content-Length", r.Header.Get("Content-Length"))
 	if uploadID := UploadID(query.Get("uploadId")); uploadID != "" {
 		err = g.routeMultipartUpload(bucket, object, uploadID, w, r)
@@ -84,7 +77,6 @@ func (g *Yts3) routeBase(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-
 	if err != nil {
 		g.httpError(w, r, err)
 	}
@@ -137,7 +129,6 @@ func (g *Yts3) routeBucket(bucket string, w http.ResponseWriter, r *http.Request
 		return g.createBucket(bucket, w, r)
 	case "DELETE":
 		return g.deleteBucket(bucket, w, r)
-
 	case "POST":
 		if _, ok := r.URL.Query()["delete"]; ok {
 			return g.deleteMulti(bucket, w, r)

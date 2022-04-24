@@ -8,8 +8,9 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"sync/atomic"
 	"time"
+
+	"github.com/yottachain/YTCoreService/env"
 )
 
 type Yts3 struct {
@@ -22,7 +23,7 @@ type Yts3 struct {
 	failOnUnimplementedPage bool
 	hostBucket              bool
 	uploader                *uploader
-	requestID               uint64
+	requestID               *env.AtomInt64
 	log                     Logger
 }
 
@@ -33,7 +34,7 @@ func New(backend Backend, options ...Option) *Yts3 {
 		metadataSizeLimit: DefaultMetadataSizeLimit,
 		integrityCheck:    true,
 		uploader:          newUploader(),
-		requestID:         0,
+		requestID:         env.NewAtomInt64(0),
 	}
 	// versioned MUST be set before options as one of the options disables it:
 	s3.versioned, _ = backend.(VersionedBackend)
@@ -120,7 +121,7 @@ func metadataHeaders(headers map[string][]string, at time.Time, sizeLimit int) (
 	return meta, nil
 }
 func (g *Yts3) nextRequestID() uint64 {
-	return atomic.AddUint64(&g.requestID, 1)
+	return uint64(g.requestID.Add(1))
 }
 
 func (g *Yts3) httpError(w http.ResponseWriter, r *http.Request, err error) {

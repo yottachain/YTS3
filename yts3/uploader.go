@@ -315,7 +315,6 @@ func (mpu *multipartUpload) AddPart(bucketName, objectName string, partNumber in
 	defer mpu.mu.Unlock()
 	s3cache := env.GetS3Cache()
 	directory := s3cache + "/" + bucketName + "/" + objectName
-
 	partName := fmt.Sprintf("%d", partNumber)
 	etag, err3 := writeCacheFilePart(directory, objectName, partName, rdr)
 	if err3 != nil {

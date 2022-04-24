@@ -7,7 +7,6 @@ require (
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-ini/ini v1.57.0
 	github.com/go-playground/validator/v10 v10.3.0 // indirect
-	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/google/go-cmp v0.5.1 // indirect
 	github.com/json-iterator/go v1.1.10 // indirect
@@ -20,9 +19,7 @@ require (
 	github.com/spf13/viper v1.7.0 // indirect
 	github.com/unrolled/secure v1.0.8
 	//github.com/yottachain/YTCoreService v0.0.0-20211227024951-d68e183fd64d
-	//github.com/yottachain/YTCoreService v0.0.0-20220405012904-32a84dbba9c0
-	//github.com/yottachain/YTCoreService v0.0.0-20220413123506-1649ec6b9619
-	github.com/yottachain/YTCoreService v0.0.0-20220414023437-f91ca9442379
+	github.com/yottachain/YTCoreService v0.0.0-20220422020751-9eb1b2810113
 	go.mongodb.org/mongo-driver v1.3.3
 	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc // indirect
 	golang.org/x/sys v0.0.0-20210315160823-c6e025ad8005 // indirect

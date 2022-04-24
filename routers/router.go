@@ -1,6 +1,8 @@
 package routers
 
 import (
+	"net/http"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -15,6 +17,8 @@ func InitRouter() (router *gin.Engine) {
 	config.AllowAllOrigins = true
 	// router.Use(cors.New(config))
 	//router.Use(TlsHandler())
+
+	router.Handle(http.MethodGet, "/", controller.Login)
 	v1 := router.Group("/api/v1")
 	{
 		v1.POST("/insertuser", controller.Register)

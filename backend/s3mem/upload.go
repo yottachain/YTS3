@@ -8,7 +8,6 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/gofrs/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
 	"github.com/yottachain/YTCoreService/api/cache"
@@ -27,24 +26,17 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 	if c == nil {
 		return result, yts3.ResourceError(yts3.ErrInvalidAccessKeyID, "YTA"+publicKey)
 	}
-	s3cache := env.GetS3Cache()
-	u1, err := uuid.NewV4()
-	if err != nil {
-		logrus.Errorf("[S3Upload]/%s/%s,gen UUID ERR: %s\n", bucketName, objectName, err)
-		return result, err
-	}
-	directory := s3cache + bucketName + "/" + u1.String()
 	var hash []byte
 	var bts []byte
-	var header map[string]string
-	header = make(map[string]string)
+	header := make(map[string]string)
 	SyncFileMin := env.GetConfig().GetRangeInt("SyncFileMin", 1, 10, 2) * 1024 * 1024
 	if size >= int64(SyncFileMin) {
-		errw := writeCacheFile(directory, objectName, input)
+		u1 := primitive.NewObjectID().Hex()
+		errw := writeCacheFile(env.GetS3Cache(), u1, input)
 		if errw != nil {
 			return result, errw
 		}
-		filePath := directory + "/" + objectName
+		filePath := env.GetS3Cache() + u1
 		md5bytes, erre := c.UploadFile(filePath, bucketName, objectName)
 		if erre != nil {
 			logrus.Errorf("[S3Upload]/%s/%s,UploadFile ERR: %s\n", bucketName, objectName, erre)
@@ -108,7 +100,7 @@ func writeCacheFile(directory, fileName string, input io.Reader) error {
 		if !s.IsDir() {
 			return errors.New("The specified path is not a directory.")
 		}
-		filePath := directory + "/" + fileName
+		filePath := directory + fileName
 		logrus.Infof("[S3Upload]Write cache:%s\n", filePath)
 		f, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 		if err != nil {

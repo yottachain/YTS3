@@ -28,7 +28,7 @@ func WithGlobalLog() Option {
 	return WithLogger(GlobalLog())
 }
 func WithRequestID(id uint64) Option {
-	return func(g *Yts3) { g.requestID = id }
+	return func(g *Yts3) { g.requestID.Set(int64(id)) }
 }
 
 func WithHostBucket(enabled bool) Option {
