@@ -22,7 +22,9 @@ require (
 	//github.com/yottachain/YTCoreService v0.0.0-20220422020751-9eb1b2810113
 	//github.com/yottachain/YTCoreService v0.0.0-20220424100209-b1c341fd1062  wangjun debug
 	//github.com/yottachain/YTCoreService v0.0.0-20220424082726-d2cdc5b2675e  shepeng_qimingtest
-	github.com/yottachain/YTCoreService v0.0.0-20220427091729-505fb96b2b14
+	//github.com/yottachain/YTCoreService v0.0.0-20220427091729-505fb96b2b14
+	//github.com/yottachain/YTCoreService v0.0.0-20220429035713-79d32a42bb70
+	github.com/yottachain/YTCoreService v0.0.0-20220429063103-7c271bc0566c
 	github.com/yottachain/YTCrypto v0.0.0-20200122165219-0ea35dc29812
 	go.mongodb.org/mongo-driver v1.3.3
 	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc // indirect
