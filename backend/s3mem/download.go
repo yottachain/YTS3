@@ -3,6 +3,7 @@ package s3mem
 import (
 	"encoding/hex"
 	"io"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
@@ -20,19 +21,33 @@ func (db *Backend) GetObjectV2(publicKey, bucketName, objectName string, rangeRe
 	if c == nil {
 		return nil, yts3.ResourceError(yts3.ErrInvalidAccessKeyID, "YTA"+publicKey)
 	}
+	var metabs []byte
+	var t time.Time
 	download, errMsg := c.NewDownloadLastVersion(bucketName, objectName)
 	if errMsg != nil {
 		logrus.Errorf("[S3Download]NewDownloadLastVersion err:%s\n", errMsg)
 		if errMsg.Code == pkt.INVALID_OBJECT_NAME {
-			return nil, yts3.ErrNoSuchKey
+			items, err := c.NewObjectAccessor().ListObject(bucketName, "", objectName, false, primitive.NilObjectID, uint32(page.MaxKeys))
+			if err != nil {
+				return nil, pkt.ToError(errMsg)
+			}
+			if len(items) > 0 {
+				metabs = items[0].Meta
+				t = items[0].FileId.Timestamp()
+			} else {
+				return nil, yts3.ErrNoSuchKey
+			}
+		} else {
+			return nil, pkt.ToError(errMsg)
 		}
-		return nil, pkt.ToError(errMsg)
+	} else {
+		metabs = download.Meta
+		t = download.GetTime()
 	}
-	meta, err := api.BytesToFileMetaMap(download.Meta, primitive.NilObjectID)
+	meta, err := api.BytesToFileMetaMap(metabs, primitive.NilObjectID)
 	if err != nil {
 		return nil, err
 	}
-	t := download.GetTime()
 	meta["x-amz-meta-s3b-last-modified"] = t.Format("20060102T150405Z")
 	content := getContentByMeta(meta)
 	content.Key = objectName
@@ -69,10 +84,24 @@ func (db *Backend) GetObjectV2(publicKey, bucketName, objectName string, rangeRe
 		} else {
 			result.Contents = &ContentReader{download.Load().(io.ReadCloser)}
 		}
+	} else if result.Size == 0 {
+		result.Contents = &ZeroReader{}
 	}
 	hash, _ = hex.DecodeString(content.ETag)
 	result.Hash = hash
 	return result, nil
+}
+
+type ZeroReader struct {
+	io.ReadCloser
+}
+
+func (cr *ZeroReader) Close() error {
+	return nil
+}
+
+func (cr *ZeroReader) Read(buf []byte) (int, error) {
+	return 0, io.EOF
 }
 
 func (db *Backend) HeadObject(publicKey, bucketName, objectName string) (*yts3.Object, error) {

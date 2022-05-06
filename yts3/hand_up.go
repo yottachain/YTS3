@@ -4,8 +4,6 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"errors"
-	"fmt"
-	"io"
 	"net/http"
 	"net/textproto"
 	"strconv"
@@ -49,16 +47,18 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 		return g.copyObject(bucket, object, meta, w, r)
 	}
 	contentLength := r.Header.Get("Content-Length")
-	if contentLength == "" {
-		return ErrMissingContentLength
-	} else if contentLength == "154" {
-		var rdr io.Reader = r.Body
-		lnn := 10485760
-		body, err := ReadAll(rdr, int64(lnn))
-		if err != nil {
-			contentLength = fmt.Sprintf("%d", len(body))
+	/*
+		if contentLength == "" {
+			return ErrMissingContentLength
+		} else if contentLength == "154" {
+			var rdr io.Reader = r.Body
+			lnn := 10485760
+			body, err := ReadAll(rdr, int64(lnn))
+			if err != nil {
+				contentLength = fmt.Sprintf("%d", len(body))
+			}
 		}
-	}
+	*/
 	size, err := strconv.ParseInt(contentLength, 10, 64)
 	if err != nil || size < 0 {
 		w.WriteHeader(http.StatusBadRequest)
@@ -79,7 +79,7 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 		return err
 	}
 	uri := r.URL.Path
-	if strings.HasSuffix(uri, "/") {
+	if strings.HasSuffix(uri, "/") || size == 0 {
 		var bts []byte
 		metazero := make(map[string]string)
 		hashz := md5.Sum(bts)
