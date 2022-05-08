@@ -20,7 +20,7 @@ import (
 func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[string]string, input io.Reader, size int64, putObjectNum int32) (result yts3.PutObjectResult, err error) {
 	_, er := db.GetBucket(publicKey, bucketName)
 	if er != nil {
-		return result, err
+		return result, er
 	}
 	c := api.GetClient(publicKey)
 	if c == nil {
@@ -129,7 +129,7 @@ func writeCacheFile(directory, fileName string, input io.Reader) error {
 func (db *Backend) MultipartUpload(publicKey, bucketName, objectName string, partsPath []string, size int64) (result yts3.PutObjectResult, err error) {
 	_, er := db.GetBucket(publicKey, bucketName)
 	if er != nil {
-		return result, err
+		return result, er
 	}
 	c := api.GetClient(publicKey)
 	if c == nil {

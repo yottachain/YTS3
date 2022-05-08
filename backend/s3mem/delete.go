@@ -21,7 +21,7 @@ func (db *Backend) rm(publicKey, bucketName, objectName string, c *api.Client) (
 func (db *Backend) DeleteMulti(publicKey, bucketName string, objects ...string) (result yts3.MultiDeleteResult, err error) {
 	_, er := db.GetBucket(publicKey, bucketName)
 	if er != nil {
-		return result, err
+		return result, er
 	}
 	c := api.GetClient(publicKey)
 	if c == nil {
