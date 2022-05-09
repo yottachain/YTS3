@@ -3,6 +3,7 @@ package controller
 import (
 	"bytes"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -111,4 +112,30 @@ func AddPubkey(g *gin.Context) {
 	//
 	//	// api.AddP
 	//
+}
+
+func AddClientforMobile(g *gin.Context) {
+	userId := g.Query("UserId")
+	signKeyNumber := g.Query("signKey.KeyNumber")
+	storeKeyNumber := g.Query("storeKey.KeyNumber")
+	signKeySign := g.Query("signKey.Sign")
+
+	userId_32, err := strconv.ParseInt(userId, 10, 32)
+	if err != nil {
+		logrus.Error("convert userId %s error", userId)
+	}
+	signKeyNumber_32, err := strconv.ParseInt(signKeyNumber, 10, 32)
+	if err != nil {
+		logrus.Error("convert userId %s error", userId)
+	}
+	storeKeyNumber_32, err := strconv.ParseInt(storeKeyNumber, 10, 32)
+	if err != nil {
+		logrus.Error("convert userId %s error", userId)
+	}
+	result, err := api.AddClient(uint32(userId_32), uint32(signKeyNumber_32), uint32(storeKeyNumber_32), signKeySign)
+	if err != nil {
+		logrus.Error("add client error.")
+		g.JSON(http.StatusMethodNotAllowed, gin.H{"error": "create bucket error"})
+	}
+	g.JSON(http.StatusOK, result)
 }

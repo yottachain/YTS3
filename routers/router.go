@@ -39,6 +39,7 @@ func InitRouter() (router *gin.Engine) {
 		v1.GET("/licensedTo", controller.LicensedTo)
 		v1.POST("/saveFileToLocal", controller.SaveFileToLocal)
 		v1.POST("/account/create", controller.CreateAccountCli)
+		//v1.GET("/addClientforMobile", controller.AddClientforMobile)
 	}
 
 	return
