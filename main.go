@@ -48,6 +48,10 @@ func (p *S3Program) run() {
 }
 
 func main() {
+	if len(os.Args) == 1 {
+		fmt.Println("Yts3 starting......")
+		s3StartServer()
+	}
 	if len(os.Args) > 1 {
 		prog := &S3Program{}
 		s, err := service.New(prog, serviceConfig)
@@ -126,7 +130,7 @@ func main() {
 		logger.Info("uninstall    Uninstall.")
 		return
 	}
-	s3StartServer()
+
 }
 
 func s3StopServer() {
@@ -136,9 +140,9 @@ func s3StopServer() {
 var crt, key string
 
 func s3StartServer() {
+	api.StartApi()
 	flag.Parse()
 	env.SetLimit()
-	api.StartApi()
 	crt = env.YTFS_HOME + "crt/server.crt"
 	key = env.YTFS_HOME + "crt/server.key"
 	_, err := ioutil.ReadFile(crt)
