@@ -10,7 +10,6 @@ require (
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/google/go-cmp v0.5.1 // indirect
 	github.com/json-iterator/go v1.1.10 // indirect
-	github.com/kardianos/service v1.1.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46
 	github.com/sirupsen/logrus v1.8.1

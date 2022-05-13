@@ -1,6 +1,3 @@
-//go:build ignore
-// +build ignore
-
 package main
 
 import (
@@ -8,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	httppprof "net/http/pprof"
@@ -16,9 +14,6 @@ import (
 	"strconv"
 	"time"
 
-	"log"
-
-	"github.com/kardianos/service"
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
 	"github.com/yottachain/YTCoreService/env"
@@ -27,117 +22,9 @@ import (
 	"github.com/yottachain/YTS3/yts3"
 )
 
-var logger service.Logger
-var serviceConfig = &service.Config{
-	Name:        "yts3",
-	DisplayName: "go yts3 service",
-	Description: "go yts3 daemons service",
-}
-
-type S3Program struct{}
-
-func (p *S3Program) Start(s service.Service) error {
-	go p.run()
-	return nil
-}
-
-func (p *S3Program) Stop(s service.Service) error {
-	s3StopServer()
-	return nil
-}
-
-func (p *S3Program) run() {
-	s3StartServer()
-}
-
 func main() {
-	if len(os.Args) == 1 {
-		fmt.Println("Yts3 starting......")
-		s3StartServer()
-	}
-	if len(os.Args) > 1 {
-		prog := &S3Program{}
-		s, err := service.New(prog, serviceConfig)
-		if err != nil {
-			panic(err)
-		}
-		logger, err = s.Logger(nil)
-		if err != nil {
-			panic(err)
-		}
-		cmd := os.Args[1]
-		if cmd == "version" {
-			fmt.Println(env.VersionID)
-			return
-		}
-		if cmd == "console" {
-			env.Console = true
-			err = s.Run()
-			if err != nil {
-				logger.Info("Run console err:", err.Error())
-			}
-			return
-		}
-		if cmd == "start" {
-			err = s.Start()
-			if err != nil {
-				logger.Info("Maybe the daemons are not installed.Start err:", err.Error())
-			} else {
-				logger.Info("Start OK.")
-			}
-			return
-		}
-		if cmd == "restart" {
-			err = s.Restart()
-			if err != nil {
-				logger.Info("Maybe the daemons are not installed.Restart err:", err.Error())
-			} else {
-				logger.Info("Restart OK.")
-			}
-			return
-		}
-		if cmd == "stop" {
-			err = s.Stop()
-			if err != nil {
-				logger.Info("Stop err:", err.Error())
-			} else {
-				logger.Info("Stop OK.")
-			}
-			return
-		}
-		if cmd == "install" {
-			err = s.Install()
-			if err != nil {
-				logger.Info("Install err:", err.Error())
-			} else {
-				logger.Info("Install OK.")
-			}
-			return
-		}
-		if cmd == "uninstall" {
-			err = s.Uninstall()
-			if err != nil {
-				logger.Info("Uninstall err:", err.Error())
-			} else {
-				logger.Info("Uninstall OK.")
-			}
-			return
-		}
-		logger.Info("Commands:")
-		logger.Info("version      Show versionid.")
-		logger.Info("console      Launch in the current console.")
-		logger.Info("start        Start in the background as a daemon process.")
-		logger.Info("stop         Stop if running as a daemon or in another console.")
-		logger.Info("restart      Restart if running as a daemon or in another console.")
-		logger.Info("install      Install to start automatically when system boots.")
-		logger.Info("uninstall    Uninstall.")
-		return
-	}
-
-}
-
-func s3StopServer() {
-
+	fmt.Println("Yts3 starting......")
+	s3StartServer()
 }
 
 var crt, key string
