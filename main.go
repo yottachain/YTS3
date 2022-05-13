@@ -44,30 +44,27 @@ func (p *S3Program) Stop(s service.Service) error {
 }
 
 func (p *S3Program) run() {
-	// api.StartApi()
 	s3StartServer()
 }
 
 func main() {
-	prog := &S3Program{}
-	s, err := service.New(prog, serviceConfig)
-	if err != nil {
-		panic(err)
-	}
-	logger, err = s.Logger(nil)
-	if err != nil {
-		panic(err)
-	}
-
 	if len(os.Args) > 1 {
-		logger.Info("Path:", os.Args[0])
+		prog := &S3Program{}
+		s, err := service.New(prog, serviceConfig)
+		if err != nil {
+			panic(err)
+		}
+		logger, err = s.Logger(nil)
+		if err != nil {
+			panic(err)
+		}
 		cmd := os.Args[1]
 		if cmd == "version" {
 			fmt.Println(env.VersionID)
 			return
 		}
 		if cmd == "console" {
-			// env.Console = true
+			env.Console = true
 			err = s.Run()
 			if err != nil {
 				logger.Info("Run console err:", err.Error())
@@ -129,10 +126,7 @@ func main() {
 		logger.Info("uninstall    Uninstall.")
 		return
 	}
-	err = s.Run()
-	if err != nil {
-		logger.Info("Run err:", err.Error())
-	}
+	s3StartServer()
 }
 
 func s3StopServer() {
