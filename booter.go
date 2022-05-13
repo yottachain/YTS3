@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"expvar"
 	"flag"
 	"fmt"
@@ -24,12 +25,24 @@ import (
 
 func main() {
 	fmt.Println("Yts3 starting......")
-	s3StartServer()
+	for {
+		err := s3StartServer()
+		if err != nil {
+			time.Sleep(time.Second * 10)
+		} else {
+			return
+		}
+	}
 }
 
 var crt, key string
 
-func s3StartServer() {
+func s3StartServer() (starterr error) {
+	defer func() {
+		if rec := recover(); rec != nil {
+			starterr = errors.New("")
+		}
+	}()
 	api.StartApi()
 	flag.Parse()
 	env.SetLimit()
