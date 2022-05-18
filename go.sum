@@ -225,6 +225,8 @@ github.com/gorilla/websocket v1.4.1/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/ad
 github.com/gorilla/websocket v1.4.2 h1:+/TMaTYc4QFitKJxsQ7Yye35DkWvkdLcvGKqM+x0Ufc=
 github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/graph-gophers/graphql-go v0.0.0-20191115155744-f33e81362277/go.mod h1:9CQHMSxwO4MprSdzoIEobiHpoLtHm77vfxsvsIN5Vuc=
+github.com/grd/statistics v0.0.0-20130405091615-5af75da930c9 h1:VgcBlcf+gxSR6+X8PerbepV9x+WZV0f4K+SYVYCmk+U=
+github.com/grd/statistics v0.0.0-20130405091615-5af75da930c9/go.mod h1:0I4YW+/RI/5xLC4FZzEQuaSMK5DW8GyfYIVSZ1PeC6Y=
 github.com/grpc-ecosystem/go-grpc-middleware v1.0.0/go.mod h1:FiyG127CGDf3tlThmgyCl78X/SZQqEOJBCDaAfeWzPs=
 github.com/grpc-ecosystem/go-grpc-middleware v1.1.0/go.mod h1:f5nM7jw/oeRSadq3xCzHAvxcr8HZnzsqU6ILg/0NiiE=
 github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0/go.mod h1:8NvIoxWQoOIhqOTXgfV/d3M/q6VIi02HzZEHgUlZvzk=
@@ -556,8 +558,8 @@ github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:
 github.com/yottachain/P2PHost v1.0.1-0.20200330065720-69572fdc7d92/go.mod h1:V7g0oufx1cRzGw+1aUsMPkmD/+Uvdiax7dZiiC+afoM=
 github.com/yottachain/P2PHost v1.0.2-0.20200921072702-609d35770f59 h1:FZHYTMNf39jebg8BP4Zr7C6aSu2lLz5GKk5rldGJZh0=
 github.com/yottachain/P2PHost v1.0.2-0.20200921072702-609d35770f59/go.mod h1:4ZBTjWbVgjQbVAjLDWsj0VSB723F02mau38rGp1W5yU=
-github.com/yottachain/YTCoreService v0.0.0-20220509095509-c3149925c462 h1:re6VNY6oxalS69G3stYxZ4Kf4O2naEv9nXHfkEeGvmI=
-github.com/yottachain/YTCoreService v0.0.0-20220509095509-c3149925c462/go.mod h1:E9EDh6JEiB70UH90HpoUh6K0HUwLKcWGWTCo7BTmLG8=
+github.com/yottachain/YTCoreService v0.0.0-20220518025228-d6a81ff0fa88 h1:lPjKs8P3SMsZQfncFe6XdKjoZhAjPKmGe7aUtyyv0lI=
+github.com/yottachain/YTCoreService v0.0.0-20220518025228-d6a81ff0fa88/go.mod h1:79ywSKwaeMd3qXjru5gFSLrA50vCfyFcdX6GIcQnmKo=
 github.com/yottachain/YTCrypto v0.0.0-20200122165219-0ea35dc29812 h1:XG9TtLosanLdwqSoporMr8OASUOjxuaj6cJDlut1c9s=
 github.com/yottachain/YTCrypto v0.0.0-20200122165219-0ea35dc29812/go.mod h1:jDJUVGeQ1clW7k9OTRBAFtCMwGs9B9fGQ9QY64SKqlk=
 github.com/yottachain/YTDNMgmt v0.0.0-20220429025320-4a62e6d257b2 h1:nuIIUv/m2EL2I4YLGbvDLJ1rpTV61tN0x3m/1+DgAMY=
@@ -565,8 +567,8 @@ github.com/yottachain/YTDNMgmt v0.0.0-20220429025320-4a62e6d257b2/go.mod h1:21to
 github.com/yottachain/YTHost v1.0.2-0.20200330065027-fd1b316f47cb/go.mod h1:PMIX6FcFzZ5xaexcI1ivumzoo9nblL2wZc5it/R3SeU=
 github.com/yottachain/YTHost v1.0.2-0.20200703084155-b2658f82b387/go.mod h1:PMIX6FcFzZ5xaexcI1ivumzoo9nblL2wZc5it/R3SeU=
 github.com/yottachain/YTHost v1.0.2-0.20200918110720-68f155ccc541/go.mod h1:PMIX6FcFzZ5xaexcI1ivumzoo9nblL2wZc5it/R3SeU=
-github.com/yottachain/YTHost v1.0.2-0.20220429075753-964d1a60e7a8 h1:3YaKHiZe4kd8zEMujJWBvQNmQbUotJ4CG9mUChWErW0=
-github.com/yottachain/YTHost v1.0.2-0.20220429075753-964d1a60e7a8/go.mod h1:PMIX6FcFzZ5xaexcI1ivumzoo9nblL2wZc5it/R3SeU=
+github.com/yottachain/YTHost v1.0.2-0.20220516133612-97944b217723 h1:9u7DPkTucOyeepzYuR5el6X1UIfBeiEkoIzXdnJ2Urk=
+github.com/yottachain/YTHost v1.0.2-0.20220516133612-97944b217723/go.mod h1:PMIX6FcFzZ5xaexcI1ivumzoo9nblL2wZc5it/R3SeU=
 github.com/yottachain/yotta-analysis v0.0.0-20200427065413-d4b83ac9a92f/go.mod h1:WBAiITvR+7h/fwyUYkybMjaBb812On6Td7sMc/nAqKE=
 github.com/yottachain/yotta-analysis v0.0.0-20200827070430-a2cc45d44692/go.mod h1:jkzWxLT0S/YYMbXukSBAehYg63AW3kj2hzhcubrgqhc=
 github.com/yottachain/yotta-rebuilder v0.0.0-20201208032400-af42fe398b9e/go.mod h1:bB1NSBvVo4SxMlLf1HraSxM4NukpSz3SpppSZnSrIHo=

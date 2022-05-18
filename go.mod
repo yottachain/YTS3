@@ -18,13 +18,11 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.7.0 // indirect
 	github.com/unrolled/secure v1.0.8
-	//github.com/yottachain/YTCoreService v0.0.0-20211227024951-d68e183fd64d
-	//github.com/yottachain/YTCoreService v0.0.0-20220422020751-9eb1b2810113
 	//github.com/yottachain/YTCoreService v0.0.0-20220424100209-b1c341fd1062  wangjun debug
 	//github.com/yottachain/YTCoreService v0.0.0-20220424082726-d2cdc5b2675e  shepeng_qimingtest
-
-	//github.com/yottachain/YTCoreService v0.0.0-20220429063103-7c271bc0566c
-	github.com/yottachain/YTCoreService v0.0.0-20220509095509-c3149925c462
+	//github.com/yottachain/YTCoreService v0.0.0-20220509095509-c3149925c462
+	//github.com/yottachain/YTCoreService v0.0.0-20220515044812-ab134bcde991
+	github.com/yottachain/YTCoreService v0.0.0-20220518025228-d6a81ff0fa88
 	github.com/yottachain/YTCrypto v0.0.0-20200122165219-0ea35dc29812
 	go.mongodb.org/mongo-driver v1.3.3
 	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc // indirect
