@@ -47,6 +47,8 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 			cache.Delete([]string{filePath})
 		}
 	} else {
+
+		//可在此降速
 		bts, err = yts3.ReadAll(input, size)
 		if err != nil {
 			return result, err
