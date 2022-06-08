@@ -48,16 +48,16 @@ func (p *S3Program) run() {
 }
 
 func main() {
+	prog := &S3Program{}
+	s, err := service.New(prog, serviceConfig)
+	if err != nil {
+		panic(err)
+	}
+	logger, err = s.Logger(nil)
+	if err != nil {
+		panic(err)
+	}
 	if len(os.Args) > 1 {
-		prog := &S3Program{}
-		s, err := service.New(prog, serviceConfig)
-		if err != nil {
-			panic(err)
-		}
-		logger, err = s.Logger(nil)
-		if err != nil {
-			panic(err)
-		}
 		cmd := os.Args[1]
 		if cmd == "version" {
 			fmt.Println(env.VersionID)
@@ -126,7 +126,10 @@ func main() {
 		logger.Info("uninstall    Uninstall.")
 		return
 	}
-	s3StartServer()
+	err = s.Run()
+	if err != nil {
+		logger.Info("Run err:", err.Error())
+	}
 }
 
 func s3StopServer() {
