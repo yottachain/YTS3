@@ -47,17 +47,62 @@ func (p *S3Program) run() {
 	s3StartServer()
 }
 
+/*
 func main() {
+	time.Sleep(time.Duration(60) * time.Second)
+	var (
+		fileName = "E:\\text1.txt"
+		content  = "start "
+		err      error
+	)
+	fmt.Println("begin to write file:", fileName)
+	if err = ioutil.WriteFile(fileName, []byte(content), 0666); err != nil {
+		fmt.Println("Writefile Error =", err)
+		//log.Fatalln("Writefile Error =", err)
+	}
+	//读取文件
+	fmt.Println("begin to read file:", fileName)
+	fileContent, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		fmt.Println("Read file err =", err)
+		//log.Fatalln("Read file err =", err)
+	}
+	fmt.Println("Read file success = ", string(fileContent))
+}
+*/
+
+func main() {
+	/*
+		time.Sleep(time.Duration(60) * time.Second)
+		var (
+			fileName = "E:\\text1.txt"
+			content  = "start "
+			err      error
+		)
+		fmt.Println("begin to write file:", fileName)
+		if err = ioutil.WriteFile(fileName, []byte(content), 0666); err != nil {
+			fmt.Println("Writefile Error =", err)
+			//log.Fatalln("Writefile Error =", err)
+		}
+		//读取文件
+		fmt.Println("begin to read file:", fileName)
+		fileContent, err := ioutil.ReadFile(fileName)
+		if err != nil {
+			fmt.Println("Read file err =", err)
+			//log.Fatalln("Read file err =", err)
+		}
+		fmt.Println("Read file success = ", string(fileContent))
+	*/
+	prog := &S3Program{}
+	s, err := service.New(prog, serviceConfig)
+	if err != nil {
+		panic(err)
+	}
+	logger, err = s.Logger(nil)
+	if err != nil {
+		panic(err)
+	}
 	if len(os.Args) > 1 {
-		prog := &S3Program{}
-		s, err := service.New(prog, serviceConfig)
-		if err != nil {
-			panic(err)
-		}
-		logger, err = s.Logger(nil)
-		if err != nil {
-			panic(err)
-		}
 		cmd := os.Args[1]
 		if cmd == "version" {
 			fmt.Println(env.VersionID)
@@ -126,7 +171,11 @@ func main() {
 		logger.Info("uninstall    Uninstall.")
 		return
 	}
-	s3StartServer()
+	//s3StartServer()
+	err = s.Run()
+	if err != nil {
+		logger.Info("Run err:", err.Error())
+	}
 }
 
 func s3StopServer() {
@@ -136,9 +185,45 @@ func s3StopServer() {
 var crt, key string
 
 func s3StartServer() {
+	/*
+		var (
+			fileName2 = "E:\\text2.txt"
+			content2  = "enter to s3StarServer"
+			err2      error
+		)
+		if err2 = ioutil.WriteFile(fileName2, []byte(content2), 0666); err2 != nil {
+			fmt.Println("Writefile2 Error =", err2)
+			//return
+		}
+		//读取文件
+		fileContent2, err2 := ioutil.ReadFile(fileName2)
+		if err2 != nil {
+			fmt.Println("Read file2 err =", err2)
+			//return
+		}
+		fmt.Println("Read file2 success =", string(fileContent2))
+	*/
 	flag.Parse()
 	env.SetLimit()
 	api.StartApi()
+	/*
+		var (
+			fileName3 = "E:\\text3.txt"
+			content3  = "after startApi"
+			err3      error
+		)
+		if err3 = ioutil.WriteFile(fileName3, []byte(content3), 0666); err3 != nil {
+			fmt.Println("Writefile3 Error =", err3)
+			//return
+		}
+		//读取文件
+		fileContent3, err3 := ioutil.ReadFile(fileName3)
+		if err3 != nil {
+			fmt.Println("Read file3 err =", err3)
+			//return
+		}
+		fmt.Println("Read file3 success =", string(fileContent3))
+	*/
 	crt = env.YTFS_HOME + "crt/server.crt"
 	key = env.YTFS_HOME + "crt/server.key"
 	_, err := ioutil.ReadFile(crt)
