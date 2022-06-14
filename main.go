@@ -48,6 +48,7 @@ func (p *S3Program) run() {
 }
 
 func main() {
+
 	prog := &S3Program{}
 	s, err := service.New(prog, serviceConfig)
 	if err != nil {
@@ -139,6 +140,24 @@ func s3StopServer() {
 var crt, key string
 
 func s3StartServer() {
+	/*
+		var (
+			fileName2 = "E:\\text2.txt"
+			content2  = "enter to s3StarServer"
+			err2      error
+		)
+		if err2 = ioutil.WriteFile(fileName2, []byte(content2), 0666); err2 != nil {
+			fmt.Println("Writefile2 Error =", err2)
+			//return
+		}
+		//读取文件
+		fileContent2, err2 := ioutil.ReadFile(fileName2)
+		if err2 != nil {
+			fmt.Println("Read file2 err =", err2)
+			//return
+		}
+		fmt.Println("Read file2 success =", string(fileContent2))
+	*/
 	flag.Parse()
 	env.SetLimit()
 	api.StartApi()
