@@ -11,7 +11,6 @@ import (
 	"os"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/ryszard/goskiplist/skiplist"
@@ -299,14 +298,6 @@ type multipartUpload struct {
 }
 
 func (mpu *multipartUpload) AddPart(bucketName, objectName string, partNumber int, at time.Time, rdr io.Reader, size int64) (etag string, err error) {
-	MaxCreateObjNum := env.GetConfig().GetRangeInt("MaxCreateObjNum", 20, 100, 50)
-	count := atomic.AddInt32(CreateObjectNum, 1)
-	defer atomic.AddInt32(CreateObjectNum, -1)
-	logrus.Infof("[MultipartUpload]AddPart request number: %d\n", count)
-	if count > int32(MaxCreateObjNum) {
-		logrus.Error("[MultipartUpload]AddPart request too frequently.\n")
-		return "", errors.New("request too frequently.\n")
-	}
 	if partNumber > MaxUploadPartNumber {
 		logrus.Infof("[MultipartUpload]AddPart  ErrInvalidPart")
 		return "", ErrInvalidPart

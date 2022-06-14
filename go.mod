@@ -11,7 +11,7 @@ require (
 	github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46
 	github.com/sirupsen/logrus v1.8.1
 	github.com/unrolled/secure v1.0.8
-	github.com/yottachain/YTCoreService v0.0.0-20220605051718-7b7d1d735f3c
+	github.com/yottachain/YTCoreService v0.0.0-20220614040527-cab5106e2db3
 	github.com/yottachain/YTCrypto v0.0.0-20200122165219-0ea35dc29812
 	go.mongodb.org/mongo-driver v1.3.3
 )

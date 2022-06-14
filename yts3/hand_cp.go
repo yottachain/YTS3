@@ -45,7 +45,7 @@ func (g *Yts3) copyObject(bucket, object string, meta map[string]string, w http.
 			meta[k] = v
 		}
 	}
-	result, err := g.storage.PutObject(content, bucket, object, meta, srcObj.Contents, srcObj.Size, 0)
+	result, err := g.storage.PutObject(content, bucket, object, meta, srcObj.Contents, srcObj.Size)
 	if err != nil {
 		return err
 	}

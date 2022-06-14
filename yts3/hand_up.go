@@ -3,29 +3,17 @@ package yts3
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"errors"
 	"net/http"
 	"net/textproto"
 	"strconv"
 	"strings"
-	"sync/atomic"
 
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
 	"github.com/yottachain/YTCoreService/env"
 )
 
-var CreateObjectNum *int32 = new(int32)
-
 func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *http.Request) (err error) {
-	MaxCreateObjNum := env.GetConfig().GetRangeInt("MaxCreateObjNum", 20, 100, 50)
-	count := atomic.AddInt32(CreateObjectNum, 1)
-	defer atomic.AddInt32(CreateObjectNum, -1)
-	logrus.Infof("[S3Upload]CreateObject request number: %d\n", count)
-	if count > int32(MaxCreateObjNum) {
-		logrus.Error("[S3Upload]CreateObject request too frequently.\n")
-		return errors.New("CreateObject request too frequently.\n")
-	}
 	logrus.Infof("[S3Upload]CREATE OBJECT:%s/%s\n", bucket, object)
 	Authorization := r.Header.Get("Authorization")
 	if Authorization == "" {
@@ -97,7 +85,7 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 			return
 		}
 	} else {
-		result, err := g.storage.PutObject(content, bucket, object, meta, rdr, size, count)
+		result, err := g.storage.PutObject(content, bucket, object, meta, rdr, size)
 		if err != nil {
 			return err
 		}
@@ -111,13 +99,6 @@ func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *htt
 }
 
 func (g *Yts3) createObjectBrowserUpload(bucket string, w http.ResponseWriter, r *http.Request) error {
-	MaxCreateObjNum := env.GetConfig().GetRangeInt("MaxCreateObjNum", 20, 100, 50)
-	count := atomic.AddInt32(CreateObjectNum, 1)
-	defer atomic.AddInt32(CreateObjectNum, -1)
-	logrus.Infof("[S3Upload]createObjectBrowserUpload request number: %d\n", count)
-	if count > int32(MaxCreateObjNum) {
-		return errors.New("createObjectBrowserUpload request too frequently.\n")
-	}
 	logrus.Infof("[S3Upload]CREATE OBJECT THROUGH BROWSER UPLOAD\n")
 	Authorization := r.Header.Get("Authorization")
 	if Authorization == "" {
@@ -162,7 +143,7 @@ func (g *Yts3) createObjectBrowserUpload(bucket string, w http.ResponseWriter, r
 	if err != nil {
 		return err
 	}
-	result, err := g.storage.PutObject(content, bucket, key, meta, rdr, fileHeader.Size, count)
+	result, err := g.storage.PutObject(content, bucket, key, meta, rdr, fileHeader.Size)
 	if err != nil {
 		return err
 	}

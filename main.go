@@ -142,6 +142,7 @@ func s3StartServer() {
 	flag.Parse()
 	env.SetLimit()
 	api.StartApi()
+	s3mem.InitObjectUpPool()
 	crt = env.YTFS_HOME + "crt/server.crt"
 	key = env.YTFS_HOME + "crt/server.key"
 	_, err := ioutil.ReadFile(crt)

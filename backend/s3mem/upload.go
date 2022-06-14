@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/yottachain/YTCoreService/api"
@@ -17,7 +18,21 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[string]string, input io.Reader, size int64, putObjectNum int32) (result yts3.PutObjectResult, err error) {
+var Object_UP_CH chan int
+var Object_Timeout int = 60
+var SyncFileMin int
+
+func InitObjectUpPool() {
+	MaxCreateObjNum := env.GetConfig().GetRangeInt("MaxCreateObjNum", 20, 500, 50)
+	Object_Timeout = env.GetConfig().GetRangeInt("ObjectTimeout", 10, 300, 60)
+	SyncFileMin = env.GetConfig().GetRangeInt("SyncFileMin", 1, 10, 2) * 1024 * 1024
+	Object_UP_CH = make(chan int, MaxCreateObjNum)
+	for ii := 0; ii < MaxCreateObjNum; ii++ {
+		Object_UP_CH <- 1
+	}
+}
+
+func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[string]string, input io.Reader, size int64) (result yts3.PutObjectResult, err error) {
 	_, er := db.GetBucket(publicKey, bucketName)
 	if er != nil {
 		return result, er
@@ -29,7 +44,6 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 	var hash []byte
 	var bts []byte
 	header := make(map[string]string)
-	SyncFileMin := env.GetConfig().GetRangeInt("SyncFileMin", 1, 10, 2) * 1024 * 1024
 	if size >= int64(SyncFileMin) {
 		u1 := primitive.NewObjectID().Hex()
 		errw := writeCacheFile(env.GetS3Cache(), u1, input)
@@ -47,10 +61,16 @@ func (db *Backend) PutObject(publicKey, bucketName, objectName string, meta map[
 			cache.Delete([]string{filePath})
 		}
 	} else {
-
-		//可在此降速
+		timeout := time.After(time.Second * time.Duration(Object_Timeout))
+		select {
+		case <-Object_UP_CH:
+		case <-timeout:
+			return result, errors.New("Upload request too frequently.\n")
+		}
+		defer func() { Object_UP_CH <- 1 }()
 		bts, err = yts3.ReadAll(input, size)
 		if err != nil {
+			logrus.Errorf("[S3Upload]/%s/%s,Read ERR: %s\n", bucketName, objectName, err)
 			return result, err
 		}
 	}
