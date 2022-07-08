@@ -557,8 +557,8 @@ github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:
 github.com/yottachain/P2PHost v1.0.1-0.20200330065720-69572fdc7d92/go.mod h1:V7g0oufx1cRzGw+1aUsMPkmD/+Uvdiax7dZiiC+afoM=
 github.com/yottachain/P2PHost v1.0.2-0.20200921072702-609d35770f59 h1:FZHYTMNf39jebg8BP4Zr7C6aSu2lLz5GKk5rldGJZh0=
 github.com/yottachain/P2PHost v1.0.2-0.20200921072702-609d35770f59/go.mod h1:4ZBTjWbVgjQbVAjLDWsj0VSB723F02mau38rGp1W5yU=
-github.com/yottachain/YTCoreService v0.0.0-20220708022111-deb25b030bc7 h1:Jk5LJrPYlfHALyasAa4JYl3LUKx0HKtcaBlip8O5QCQ=
-github.com/yottachain/YTCoreService v0.0.0-20220708022111-deb25b030bc7/go.mod h1:LS9m9RHGGbB2VCOBE1fx4LBTyVlV/GJqCrToc2C0jck=
+github.com/yottachain/YTCoreService v0.0.0-20220708030706-ec48e6b0d816 h1:ZccpsuorBAjO7RQHQL0+muzr4iJtairxTmCw9CDB6vM=
+github.com/yottachain/YTCoreService v0.0.0-20220708030706-ec48e6b0d816/go.mod h1:I9ynMcyCH6/vZfuUZa7MnKEUwsEcQ2MgYuUtDY8dQ/I=
 github.com/yottachain/YTCrypto v0.0.0-20200122165219-0ea35dc29812 h1:XG9TtLosanLdwqSoporMr8OASUOjxuaj6cJDlut1c9s=
 github.com/yottachain/YTCrypto v0.0.0-20200122165219-0ea35dc29812/go.mod h1:jDJUVGeQ1clW7k9OTRBAFtCMwGs9B9fGQ9QY64SKqlk=
 github.com/yottachain/YTDNMgmt v0.0.0-20220706043819-900a99de3a6d h1:YZ6kuU9j6zRhCBgP/4FdDRJ1hCSUvyvD0YDRLvEg3Ug=
@@ -566,8 +566,8 @@ github.com/yottachain/YTDNMgmt v0.0.0-20220706043819-900a99de3a6d/go.mod h1:21to
 github.com/yottachain/YTHost v1.0.2-0.20200330065027-fd1b316f47cb/go.mod h1:PMIX6FcFzZ5xaexcI1ivumzoo9nblL2wZc5it/R3SeU=
 github.com/yottachain/YTHost v1.0.2-0.20200703084155-b2658f82b387/go.mod h1:PMIX6FcFzZ5xaexcI1ivumzoo9nblL2wZc5it/R3SeU=
 github.com/yottachain/YTHost v1.0.2-0.20200918110720-68f155ccc541/go.mod h1:PMIX6FcFzZ5xaexcI1ivumzoo9nblL2wZc5it/R3SeU=
-github.com/yottachain/YTHost v1.0.2-0.20220708021723-87b2cbcfe770 h1:uOnJhURTfwzNAcE8hZZWRSndKgkaES1JrDodsi0j6HI=
-github.com/yottachain/YTHost v1.0.2-0.20220708021723-87b2cbcfe770/go.mod h1:8/hiqr3CQQLfc6y0U2QlyzoIJUSloFKcpgZBpsdIkR4=
+github.com/yottachain/YTHost v1.0.2-0.20220708030402-f160518f851c h1:hHziZK7mSpU+zZ9s82UX/NFYX5JNSXlGee8ViAct5Qs=
+github.com/yottachain/YTHost v1.0.2-0.20220708030402-f160518f851c/go.mod h1:8/hiqr3CQQLfc6y0U2QlyzoIJUSloFKcpgZBpsdIkR4=
 github.com/yottachain/yotta-analysis v0.0.0-20200427065413-d4b83ac9a92f/go.mod h1:WBAiITvR+7h/fwyUYkybMjaBb812On6Td7sMc/nAqKE=
 github.com/yottachain/yotta-analysis v0.0.0-20200827070430-a2cc45d44692/go.mod h1:jkzWxLT0S/YYMbXukSBAehYg63AW3kj2hzhcubrgqhc=
 github.com/yottachain/yotta-rebuilder v0.0.0-20201208032400-af42fe398b9e/go.mod h1:bB1NSBvVo4SxMlLf1HraSxM4NukpSz3SpppSZnSrIHo=

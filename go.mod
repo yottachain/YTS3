@@ -11,7 +11,7 @@ require (
 	github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46
 	github.com/sirupsen/logrus v1.8.1
 	github.com/unrolled/secure v1.0.8
-	github.com/yottachain/YTCoreService v0.0.0-20220708022111-deb25b030bc7
+	github.com/yottachain/YTCoreService v0.0.0-20220708030706-ec48e6b0d816
 	github.com/yottachain/YTCrypto v0.0.0-20200122165219-0ea35dc29812
 	go.mongodb.org/mongo-driver v1.3.3
 )
@@ -85,7 +85,7 @@ require (
 	github.com/xdg/stringprep v1.0.0 // indirect
 	github.com/yottachain/P2PHost v1.0.2-0.20200921072702-609d35770f59 // indirect
 	github.com/yottachain/YTDNMgmt v0.0.0-20220706043819-900a99de3a6d // indirect
-	github.com/yottachain/YTHost v1.0.2-0.20220708021723-87b2cbcfe770 // indirect
+	github.com/yottachain/YTHost v1.0.2-0.20220708030402-f160518f851c // indirect
 	go.uber.org/atomic v1.5.0 // indirect
 	go.uber.org/multierr v1.3.0 // indirect
 	go.uber.org/tools v0.0.0-20190618225709-2cfd321de3ee // indirect
