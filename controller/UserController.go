@@ -63,7 +63,7 @@ func Register(g *gin.Context) {
 	var client *api.Client
 	var err2 error
 	for {
-		client, err2 = api.NewClientV2(&env.UserInfo{
+		client, err2 = api.NewClient(&api.UserInfo{
 			UserName: userName,
 			Privkey:  []string{privateKey}}, 3)
 		if err2 != nil {

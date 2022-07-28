@@ -61,7 +61,7 @@ func main() {
 	if len(os.Args) > 1 {
 		cmd := os.Args[1]
 		if cmd == "version" {
-			fmt.Println(env.VersionID)
+			fmt.Println(env.Version)
 			return
 		}
 		if cmd == "console" {
@@ -159,7 +159,7 @@ func s3StartServer() {
 		fmt.Println("Read file2 success =", string(fileContent2))
 	*/
 	flag.Parse()
-	env.SetLimit()
+
 	api.StartApi()
 	s3mem.InitObjectUpPool()
 	crt = env.YTFS_HOME + "crt/server.crt"

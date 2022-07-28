@@ -14,6 +14,9 @@ import (
 )
 
 func (g *Yts3) createObject(bucket, object string, w http.ResponseWriter, r *http.Request) (err error) {
+	if r.URL.RawQuery == "acl=" {
+		return nil
+	}
 	logrus.Infof("[S3Upload]CREATE OBJECT:%s/%s\n", bucket, object)
 	Authorization := r.Header.Get("Authorization")
 	if Authorization == "" {

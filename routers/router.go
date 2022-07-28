@@ -2,13 +2,32 @@ package routers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/unrolled/secure"
+	"github.com/yottachain/YTCoreService/env"
 	"github.com/yottachain/YTS3/controller"
 )
+
+func StartServer() {
+	go func() {
+		router := InitRouter()
+		port := env.GetConfig().GetInt("s3port", 8080)
+		var e error
+		if env.CertFilePath == "" {
+			e = router.Run(":" + strconv.Itoa(port))
+		} else {
+			e = router.RunTLS(":"+strconv.Itoa(port), env.CertFilePath, env.KeyFilePath)
+		}
+		if e != nil {
+			logrus.Errorf("[Main]Port %d,err:s%\n", port, e)
+		}
+	}()
+
+}
 
 //InitRouter 初始化路由
 func InitRouter() (router *gin.Engine) {
