@@ -12,10 +12,9 @@ import (
 	"github.com/yottachain/YTS3/controller"
 )
 
-func StartServer() {
+func StartServer(port int) {
 	go func() {
 		router := InitRouter()
-		port := env.GetConfig().GetInt("s3port", 8080)
 		var e error
 		if env.CertFilePath == "" {
 			e = router.Run(":" + strconv.Itoa(port))
@@ -23,7 +22,7 @@ func StartServer() {
 			e = router.RunTLS(":"+strconv.Itoa(port), env.CertFilePath, env.KeyFilePath)
 		}
 		if e != nil {
-			logrus.Errorf("[Main]Port %d,err:s%\n", port, e)
+			logrus.Errorf("[S3]Port %d,err:%s \n", port, e)
 		}
 	}()
 
