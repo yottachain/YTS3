@@ -12,8 +12,9 @@ import (
 	"github.com/yottachain/YTS3/controller"
 )
 
-func StartServer(port int) {
+func StartServer() {
 	go func() {
+		port := env.GetConfig().GetInt("S3ExtPort", 8080)
 		router := InitRouter()
 		var e error
 		if env.CertFilePath == "" {
