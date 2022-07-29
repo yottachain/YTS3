@@ -4,12 +4,12 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/yottachain/YTCoreService/api"
-	"github.com/yottachain/YTCoreService/env"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/sirupsen/logrus"
+	"github.com/yottachain/YTCoreService/api"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,7 +19,7 @@ const AUTH_FAILURE = 0x55
 //Exportclient 1.注册导出授权的用户实例
 func exportclient(userName, privateKey string) (*api.Client, error) {
 
-	exportclient, err := api.NewClientV2(&env.UserInfo{
+	exportclient, err := api.NewClient(&api.UserInfo{
 		UserName: userName,
 		Privkey:  []string{privateKey}}, 3)
 	if err != nil {
@@ -31,7 +31,7 @@ func exportclient(userName, privateKey string) (*api.Client, error) {
 
 //Importclient 2.注册导入授权的用户实例
 func Importclient(userName, privateKey string) (*api.Client, error) {
-	importclient, err := api.NewClientV2(&env.UserInfo{
+	importclient, err := api.NewClient(&api.UserInfo{
 		UserName: userName,
 		Privkey:  []string{privateKey}}, 3)
 	if err != nil {

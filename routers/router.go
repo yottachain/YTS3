@@ -1,12 +1,33 @@
 package routers
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/unrolled/secure"
+	"github.com/yottachain/YTCoreService/env"
 	"github.com/yottachain/YTS3/controller"
 )
+
+func StartServer() {
+	go func() {
+		port := env.GetConfig().GetInt("S3ExtPort", 8080)
+		router := InitRouter()
+		var e error
+		if env.CertFilePath == "" {
+			e = router.Run(":" + strconv.Itoa(port))
+		} else {
+			e = router.RunTLS(":"+strconv.Itoa(port), env.CertFilePath, env.KeyFilePath)
+		}
+		if e != nil {
+			logrus.Errorf("[S3]Port %d,err:%s \n", port, e)
+		}
+	}()
+
+}
 
 //InitRouter 初始化路由
 func InitRouter() (router *gin.Engine) {
@@ -15,6 +36,8 @@ func InitRouter() (router *gin.Engine) {
 	config.AllowAllOrigins = true
 	// router.Use(cors.New(config))
 	//router.Use(TlsHandler())
+
+	router.Handle(http.MethodGet, "/", controller.Login)
 	v1 := router.Group("/api/v1")
 	{
 		v1.POST("/insertuser", controller.Register)
@@ -34,6 +57,8 @@ func InitRouter() (router *gin.Engine) {
 		v1.GET("/exporterAuthData", controller.ExporterAuthData)
 		v1.GET("/licensedTo", controller.LicensedTo)
 		v1.POST("/saveFileToLocal", controller.SaveFileToLocal)
+		v1.POST("/account/create", controller.CreateAccountCli)
+		//v1.GET("/addClientforMobile", controller.AddClientforMobile)
 	}
 
 	return
