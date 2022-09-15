@@ -54,9 +54,14 @@ func Register(g *gin.Context) {
 			privateKey = json.PrivateKey
 		}
 	}
-	if userName == "" || privateKey == "" {
-		logrus.Info("[Register]userName or privateKey is empty\n")
-		g.JSON(http.StatusUnauthorized, gin.H{"status": http.StatusUnauthorized, "Msg": "userName or privateKey is empty"})
+	if userName == "" {
+		logrus.Info("[Register]userName is empty\n")
+		g.JSON(http.StatusUnauthorized, gin.H{"status": http.StatusUnauthorized, "Msg": "userName is empty"})
+		return
+	}
+	if privateKey == "" {
+		logrus.Info("[Register]privateKey is empty\n")
+		g.JSON(http.StatusUnauthorized, gin.H{"status": http.StatusUnauthorized, "Msg": "privateKey is empty"})
 		return
 	}
 	var err2 error
